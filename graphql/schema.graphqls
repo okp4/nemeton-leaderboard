@@ -1,0 +1,163 @@
+scalar Cursor
+
+scalar DateTime
+
+"""
+Represent an okp4 address as [Betch32](https://en.bitcoin.it/wiki/Bech32) format prefixed by the blockchain prefix.
+e.g. `okp41jse8senm9hcvydhl8v9x47kfe5z82zmwtw8jvj`
+"""
+scalar Address
+
+"""
+Represent an okp4 validator address as [Betch32](https://en.bitcoin.it/wiki/Bech32) format prefixed by the blockchain valoper prefix.
+e.g. `okp4valoper1jse8senm9hcvydhl8v9x47kfe5z82zmwtw8jvj`
+"""
+scalar ValoperAddress
+
+scalar Identity
+
+type Query {
+    phase(number: Int!): Phase
+
+    phases: Phases!
+
+    board(
+        search: String
+        first: Int = 50
+        after: Cursor
+    ): BoardConnection!
+
+    validatorCount: Int!
+
+    validator(
+        cursor: Cursor
+        rank: Int
+        valoper: ValoperAddress
+        delegator: Address
+        discord: String
+        twitter: String
+    ): Validator
+}
+
+type Phases {
+    all: [Phase!]!
+
+    ongoing: [Phase!]!
+
+    finished: [Phase!]!
+
+    current: Phase
+}
+
+type Phase {
+    number: Int!
+
+    name: String!
+
+    description: String!
+
+    startDate: DateTime!
+
+    endDate: DateTime!
+
+    started: Boolean!
+
+    finished: Boolean!
+
+    tasks: [Task!]!
+
+    blocks: BlockRange!
+}
+
+type Task {
+    number: Int!
+    name: String!
+    description: String!
+    startDate: DateTime!
+    endDate: DateTime!
+    started: Boolean!
+    finished: Boolean!
+    withSubmission: Boolean!
+    rewards: Int
+}
+
+type BlockRange {
+    from: Int!
+
+    to: Int!
+
+    count: Int!
+}
+
+type BoardConnection {
+    edges: [ValidatorEdge!]!
+    pageInfo: PageInfo!
+}
+
+type ValidatorEdge {
+    cursor: Cursor!
+    node: Validator!
+}
+
+type PageInfo {
+    startCursor: Cursor!
+    endCursor: Cursor!
+    hasNextPage: Boolean!
+    count: Int!
+}
+
+type Validator {
+    rank: Int!
+    moniker: String!
+    identity: Identity
+    valoper: ValoperAddress!
+    delegator: Address!
+    twitter: String
+    discord: String!
+    country: String!
+    status: ValidatorStatus!
+    points: Int!
+    tasks: Tasks
+    missedBlocks: [BlockRange!]!
+}
+
+enum ValidatorStatus {
+    ACTIVE
+    INACTIVE
+    JAILED
+}
+
+type Tasks {
+    completedCount: Int!
+    finishedCount: Int!
+    perPhase(number: Int): [PerPhaseTasks!]!
+}
+
+type PerPhaseTasks {
+    completedCount: Int!
+    finishedCount: Int!
+    phase: Phase!
+    tasks: [TaskState!]!
+}
+
+interface TaskState {
+    task: Task!
+    completed: Boolean!
+    earnedPoints: Int!
+}
+
+type UptimeTask implements TaskState {
+    task: Task!
+    completed: Boolean!
+    earnedPoints: Int!
+    blockCount: Int!
+    missedBlockCount: Int!
+    rate: Int!
+}
+
+type SubmissionTask implements TaskState {
+    task: Task!
+    completed: Boolean!
+    earnedPoints: Int!
+    submitted: Boolean!
+}
