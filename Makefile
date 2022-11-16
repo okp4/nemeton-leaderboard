@@ -68,6 +68,10 @@ $(ENVIRONMENTS_TARGETS):
 	echo "${COLOR_CYAN} 🏗️ Building project ${COLOR_RESET}${CMD_ROOT}${COLOR_CYAN} for environment ${COLOR_YELLOW}$$GOOS ($$GOARCH)${COLOR_RESET} into ${COLOR_YELLOW}$$FOLDER${COLOR_RESET}" && \
 	$(call build-go,$$GOOS,$$GOARCH,$$FILENAME)
 
+## Generate:
+generate: ## Generate graphql models and resolvers based on the schema
+	@echo "${COLOR_CYAN} 📋 Generate graphql models and resolvers ${BINARY_NAME}${COLOR_RESET}"
+	@go run github.com/99designs/gqlgen generate
 
 ## Install:
 install: ## Install executable
