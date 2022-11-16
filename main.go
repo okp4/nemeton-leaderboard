@@ -1,6 +1,6 @@
 package main
 
-import "okp4/template-go/cmd"
+import "okp4/nemeton-leaderboard/cmd"
 
 func main() {
 	cmd.Execute()

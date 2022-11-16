@@ -1,4 +1,4 @@
-module okp4/template-go
+module okp4/nemeton-leaderboard
 
 go 1.19
 
