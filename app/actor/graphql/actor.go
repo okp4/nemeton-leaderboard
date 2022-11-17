@@ -2,8 +2,9 @@ package graphql
 
 import (
 	"context"
-	"okp4/nemeton-leaderboard/app/message"
 	"time"
+
+	"okp4/nemeton-leaderboard/app/message"
 
 	"github.com/asynkron/protoactor-go/actor"
 	"github.com/rs/zerolog/log"

@@ -6,6 +6,7 @@ package graphql
 import (
 	"context"
 	"fmt"
+
 	"okp4/nemeton-leaderboard/graphql/generated"
 	"okp4/nemeton-leaderboard/graphql/model"
 )
@@ -31,6 +32,7 @@ func (r *queryResolver) ValidatorCount(ctx context.Context) (int, error) {
 }
 
 // Validator is the resolver for the validator field.
+// nolint: lll
 func (r *queryResolver) Validator(ctx context.Context, cursor *string, rank *int, valoper *string, delegator *string, discord *string, twitter *string) (*model.Validator, error) {
 	panic(fmt.Errorf("not implemented: Validator - validator"))
 }

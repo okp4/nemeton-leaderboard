@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 	"sync"
+	"time"
 
 	"github.com/rs/zerolog/log"
 )
@@ -16,8 +17,9 @@ type server struct {
 func makeHTTPServer(listenAddr string, router *http.ServeMux) *server {
 	return &server{
 		srv: &http.Server{
-			Addr:    listenAddr,
-			Handler: router,
+			Addr:              listenAddr,
+			Handler:           router,
+			ReadHeaderTimeout: 2 * time.Second,
 		},
 		wg: &sync.WaitGroup{},
 	}

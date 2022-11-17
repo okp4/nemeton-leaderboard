@@ -2,6 +2,7 @@ package graphql
 
 import (
 	"net/http"
+
 	"okp4/nemeton-leaderboard/graphql"
 	"okp4/nemeton-leaderboard/graphql/generated"
 
