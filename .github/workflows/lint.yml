@@ -148,4 +148,4 @@ jobs:
 
       - name: Lint graphql schema (graphql-schema-linter)
         run: |
-          graphql-schema-linter
+          graphql-schema-linter graphql/schema.graphql
