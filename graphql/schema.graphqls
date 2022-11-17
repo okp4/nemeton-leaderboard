@@ -1,0 +1,523 @@
+"""
+Represents an opaque identifier on a resource allowing cursor based pagination.
+e.g. `Y291Y291bW9uY3Vs`
+"""
+scalar Cursor
+
+"""
+Represents a date time in a RFC3339 Nano format.
+e.g. `2006-01-02T15:04:05.999999999Z07:00`
+"""
+scalar Time
+
+"""
+Represents an okp4 address as [Bech32](https://en.bitcoin.it/wiki/Bech32) format prefixed by the blockchain prefix.
+e.g. `okp41jse8senm9hcvydhl8v9x47kfe5z82zmwtw8jvj`
+"""
+scalar Address
+
+"""
+Represents an okp4 validator address as [Bech32](https://en.bitcoin.it/wiki/Bech32) format prefixed by the blockchain valoper prefix.
+e.g. `okp4valoper1jse8senm9hcvydhl8v9x47kfe5z82zmwtw8jvj`
+"""
+scalar ValoperAddress
+
+"""
+Represents a PGP key id.
+e.g. `547DBC6F536D3AD2`
+"""
+scalar PGPKeyID
+
+"""
+Represents an [Uniform Resource Identifier](https://fr.wikipedia.org/wiki/Uniform_Resource_Identifier) to permanently identify a resource.
+e.g. ``
+"""
+scalar URI
+
+type Query {
+    """
+    Fetch a specific Phase.
+    """
+    phase(
+        """
+        The requested phase's number.
+        """
+        number: Int!
+    ): Phase
+
+    """
+    Fetch multiple phases.
+    """
+    phases: Phases!
+
+    """
+    Retrieve the state of the Nemeton Leaderboard.
+    """
+    board(
+        """
+        A text string to filter the validators.
+        """
+        search: String
+
+        """
+        The slice size the connection shall return.
+        """
+        first: Int = 50
+
+        """
+        Specify the elements to return after this cursor.
+        """
+        after: Cursor
+    ): BoardConnection!
+
+    """
+    The total number of participants, or druids, or validator.
+    """
+    validatorCount: Int!
+
+    """
+    Fetch a validator through one of its unique property.
+    """
+    validator(
+        cursor: Cursor
+        rank: Int
+        valoper: ValoperAddress
+        delegator: Address
+        discord: String
+        twitter: String
+    ): Validator
+}
+
+"""
+Represents a Phases payload
+"""
+type Phases {
+    """
+    Retrieve all the phases.
+    """
+    all: [Phase!]!
+
+    """
+    Retrieve all the ongoing phases, those who hasn't started yet.
+    """
+    ongoing: [Phase!]!
+
+    """
+    Retrieve all the finished phases.
+    """
+    finished: [Phase!]!
+
+    """
+    Retrieve the current phase.
+    """
+    current: Phase
+}
+
+"""
+Represents a Phase of the Nemeton Program
+"""
+type Phase {
+    """
+    Identify the phase, the phases are ordered through their number.
+    """
+    number: Int!
+
+    """
+    The name of the phase.
+    """
+    name: String!
+
+    """
+    The description of the phase.
+    """
+    description: String!
+
+    """
+    The date the phase begins.
+    """
+    startDate: Time!
+
+    """
+    The date the phase ends.
+    """
+    endDate: Time!
+
+    """
+    `true` if the phase is in progress.
+    """
+    started: Boolean!
+
+    """
+    `true` if the phase is finished.
+    """
+    finished: Boolean!
+
+    """
+    The tasks composing the phase the druids will have to perform.
+    """
+    tasks: [Task!]!
+
+    """
+    The current block range of the phase. In the case the phase hasn't started its size is 0, for a phase in progress the range will evolve.
+    """
+    blocks: BlockRange!
+}
+
+"""
+Represents a phase's task, containing only descriptive elements. It does not expressed any potential progress or result as it is not linked to a druid.
+"""
+type Task {
+    """
+    The unique identifier of the task.
+    """
+    id: ID!
+
+    """
+    The name of the task.
+    """
+    name: String!
+
+    """
+    The description of the task.
+    """
+    description: String!
+
+    """
+    The date the task begins.
+    """
+    startDate: Time!
+
+    """
+    The date the task ends.
+    """
+    endDate: Time!
+
+    """
+    `true` if the task is in progress.
+    """
+    started: Boolean!
+
+    """
+    `true` if the task is finished.
+    """
+    finished: Boolean!
+
+    """
+    Tells whether a task require a manual submission from the druids to be evaluated.
+    """
+    withSubmission: Boolean!
+
+    """
+    The points earned if the task is completed. No value means there is no fixed amount of points as rewards, the amount is calculated regarding the performance.
+    """
+    rewards: Int
+}
+
+"""
+Represents a blockchain block range.
+"""
+type BlockRange {
+    """
+    The block height the range begin, inclusive.
+    """
+    from: Int!
+
+    """
+    The block height the range end, inclusive.
+    """
+    to: Int!
+
+    """
+    The size of the range (i.e. `size` =  `to` - `from`).
+    """
+    count: Int!
+}
+
+"""
+Represents a page of the Leaderboard.
+"""
+type BoardConnection {
+    """
+    The page's validators, ordered by their rank.
+    """
+    edges: [ValidatorEdge!]!
+
+    """
+    The information on the current connection page.
+    """
+    pageInfo: PageInfo!
+}
+
+"""
+Represents an edge to a validator.
+"""
+type ValidatorEdge {
+    """
+    The validator's cursor.
+    """
+    cursor: Cursor!
+
+    """
+    The validator.
+    """
+    node: Validator!
+}
+
+"""
+Contains information on a connection page.
+"""
+type PageInfo {
+    """
+    The cursor of the first element of the page.
+    """
+    startCursor: Cursor!
+
+    """
+    The cursor of the last element of the page.
+    """
+    endCursor: Cursor!
+
+    """
+    `true` if there is other elements after the endCursor.
+    """
+    hasNextPage: Boolean!
+
+    """
+    The number of elements in the page.
+    """
+    count: Int!
+}
+
+"""
+Represents a validator, a participant or a druid in the Nemeton program.
+"""
+type Validator {
+    """
+    The validator position in the board.
+    """
+    rank: Int!
+
+    """
+    The validator moniker.
+    """
+    moniker: String!
+
+    """
+    The validator identity on https://keybase.io/, can be used to retrieve its picture.
+    """
+    identity: Identity
+
+    """
+    The validator node valoper address.
+    """
+    valoper: ValoperAddress!
+
+    """
+    The address of the validator node delegator.
+    """
+    delegator: Address!
+
+    """
+    The validator twitter account.
+    """
+    twitter: String
+
+    """
+    The validator discord account.
+    """
+    discord: String!
+
+    """
+    The validator country.
+    """
+    country: String!
+
+    """
+    The validator current status.
+    """
+    status: ValidatorStatus!
+
+    """
+    The validator points count.
+    """
+    points: Int!
+
+    """
+    The validator affected tasks, does not reference not tasks who has not started yet.
+    """
+    tasks: Tasks
+
+    """
+    The blocks the validator has not signed.
+    """
+    missedBlocks: [BlockRange!]!
+}
+
+"""
+Represents an identity on https://keybase.io/
+"""
+type Identity {
+    """
+    The identity PGP key id.
+    """
+    pgp: PGPKeyID!
+
+    """
+    The resolved identity picture, if any.
+    """
+    picture: Link
+}
+
+"""
+A Link represents a relationship from the containing resource to a URI.
+"""
+type Link {
+    """
+    The URI to the resource.
+
+    Its value is either a URI compliant with [RFC3986](https://www.ietf.org/rfc/rfc3986.txt) or a URI Template compliant with
+    [RFC6570](https://tools.ietf.org/html/rfc6570).
+
+    If the value is a URI Template then the Link Object shall have a `templated` attribute whose value is true.
+    """
+    href: URI!
+}
+
+"""
+Represents the status of a validator node on the blockchain.
+"""
+enum ValidatorStatus {
+    ACTIVE
+    INACTIVE
+    JAILED
+}
+
+"""
+Contains information relative to the state of the tasks a validator shall perform.
+"""
+type Tasks {
+    """
+    The total number of tasks the validator completed.
+    """
+    completedCount: Int!
+
+    """
+    The total number of finished tasks the validator was supposed to perform.
+    """
+    finishedCount: Int!
+
+    """
+    Details the tasks state a validator is supposed to perform per phase.
+    """
+    perPhase(number: Int): [PerPhaseTasks!]!
+}
+
+"""
+Contains tasks state in the context of a phase and a validator.
+"""
+type PerPhaseTasks {
+    """
+    The total number of tasks the validator completed in this phase.
+    """
+    completedCount: Int!
+
+    """
+    The total number of finished tasks in this phase.
+    """
+    finishedCount: Int!
+
+    """
+    The phase we're talking about.
+    """
+    phase: Phase!
+
+    """
+    The current status of the phase's tasks for a validator.
+    """
+    tasks: [TaskState!]!
+}
+
+"""
+Represents the progress/result of a task assigned to a validator.
+"""
+interface TaskState {
+    """
+    The task we're talking about.
+    """
+    task: Task!
+
+    """
+    `true` if the validator  completed this task.
+    """
+    completed: Boolean!
+
+    """
+    The number of points earned by the validator on this task.
+    """
+    earnedPoints: Int!
+}
+
+"""
+Represents the state of a specific task of uptime.
+"""
+type UptimeTask implements TaskState {
+    """
+    The task we're talking about.
+    """
+    task: Task!
+
+    """
+    `true` if the validator  completed this task.
+    """
+    completed: Boolean!
+
+    """
+    The number of points earned by the validator on this task.
+    """
+    earnedPoints: Int!
+
+    """
+    The total number of blocks expected to be signed.
+    """
+    blockCount: Int!
+
+    """
+    The number of missed blocks.
+    """
+    missedBlockCount: Int!
+
+    """
+    The missed block ranges.
+    """
+    missedBlocks: [BlockRange!]!
+
+    """
+    The ratio of signed blocks.
+    """
+    ratio: Int!
+}
+
+"""
+Represents the state of a specific task requiring a manual submission from the validator.
+"""
+type SubmissionTask implements TaskState {
+    """
+    The task we're talking about.
+    """
+    task: Task!
+
+    """
+    `true` if the validator  completed this task.
+    """
+    completed: Boolean!
+
+    """
+    The number of points earned by the validator on this task.
+    """
+    earnedPoints: Int!
+
+    """
+    `true` if the validator has submitted the content expected for the task.
+    """
+    submitted: Boolean!
+}
