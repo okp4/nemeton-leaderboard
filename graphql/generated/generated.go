@@ -11,6 +11,7 @@ import (
 	"strconv"
 	"sync"
 	"sync/atomic"
+	"time"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/99designs/gqlgen/graphql/introspection"
@@ -52,6 +53,15 @@ type ComplexityRoot struct {
 	BoardConnection struct {
 		Edges    func(childComplexity int) int
 		PageInfo func(childComplexity int) int
+	}
+
+	Identity struct {
+		PGP     func(childComplexity int) int
+		Picture func(childComplexity int) int
+	}
+
+	Link struct {
+		Href func(childComplexity int) int
 	}
 
 	PageInfo struct {
@@ -106,8 +116,8 @@ type ComplexityRoot struct {
 		Description    func(childComplexity int) int
 		EndDate        func(childComplexity int) int
 		Finished       func(childComplexity int) int
+		ID             func(childComplexity int) int
 		Name           func(childComplexity int) int
-		Number         func(childComplexity int) int
 		Rewards        func(childComplexity int) int
 		StartDate      func(childComplexity int) int
 		Started        func(childComplexity int) int
@@ -125,7 +135,8 @@ type ComplexityRoot struct {
 		Completed        func(childComplexity int) int
 		EarnedPoints     func(childComplexity int) int
 		MissedBlockCount func(childComplexity int) int
-		Rate             func(childComplexity int) int
+		MissedBlocks     func(childComplexity int) int
+		Ratio            func(childComplexity int) int
 		Task             func(childComplexity int) int
 	}
 
@@ -207,6 +218,27 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.BoardConnection.PageInfo(childComplexity), true
+
+	case "Identity.pgp":
+		if e.complexity.Identity.PGP == nil {
+			break
+		}
+
+		return e.complexity.Identity.PGP(childComplexity), true
+
+	case "Identity.picture":
+		if e.complexity.Identity.Picture == nil {
+			break
+		}
+
+		return e.complexity.Identity.Picture(childComplexity), true
+
+	case "Link.href":
+		if e.complexity.Link.Href == nil {
+			break
+		}
+
+		return e.complexity.Link.Href(childComplexity), true
 
 	case "PageInfo.count":
 		if e.complexity.PageInfo.Count == nil {
@@ -454,19 +486,19 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Task.Finished(childComplexity), true
 
+	case "Task.id":
+		if e.complexity.Task.ID == nil {
+			break
+		}
+
+		return e.complexity.Task.ID(childComplexity), true
+
 	case "Task.name":
 		if e.complexity.Task.Name == nil {
 			break
 		}
 
 		return e.complexity.Task.Name(childComplexity), true
-
-	case "Task.number":
-		if e.complexity.Task.Number == nil {
-			break
-		}
-
-		return e.complexity.Task.Number(childComplexity), true
 
 	case "Task.rewards":
 		if e.complexity.Task.Rewards == nil {
@@ -550,12 +582,19 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.UptimeTask.MissedBlockCount(childComplexity), true
 
-	case "UptimeTask.rate":
-		if e.complexity.UptimeTask.Rate == nil {
+	case "UptimeTask.missedBlocks":
+		if e.complexity.UptimeTask.MissedBlocks == nil {
 			break
 		}
 
-		return e.complexity.UptimeTask.Rate(childComplexity), true
+		return e.complexity.UptimeTask.MissedBlocks(childComplexity), true
+
+	case "UptimeTask.ratio":
+		if e.complexity.UptimeTask.Ratio == nil {
+			break
+		}
+
+		return e.complexity.UptimeTask.Ratio(childComplexity), true
 
 	case "UptimeTask.task":
 		if e.complexity.UptimeTask.Task == nil {
@@ -714,37 +753,86 @@ func (ec *executionContext) introspectType(name string) (*introspection.Type, er
 }
 
 var sources = []*ast.Source{
-	{Name: "../schema.graphqls", Input: `scalar Cursor
-
-scalar DateTime
+	{Name: "../schema.graphqls", Input: `"""
+Represents an opaque identifier on a resource allowing cursor based pagination.
+e.g. ` + "`" + `Y291Y291bW9uY3Vs` + "`" + `
+"""
+scalar Cursor
 
 """
-Represent an okp4 address as [Betch32](https://en.bitcoin.it/wiki/Bech32) format prefixed by the blockchain prefix.
+Represents a date time in a RFC3339 Nano format.
+e.g. ` + "`" + `2006-01-02T15:04:05.999999999Z07:00` + "`" + `
+"""
+scalar Time
+
+"""
+Represents an okp4 address as [Betch32](https://en.bitcoin.it/wiki/Bech32) format prefixed by the blockchain prefix.
 e.g. ` + "`" + `okp41jse8senm9hcvydhl8v9x47kfe5z82zmwtw8jvj` + "`" + `
 """
 scalar Address
 
 """
-Represent an okp4 validator address as [Betch32](https://en.bitcoin.it/wiki/Bech32) format prefixed by the blockchain valoper prefix.
+Represents an okp4 validator address as [Betch32](https://en.bitcoin.it/wiki/Bech32) format prefixed by the blockchain valoper prefix.
 e.g. ` + "`" + `okp4valoper1jse8senm9hcvydhl8v9x47kfe5z82zmwtw8jvj` + "`" + `
 """
 scalar ValoperAddress
 
-scalar Identity
+"""
+Represents a PGP key id.
+e.g. ` + "`" + `547DBC6F536D3AD2` + "`" + `
+"""
+scalar PGPKeyID
+
+"""
+Represents an [Uniform Resource Identifier](https://fr.wikipedia.org/wiki/Uniform_Resource_Identifier) to permanently identify a resource.
+e.g. ` + "`" + `` + "`" + `
+"""
+scalar URI
 
 type Query {
-    phase(number: Int!): Phase
+    """
+    Fetch a specific Phase.
+    """
+    phase(
+        """
+        The requested phase's number.
+        """
+        number: Int!
+    ): Phase
 
+    """
+    Fetch multiple phases.
+    """
     phases: Phases!
 
+    """
+    Retrieve the state of the Nemeton Leaderboard.
+    """
     board(
+        """
+        A text string to filter the validators.
+        """
         search: String
+
+        """
+        The slice size the connection shall return.
+        """
         first: Int = 50
+
+        """
+        Specify the elements to return after this cursor.
+        """
         after: Cursor
     ): BoardConnection!
 
+    """
+    The total number of participants, or druids, or validator.
+    """
     validatorCount: Int!
 
+    """
+    Fetch a validator through one of its unique property.
+    """
     validator(
         cursor: Cursor
         rank: Int
@@ -755,126 +843,437 @@ type Query {
     ): Validator
 }
 
+"""
+Represents a Phases payload
+"""
 type Phases {
+    """
+    Retrieve all the phases.
+    """
     all: [Phase!]!
 
+    """
+    Retrieve all the ongoing phases, those who hasn't started yet.
+    """
     ongoing: [Phase!]!
 
+    """
+    Retrieve all the finished phases.
+    """
     finished: [Phase!]!
 
+    """
+    Retrieve the current phase.
+    """
     current: Phase
 }
 
+"""
+Represents a Phase of the Nemeton Program
+"""
 type Phase {
+    """
+    Identify the phase, the phases are ordered through their number.
+    """
     number: Int!
 
+    """
+    The name of the phase.
+    """
     name: String!
 
+    """
+    The description of the phase.
+    """
     description: String!
 
-    startDate: DateTime!
+    """
+    The date the phase begin.
+    """
+    startDate: Time!
 
-    endDate: DateTime!
+    """
+    The date the phase end.
+    """
+    endDate: Time!
 
+    """
+    ` + "`" + `true` + "`" + ` if the phase is in progress.
+    """
     started: Boolean!
 
+    """
+    ` + "`" + `true` + "`" + ` if the phase is finished.
+    """
     finished: Boolean!
 
+    """
+    The tasks composing the phase the druids will have to perform.
+    """
     tasks: [Task!]!
 
+    """
+    The current block range of the phase. In the case the phase hasn't started its size is 0, for a phase in progress the range will evolve.
+    """
     blocks: BlockRange!
 }
 
+"""
+Represents a phase's task, containing only descriptive elements. It does not expressed any potential progress or result as it is not linked to a druid.
+"""
 type Task {
-    number: Int!
+    """
+    The unique identifier of the task.
+    """
+    id: ID!
+
+    """
+    The name of the task.
+    """
     name: String!
+
+    """
+    The description of the task.
+    """
     description: String!
-    startDate: DateTime!
-    endDate: DateTime!
+
+    """
+    The date the task being.
+    """
+    startDate: Time!
+
+    """
+    The date the task end.
+    """
+    endDate: Time!
+
+    """
+    ` + "`" + `true` + "`" + ` if the task is in progress.
+    """
     started: Boolean!
+
+    """
+    ` + "`" + `true` + "`" + ` if the task is finished.
+    """
     finished: Boolean!
+
+    """
+    Tells whether a task require a manual submission from the druids to be evaluated.
+    """
     withSubmission: Boolean!
+
+    """
+    The points earned if the task is completed. No value means there is no fixed amount of points as rewards, the amount is calculated regarding the performance.
+    """
     rewards: Int
 }
 
+"""
+Represents a blockchain block range.
+"""
 type BlockRange {
+    """
+    The block height the range begin, inclusive.
+    """
     from: Int!
 
+    """
+    The block height the range end, inclusive.
+    """
     to: Int!
 
+    """
+    The size of the range (i.e. ` + "`" + `size` + "`" + ` =  ` + "`" + `to` + "`" + ` - ` + "`" + `from` + "`" + `).
+    """
     count: Int!
 }
 
+"""
+Represents a page of the Leaderboard.
+"""
 type BoardConnection {
+    """
+    The page's validators, ordered by their rank.
+    """
     edges: [ValidatorEdge!]!
+
+    """
+    The information on the current connection page.
+    """
     pageInfo: PageInfo!
 }
 
+"""
+Represents an edge to a validator.
+"""
 type ValidatorEdge {
+    """
+    The validator's cursor.
+    """
     cursor: Cursor!
+
+    """
+    The validator.
+    """
     node: Validator!
 }
 
+"""
+Contains information on a connection page.
+"""
 type PageInfo {
+    """
+    The cursor of the first element of the page.
+    """
     startCursor: Cursor!
+
+    """
+    The cursor of the last element of the page.
+    """
     endCursor: Cursor!
+
+    """
+    ` + "`" + `true` + "`" + ` if there is other elements after the endCursor.
+    """
     hasNextPage: Boolean!
+
+    """
+    The number of elements in the page.
+    """
     count: Int!
 }
 
+"""
+Represents a validator, a participant or a druid in the Nemeton program.
+"""
 type Validator {
+    """
+    The validator position in the board.
+    """
     rank: Int!
+
+    """
+    The validator moniker.
+    """
     moniker: String!
+
+    """
+    The validator identity on https://keybase.io/, can be used to retrieve its picture.
+    """
     identity: Identity
+
+    """
+    The validator node valoper address.
+    """
     valoper: ValoperAddress!
+
+    """
+    The address of the validator node delegator.
+    """
     delegator: Address!
+
+    """
+    The validator twitter account.
+    """
     twitter: String
+
+    """
+    The validator discord account.
+    """
     discord: String!
+
+    """
+    The validator country.
+    """
     country: String!
+
+    """
+    The validator current status.
+    """
     status: ValidatorStatus!
+
+    """
+    The validator points count.
+    """
     points: Int!
+
+    """
+    The validator affected tasks, does not reference not tasks who has not started yet.
+    """
     tasks: Tasks
+
+    """
+    The blocks the validator has not signed.
+    """
     missedBlocks: [BlockRange!]!
 }
 
+"""
+Represents an identity on https://keybase.io/
+"""
+type Identity {
+    """
+    The identity PGP key id.
+    """
+    pgp: PGPKeyID!
+
+    """
+    The resolved identity picture, if any.
+    """
+    picture: Link
+}
+
+"""
+A Link represents a relationship from the containing resource to a URI.
+"""
+type Link {
+    """
+    The URI to the resource.
+
+    Its value is either a URI compliant with [RFC3986](https://www.ietf.org/rfc/rfc3986.txt) or a URI Template compliant with
+    [RFC6570](https://tools.ietf.org/html/rfc6570).
+
+    If the value is a URI Template then the Link Object shall have a ` + "`" + `templated` + "`" + ` attribute whose value is true.
+    """
+    href: URI!
+}
+
+"""
+Represents the status of a validator node on the blockchain.
+"""
 enum ValidatorStatus {
     ACTIVE
     INACTIVE
     JAILED
 }
 
+"""
+Contains information relative to the state of the tasks a validator shall perform.
+"""
 type Tasks {
+    """
+    The total number of tasks the validator completed.
+    """
     completedCount: Int!
+
+    """
+    The total number of finished tasks the validator was supposed to perform.
+    """
     finishedCount: Int!
+
+    """
+    Details the tasks state a validator is supposed to perform per phase.
+    """
     perPhase(number: Int): [PerPhaseTasks!]!
 }
 
+"""
+Contains tasks state in the context of a phase and a validator.
+"""
 type PerPhaseTasks {
+    """
+    The total number of tasks the validator completed in this phase.
+    """
     completedCount: Int!
+
+    """
+    The total number of finished tasks in this phase.
+    """
     finishedCount: Int!
+
+    """
+    The phase we're talking about.
+    """
     phase: Phase!
+
+    """
+    The current status of the phase's tasks for a validator.
+    """
     tasks: [TaskState!]!
 }
 
+"""
+Represents the progress/result of a task assigned to a validator.
+"""
 interface TaskState {
+    """
+    The task we're talking about.
+    """
     task: Task!
+
+    """
+    ` + "`" + `true` + "`" + ` if the validator  completed this task.
+    """
     completed: Boolean!
+
+    """
+    The number of points earned by the validator on this task.
+    """
     earnedPoints: Int!
 }
 
+"""
+Represents the state of a specific task of uptime.
+"""
 type UptimeTask implements TaskState {
+    """
+    The task we're talking about.
+    """
     task: Task!
+
+    """
+    ` + "`" + `true` + "`" + ` if the validator  completed this task.
+    """
     completed: Boolean!
+
+    """
+    The number of points earned by the validator on this task.
+    """
     earnedPoints: Int!
+
+    """
+    The total number of blocks expected to be signed.
+    """
     blockCount: Int!
+
+    """
+    The number of missed blocks.
+    """
     missedBlockCount: Int!
-    rate: Int!
+
+    """
+    The missed block ranges.
+    """
+    missedBlocks: [BlockRange!]!
+
+    """
+    The ratio of signed blocks.
+    """
+    ratio: Int!
 }
 
+"""
+Represents the state of a specific task requiring a manual submission from the validator.
+"""
 type SubmissionTask implements TaskState {
+    """
+    The task we're talking about.
+    """
     task: Task!
+
+    """
+    ` + "`" + `true` + "`" + ` if the validator  completed this task.
+    """
     completed: Boolean!
+
+    """
+    The number of points earned by the validator on this task.
+    """
     earnedPoints: Int!
+
+    """
+    ` + "`" + `true` + "`" + ` if the validator has submitted the content expected for the task.
+    """
     submitted: Boolean!
 }
 `, BuiltIn: false},
@@ -1292,6 +1691,139 @@ func (ec *executionContext) fieldContext_BoardConnection_pageInfo(ctx context.Co
 				return ec.fieldContext_PageInfo_count(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type PageInfo", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Identity_pgp(ctx context.Context, field graphql.CollectedField, obj *model.Identity) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Identity_pgp(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.PGP, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNPGPKeyID2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Identity_pgp(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Identity",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type PGPKeyID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Identity_picture(ctx context.Context, field graphql.CollectedField, obj *model.Identity) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Identity_picture(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Picture, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.Link)
+	fc.Result = res
+	return ec.marshalOLink2ᚖokp4ᚋnemetonᚑleaderboardᚋgraphqlᚋmodelᚐLink(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Identity_picture(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Identity",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "href":
+				return ec.fieldContext_Link_href(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Link", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Link_href(ctx context.Context, field graphql.CollectedField, obj *model.Link) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Link_href(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Href, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNURI2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Link_href(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Link",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type URI does not have child fields")
 		},
 	}
 	return fc, nil
@@ -1827,9 +2359,9 @@ func (ec *executionContext) _Phase_startDate(ctx context.Context, field graphql.
 		}
 		return graphql.Null
 	}
-	res := resTmp.(string)
+	res := resTmp.(time.Time)
 	fc.Result = res
-	return ec.marshalNDateTime2string(ctx, field.Selections, res)
+	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Phase_startDate(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -1839,7 +2371,7 @@ func (ec *executionContext) fieldContext_Phase_startDate(ctx context.Context, fi
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type DateTime does not have child fields")
+			return nil, errors.New("field of type Time does not have child fields")
 		},
 	}
 	return fc, nil
@@ -1871,9 +2403,9 @@ func (ec *executionContext) _Phase_endDate(ctx context.Context, field graphql.Co
 		}
 		return graphql.Null
 	}
-	res := resTmp.(string)
+	res := resTmp.(time.Time)
 	fc.Result = res
-	return ec.marshalNDateTime2string(ctx, field.Selections, res)
+	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Phase_endDate(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -1883,7 +2415,7 @@ func (ec *executionContext) fieldContext_Phase_endDate(ctx context.Context, fiel
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type DateTime does not have child fields")
+			return nil, errors.New("field of type Time does not have child fields")
 		},
 	}
 	return fc, nil
@@ -2016,8 +2548,8 @@ func (ec *executionContext) fieldContext_Phase_tasks(ctx context.Context, field 
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
-			case "number":
-				return ec.fieldContext_Task_number(ctx, field)
+			case "id":
+				return ec.fieldContext_Task_id(ctx, field)
 			case "name":
 				return ec.fieldContext_Task_name(ctx, field)
 			case "description":
@@ -2823,8 +3355,8 @@ func (ec *executionContext) fieldContext_SubmissionTask_task(ctx context.Context
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
-			case "number":
-				return ec.fieldContext_Task_number(ctx, field)
+			case "id":
+				return ec.fieldContext_Task_id(ctx, field)
 			case "name":
 				return ec.fieldContext_Task_name(ctx, field)
 			case "description":
@@ -2980,8 +3512,8 @@ func (ec *executionContext) fieldContext_SubmissionTask_submitted(ctx context.Co
 	return fc, nil
 }
 
-func (ec *executionContext) _Task_number(ctx context.Context, field graphql.CollectedField, obj *model.Task) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Task_number(ctx, field)
+func (ec *executionContext) _Task_id(ctx context.Context, field graphql.CollectedField, obj *model.Task) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Task_id(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -2994,7 +3526,7 @@ func (ec *executionContext) _Task_number(ctx context.Context, field graphql.Coll
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Number, nil
+		return obj.ID, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -3006,19 +3538,19 @@ func (ec *executionContext) _Task_number(ctx context.Context, field graphql.Coll
 		}
 		return graphql.Null
 	}
-	res := resTmp.(int)
+	res := resTmp.(string)
 	fc.Result = res
-	return ec.marshalNInt2int(ctx, field.Selections, res)
+	return ec.marshalNID2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Task_number(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Task_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Task",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Int does not have child fields")
+			return nil, errors.New("field of type ID does not have child fields")
 		},
 	}
 	return fc, nil
@@ -3138,9 +3670,9 @@ func (ec *executionContext) _Task_startDate(ctx context.Context, field graphql.C
 		}
 		return graphql.Null
 	}
-	res := resTmp.(string)
+	res := resTmp.(time.Time)
 	fc.Result = res
-	return ec.marshalNDateTime2string(ctx, field.Selections, res)
+	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Task_startDate(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -3150,7 +3682,7 @@ func (ec *executionContext) fieldContext_Task_startDate(ctx context.Context, fie
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type DateTime does not have child fields")
+			return nil, errors.New("field of type Time does not have child fields")
 		},
 	}
 	return fc, nil
@@ -3182,9 +3714,9 @@ func (ec *executionContext) _Task_endDate(ctx context.Context, field graphql.Col
 		}
 		return graphql.Null
 	}
-	res := resTmp.(string)
+	res := resTmp.(time.Time)
 	fc.Result = res
-	return ec.marshalNDateTime2string(ctx, field.Selections, res)
+	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Task_endDate(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -3194,7 +3726,7 @@ func (ec *executionContext) fieldContext_Task_endDate(ctx context.Context, field
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type DateTime does not have child fields")
+			return nil, errors.New("field of type Time does not have child fields")
 		},
 	}
 	return fc, nil
@@ -3565,8 +4097,8 @@ func (ec *executionContext) fieldContext_UptimeTask_task(ctx context.Context, fi
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
-			case "number":
-				return ec.fieldContext_Task_number(ctx, field)
+			case "id":
+				return ec.fieldContext_Task_id(ctx, field)
 			case "name":
 				return ec.fieldContext_Task_name(ctx, field)
 			case "description":
@@ -3766,8 +4298,8 @@ func (ec *executionContext) fieldContext_UptimeTask_missedBlockCount(ctx context
 	return fc, nil
 }
 
-func (ec *executionContext) _UptimeTask_rate(ctx context.Context, field graphql.CollectedField, obj *model.UptimeTask) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_UptimeTask_rate(ctx, field)
+func (ec *executionContext) _UptimeTask_missedBlocks(ctx context.Context, field graphql.CollectedField, obj *model.UptimeTask) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_UptimeTask_missedBlocks(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -3780,7 +4312,59 @@ func (ec *executionContext) _UptimeTask_rate(ctx context.Context, field graphql.
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Rate, nil
+		return obj.MissedBlocks, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.BlockRange)
+	fc.Result = res
+	return ec.marshalNBlockRange2ᚕᚖokp4ᚋnemetonᚑleaderboardᚋgraphqlᚋmodelᚐBlockRangeᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_UptimeTask_missedBlocks(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UptimeTask",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "from":
+				return ec.fieldContext_BlockRange_from(ctx, field)
+			case "to":
+				return ec.fieldContext_BlockRange_to(ctx, field)
+			case "count":
+				return ec.fieldContext_BlockRange_count(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type BlockRange", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UptimeTask_ratio(ctx context.Context, field graphql.CollectedField, obj *model.UptimeTask) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_UptimeTask_ratio(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Ratio, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -3797,7 +4381,7 @@ func (ec *executionContext) _UptimeTask_rate(ctx context.Context, field graphql.
 	return ec.marshalNInt2int(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_UptimeTask_rate(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_UptimeTask_ratio(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "UptimeTask",
 		Field:      field,
@@ -3921,9 +4505,9 @@ func (ec *executionContext) _Validator_identity(ctx context.Context, field graph
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(*string)
+	res := resTmp.(*model.Identity)
 	fc.Result = res
-	return ec.marshalOIdentity2ᚖstring(ctx, field.Selections, res)
+	return ec.marshalOIdentity2ᚖokp4ᚋnemetonᚑleaderboardᚋgraphqlᚋmodelᚐIdentity(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Validator_identity(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -3933,7 +4517,13 @@ func (ec *executionContext) fieldContext_Validator_identity(ctx context.Context,
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Identity does not have child fields")
+			switch field.Name {
+			case "pgp":
+				return ec.fieldContext_Identity_pgp(ctx, field)
+			case "picture":
+				return ec.fieldContext_Identity_picture(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Identity", field.Name)
 		},
 	}
 	return fc, nil
@@ -6340,6 +6930,66 @@ func (ec *executionContext) _BoardConnection(ctx context.Context, sel ast.Select
 	return out
 }
 
+var identityImplementors = []string{"Identity"}
+
+func (ec *executionContext) _Identity(ctx context.Context, sel ast.SelectionSet, obj *model.Identity) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, identityImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("Identity")
+		case "pgp":
+
+			out.Values[i] = ec._Identity_pgp(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "picture":
+
+			out.Values[i] = ec._Identity_picture(ctx, field, obj)
+
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var linkImplementors = []string{"Link"}
+
+func (ec *executionContext) _Link(ctx context.Context, sel ast.SelectionSet, obj *model.Link) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, linkImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("Link")
+		case "href":
+
+			out.Values[i] = ec._Link_href(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
 var pageInfoImplementors = []string{"PageInfo"}
 
 func (ec *executionContext) _PageInfo(ctx context.Context, sel ast.SelectionSet, obj *model.PageInfo) graphql.Marshaler {
@@ -6778,9 +7428,9 @@ func (ec *executionContext) _Task(ctx context.Context, sel ast.SelectionSet, obj
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("Task")
-		case "number":
+		case "id":
 
-			out.Values[i] = ec._Task_number(ctx, field, obj)
+			out.Values[i] = ec._Task_id(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
 				invalids++
@@ -6936,9 +7586,16 @@ func (ec *executionContext) _UptimeTask(ctx context.Context, sel ast.SelectionSe
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
-		case "rate":
+		case "missedBlocks":
 
-			out.Values[i] = ec._UptimeTask_rate(ctx, field, obj)
+			out.Values[i] = ec._UptimeTask_missedBlocks(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "ratio":
+
+			out.Values[i] = ec._UptimeTask_ratio(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
 				invalids++
@@ -7516,13 +8173,13 @@ func (ec *executionContext) marshalNCursor2string(ctx context.Context, sel ast.S
 	return res
 }
 
-func (ec *executionContext) unmarshalNDateTime2string(ctx context.Context, v interface{}) (string, error) {
-	res, err := graphql.UnmarshalString(v)
+func (ec *executionContext) unmarshalNID2string(ctx context.Context, v interface{}) (string, error) {
+	res, err := graphql.UnmarshalID(v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNDateTime2string(ctx context.Context, sel ast.SelectionSet, v string) graphql.Marshaler {
-	res := graphql.MarshalString(v)
+func (ec *executionContext) marshalNID2string(ctx context.Context, sel ast.SelectionSet, v string) graphql.Marshaler {
+	res := graphql.MarshalID(v)
 	if res == graphql.Null {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -7538,6 +8195,21 @@ func (ec *executionContext) unmarshalNInt2int(ctx context.Context, v interface{}
 
 func (ec *executionContext) marshalNInt2int(ctx context.Context, sel ast.SelectionSet, v int) graphql.Marshaler {
 	res := graphql.MarshalInt(v)
+	if res == graphql.Null {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+	}
+	return res
+}
+
+func (ec *executionContext) unmarshalNPGPKeyID2string(ctx context.Context, v interface{}) (string, error) {
+	res, err := graphql.UnmarshalString(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNPGPKeyID2string(ctx context.Context, sel ast.SelectionSet, v string) graphql.Marshaler {
+	res := graphql.MarshalString(v)
 	if res == graphql.Null {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -7799,6 +8471,36 @@ func (ec *executionContext) marshalNTaskState2ᚕokp4ᚋnemetonᚑleaderboardᚋ
 	}
 
 	return ret
+}
+
+func (ec *executionContext) unmarshalNTime2timeᚐTime(ctx context.Context, v interface{}) (time.Time, error) {
+	res, err := graphql.UnmarshalTime(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNTime2timeᚐTime(ctx context.Context, sel ast.SelectionSet, v time.Time) graphql.Marshaler {
+	res := graphql.MarshalTime(v)
+	if res == graphql.Null {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+	}
+	return res
+}
+
+func (ec *executionContext) unmarshalNURI2string(ctx context.Context, v interface{}) (string, error) {
+	res, err := graphql.UnmarshalString(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNURI2string(ctx context.Context, sel ast.SelectionSet, v string) graphql.Marshaler {
+	res := graphql.MarshalString(v)
+	if res == graphql.Null {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+	}
+	return res
 }
 
 func (ec *executionContext) marshalNValidator2ᚖokp4ᚋnemetonᚑleaderboardᚋgraphqlᚋmodelᚐValidator(ctx context.Context, sel ast.SelectionSet, v *model.Validator) graphql.Marshaler {
@@ -8201,20 +8903,11 @@ func (ec *executionContext) marshalOCursor2ᚖstring(ctx context.Context, sel as
 	return res
 }
 
-func (ec *executionContext) unmarshalOIdentity2ᚖstring(ctx context.Context, v interface{}) (*string, error) {
-	if v == nil {
-		return nil, nil
-	}
-	res, err := graphql.UnmarshalString(v)
-	return &res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) marshalOIdentity2ᚖstring(ctx context.Context, sel ast.SelectionSet, v *string) graphql.Marshaler {
+func (ec *executionContext) marshalOIdentity2ᚖokp4ᚋnemetonᚑleaderboardᚋgraphqlᚋmodelᚐIdentity(ctx context.Context, sel ast.SelectionSet, v *model.Identity) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
-	res := graphql.MarshalString(*v)
-	return res
+	return ec._Identity(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalOInt2ᚖint(ctx context.Context, v interface{}) (*int, error) {
@@ -8231,6 +8924,13 @@ func (ec *executionContext) marshalOInt2ᚖint(ctx context.Context, sel ast.Sele
 	}
 	res := graphql.MarshalInt(*v)
 	return res
+}
+
+func (ec *executionContext) marshalOLink2ᚖokp4ᚋnemetonᚑleaderboardᚋgraphqlᚋmodelᚐLink(ctx context.Context, sel ast.SelectionSet, v *model.Link) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._Link(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalOPhase2ᚖokp4ᚋnemetonᚑleaderboardᚋgraphqlᚋmodelᚐPhase(ctx context.Context, sel ast.SelectionSet, v *model.Phase) graphql.Marshaler {

@@ -3,6 +3,9 @@ run:
   skip-dirs:
     - graphql/generated
     - graphql/model
+  skip-files:
+    - graphql/resolver.go
+    - graphql/schema.resolvers.go
 linters:
   disable-all: true
   enable:
@@ -45,7 +48,6 @@ linters:
     - nilerr
     - nilnil
     - noctx
-    - nolintlint
     - prealloc
     - predeclared
     - promlinter

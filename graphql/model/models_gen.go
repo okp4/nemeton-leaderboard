@@ -6,123 +6,236 @@ import (
 	"fmt"
 	"io"
 	"strconv"
+	"time"
 )
 
+// Represents the progress/result of a task assigned to a validator.
 type TaskState interface {
 	IsTaskState()
+	// The task we're talking about.
 	GetTask() *Task
+	// `true` if the validator  completed this task.
 	GetCompleted() bool
+	// The number of points earned by the validator on this task.
 	GetEarnedPoints() int
 }
 
+// Represents a blockchain block range.
 type BlockRange struct {
-	From  int `json:"from"`
-	To    int `json:"to"`
+	// The block height the range begin, inclusive.
+	From int `json:"from"`
+	// The block height the range end, inclusive.
+	To int `json:"to"`
+	// The size of the range (i.e. `size` =  `to` - `from`).
 	Count int `json:"count"`
 }
 
+// Represents a page of the Leaderboard.
 type BoardConnection struct {
-	Edges    []*ValidatorEdge `json:"edges"`
-	PageInfo *PageInfo        `json:"pageInfo"`
+	// The page's validators, ordered by their rank.
+	Edges []*ValidatorEdge `json:"edges"`
+	// The information on the current connection page.
+	PageInfo *PageInfo `json:"pageInfo"`
 }
 
+// Represents an identity on https://keybase.io/
+type Identity struct {
+	// The identity PGP key id.
+	PGP string `json:"pgp"`
+	// The resolved identity picture, if any.
+	Picture *Link `json:"picture"`
+}
+
+// A Link represents a relationship from the containing resource to a URI.
+type Link struct {
+	// The URI to the resource.
+	//
+	// Its value is either a URI compliant with [RFC3986](https://www.ietf.org/rfc/rfc3986.txt) or a URI Template compliant with
+	// [RFC6570](https://tools.ietf.org/html/rfc6570).
+	//
+	// If the value is a URI Template then the Link Object shall have a `templated` attribute whose value is true.
+	Href string `json:"href"`
+}
+
+// Contains information on a connection page.
 type PageInfo struct {
+	// The cursor of the first element of the page.
 	StartCursor string `json:"startCursor"`
-	EndCursor   string `json:"endCursor"`
-	HasNextPage bool   `json:"hasNextPage"`
-	Count       int    `json:"count"`
+	// The cursor of the last element of the page.
+	EndCursor string `json:"endCursor"`
+	// `true` if there is other elements after the endCursor.
+	HasNextPage bool `json:"hasNextPage"`
+	// The number of elements in the page.
+	Count int `json:"count"`
 }
 
+// Contains tasks state in the context of a phase and a validator.
 type PerPhaseTasks struct {
-	CompletedCount int         `json:"completedCount"`
-	FinishedCount  int         `json:"finishedCount"`
-	Phase          *Phase      `json:"phase"`
-	Tasks          []TaskState `json:"tasks"`
+	// The total number of tasks the validator completed in this phase.
+	CompletedCount int `json:"completedCount"`
+	// The total number of finished tasks in this phase.
+	FinishedCount int `json:"finishedCount"`
+	// The phase we're talking about.
+	Phase *Phase `json:"phase"`
+	// The current status of the phase's tasks for a validator.
+	Tasks []TaskState `json:"tasks"`
 }
 
+// Represents a Phase of the Nemeton Program
 type Phase struct {
-	Number      int         `json:"number"`
-	Name        string      `json:"name"`
-	Description string      `json:"description"`
-	StartDate   string      `json:"startDate"`
-	EndDate     string      `json:"endDate"`
-	Started     bool        `json:"started"`
-	Finished    bool        `json:"finished"`
-	Tasks       []*Task     `json:"tasks"`
-	Blocks      *BlockRange `json:"blocks"`
+	// Identify the phase, the phases are ordered through their number.
+	Number int `json:"number"`
+	// The name of the phase.
+	Name string `json:"name"`
+	// The description of the phase.
+	Description string `json:"description"`
+	// The date the phase begin.
+	StartDate time.Time `json:"startDate"`
+	// The date the phase end.
+	EndDate time.Time `json:"endDate"`
+	// `true` if the phase is in progress.
+	Started bool `json:"started"`
+	// `true` if the phase is finished.
+	Finished bool `json:"finished"`
+	// The tasks composing the phase the druids will have to perform.
+	Tasks []*Task `json:"tasks"`
+	// The current block range of the phase. In the case the phase hasn't started its size is 0, for a phase in progress the range will evolve.
+	Blocks *BlockRange `json:"blocks"`
 }
 
+// Represents a Phases payload
 type Phases struct {
-	All      []*Phase `json:"all"`
-	Ongoing  []*Phase `json:"ongoing"`
+	// Retrieve all the phases.
+	All []*Phase `json:"all"`
+	// Retrieve all the ongoing phases, those who hasn't started yet.
+	Ongoing []*Phase `json:"ongoing"`
+	// Retrieve all the finished phases.
 	Finished []*Phase `json:"finished"`
-	Current  *Phase   `json:"current"`
+	// Retrieve the current phase.
+	Current *Phase `json:"current"`
 }
 
+// Represents the state of a specific task requiring a manual submission from the validator.
 type SubmissionTask struct {
-	Task         *Task `json:"task"`
-	Completed    bool  `json:"completed"`
-	EarnedPoints int   `json:"earnedPoints"`
-	Submitted    bool  `json:"submitted"`
+	// The task we're talking about.
+	Task *Task `json:"task"`
+	// `true` if the validator  completed this task.
+	Completed bool `json:"completed"`
+	// The number of points earned by the validator on this task.
+	EarnedPoints int `json:"earnedPoints"`
+	// `true` if the validator has submitted the content expected for the task.
+	Submitted bool `json:"submitted"`
 }
 
-func (SubmissionTask) IsTaskState()              {}
-func (this SubmissionTask) GetTask() *Task       { return this.Task }
-func (this SubmissionTask) GetCompleted() bool   { return this.Completed }
+func (SubmissionTask) IsTaskState() {}
+
+// The task we're talking about.
+func (this SubmissionTask) GetTask() *Task { return this.Task }
+
+// `true` if the validator  completed this task.
+func (this SubmissionTask) GetCompleted() bool { return this.Completed }
+
+// The number of points earned by the validator on this task.
 func (this SubmissionTask) GetEarnedPoints() int { return this.EarnedPoints }
 
+// Represents a phase's task, containing only descriptive elements. It does not expressed any potential progress or result as it is not linked to a druid.
 type Task struct {
-	Number         int    `json:"number"`
-	Name           string `json:"name"`
-	Description    string `json:"description"`
-	StartDate      string `json:"startDate"`
-	EndDate        string `json:"endDate"`
-	Started        bool   `json:"started"`
-	Finished       bool   `json:"finished"`
-	WithSubmission bool   `json:"withSubmission"`
-	Rewards        *int   `json:"rewards"`
+	// The unique identifier of the task.
+	ID string `json:"id"`
+	// The name of the task.
+	Name string `json:"name"`
+	// The description of the task.
+	Description string `json:"description"`
+	// The date the task being.
+	StartDate time.Time `json:"startDate"`
+	// The date the task end.
+	EndDate time.Time `json:"endDate"`
+	// `true` if the task is in progress.
+	Started bool `json:"started"`
+	// `true` if the task is finished.
+	Finished bool `json:"finished"`
+	// Tells whether a task require a manual submission from the druids to be evaluated.
+	WithSubmission bool `json:"withSubmission"`
+	// The points earned if the task is completed. No value means there is no fixed amount of points as rewards, the amount is calculated regarding the performance.
+	Rewards *int `json:"rewards"`
 }
 
+// Contains information relative to the state of the tasks a validator shall perform.
 type Tasks struct {
-	CompletedCount int              `json:"completedCount"`
-	FinishedCount  int              `json:"finishedCount"`
-	PerPhase       []*PerPhaseTasks `json:"perPhase"`
+	// The total number of tasks the validator completed.
+	CompletedCount int `json:"completedCount"`
+	// The total number of finished tasks the validator was supposed to perform.
+	FinishedCount int `json:"finishedCount"`
+	// Details the tasks state a validator is supposed to perform per phase.
+	PerPhase []*PerPhaseTasks `json:"perPhase"`
 }
 
+// Represents the state of a specific task of uptime.
 type UptimeTask struct {
-	Task             *Task `json:"task"`
-	Completed        bool  `json:"completed"`
-	EarnedPoints     int   `json:"earnedPoints"`
-	BlockCount       int   `json:"blockCount"`
-	MissedBlockCount int   `json:"missedBlockCount"`
-	Rate             int   `json:"rate"`
+	// The task we're talking about.
+	Task *Task `json:"task"`
+	// `true` if the validator  completed this task.
+	Completed bool `json:"completed"`
+	// The number of points earned by the validator on this task.
+	EarnedPoints int `json:"earnedPoints"`
+	// The total number of blocks expected to be signed.
+	BlockCount int `json:"blockCount"`
+	// The number of missed blocks.
+	MissedBlockCount int `json:"missedBlockCount"`
+	// The missed block ranges.
+	MissedBlocks []*BlockRange `json:"missedBlocks"`
+	// The ratio of signed blocks.
+	Ratio int `json:"ratio"`
 }
 
-func (UptimeTask) IsTaskState()              {}
-func (this UptimeTask) GetTask() *Task       { return this.Task }
-func (this UptimeTask) GetCompleted() bool   { return this.Completed }
+func (UptimeTask) IsTaskState() {}
+
+// The task we're talking about.
+func (this UptimeTask) GetTask() *Task { return this.Task }
+
+// `true` if the validator  completed this task.
+func (this UptimeTask) GetCompleted() bool { return this.Completed }
+
+// The number of points earned by the validator on this task.
 func (this UptimeTask) GetEarnedPoints() int { return this.EarnedPoints }
 
+// Represents a validator, a participant or a druid in the Nemeton program.
 type Validator struct {
-	Rank         int             `json:"rank"`
-	Moniker      string          `json:"moniker"`
-	Identity     *string         `json:"identity"`
-	Valoper      string          `json:"valoper"`
-	Delegator    string          `json:"delegator"`
-	Twitter      *string         `json:"twitter"`
-	Discord      string          `json:"discord"`
-	Country      string          `json:"country"`
-	Status       ValidatorStatus `json:"status"`
-	Points       int             `json:"points"`
-	Tasks        *Tasks          `json:"tasks"`
-	MissedBlocks []*BlockRange   `json:"missedBlocks"`
+	// The validator position in the board.
+	Rank int `json:"rank"`
+	// The validator moniker.
+	Moniker string `json:"moniker"`
+	// The validator identity on https://keybase.io/, can be used to retrieve its picture.
+	Identity *Identity `json:"identity"`
+	// The validator node valoper address.
+	Valoper string `json:"valoper"`
+	// The address of the validator node delegator.
+	Delegator string `json:"delegator"`
+	// The validator twitter account.
+	Twitter *string `json:"twitter"`
+	// The validator discord account.
+	Discord string `json:"discord"`
+	// The validator country.
+	Country string `json:"country"`
+	// The validator current status.
+	Status ValidatorStatus `json:"status"`
+	// The validator points count.
+	Points int `json:"points"`
+	// The validator affected tasks, does not reference not tasks who has not started yet.
+	Tasks *Tasks `json:"tasks"`
+	// The blocks the validator has not signed.
+	MissedBlocks []*BlockRange `json:"missedBlocks"`
 }
 
+// Represents an edge to a validator.
 type ValidatorEdge struct {
-	Cursor string     `json:"cursor"`
-	Node   *Validator `json:"node"`
+	// The validator's cursor.
+	Cursor string `json:"cursor"`
+	// The validator.
+	Node *Validator `json:"node"`
 }
 
+// Represents the status of a validator node on the blockchain.
 type ValidatorStatus string
 
 const (
