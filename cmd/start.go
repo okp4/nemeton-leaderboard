@@ -27,9 +27,9 @@ var (
 			signal.Notify(kill, syscall.SIGINT, syscall.SIGTERM)
 			<-kill
 
-			log.Info().Msg("Stopping app")
+			log.Info().Msg("\U0001F9EF Stopping app")
 			if err := app.Stop(); err != nil {
-				log.Fatal().Err(err).Msg("Unexpected error when stopping app")
+				log.Fatal().Err(err).Msg("❌ Unexpected error when stopping app")
 			}
 		},
 	}

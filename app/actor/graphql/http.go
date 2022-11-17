@@ -32,7 +32,7 @@ func (s *server) start() {
 		defer s.wg.Done()
 
 		if err := s.srv.ListenAndServe(); err != http.ErrServerClosed {
-			log.Fatal().Err(err).Msg("HTTP server stopped unexpectedly")
+			log.Fatal().Err(err).Msg("❌ HTTP server stopped unexpectedly")
 		}
 	}()
 }

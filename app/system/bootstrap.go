@@ -2,7 +2,6 @@ package system
 
 import (
 	"okp4/nemeton-leaderboard/app/actor/graphql"
-	"okp4/nemeton-leaderboard/app/message"
 
 	"github.com/asynkron/protoactor-go/actor"
 	"github.com/rs/zerolog/log"
@@ -23,7 +22,7 @@ func Bootstrap(listenAddr string) *App {
 	ctx := actor.NewActorSystem().Root
 	initPID, err := ctx.SpawnNamed(initProps, "init")
 	if err != nil {
-		log.Panic().Err(err).Msg("Could not create init actor")
+		log.Panic().Err(err).Msg("❌ Could not create init actor")
 	}
 
 	return &App{
@@ -38,15 +37,10 @@ func (app *App) Stop() error {
 
 func boot(ctx actor.Context, listenAddr string) {
 	graphqlProps := actor.PropsFromProducer(func() actor.Actor {
-		return graphql.NewActor()
+		return graphql.NewActor(listenAddr)
 	})
 
-	graphqlPID, err := ctx.SpawnNamed(graphqlProps, "graphql")
-	if err != nil {
-		log.Panic().Err(err).Msg("Could not create graphql actor")
+	if _, err := ctx.SpawnNamed(graphqlProps, "graphql"); err != nil {
+		log.Panic().Err(err).Msg("❌Could not create graphql actor")
 	}
-
-	ctx.Send(graphqlPID, &message.Start{
-		ListenAddr: listenAddr,
-	})
 }

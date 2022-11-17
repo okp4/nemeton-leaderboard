@@ -4,48 +4,45 @@ import (
 	"context"
 	"time"
 
-	"okp4/nemeton-leaderboard/app/message"
-
 	"github.com/asynkron/protoactor-go/actor"
 	"github.com/rs/zerolog/log"
 )
 
 type Actor struct {
-	srv *server
+	addr string
+	srv  *server
 }
 
-func NewActor() *Actor {
-	return &Actor{}
+func NewActor(addr string) *Actor {
+	return &Actor{
+		addr: addr,
+		srv: makeHTTPServer(
+			addr,
+			makeRouter(),
+		),
+	}
 }
 
 func (a *Actor) Receive(ctx actor.Context) {
-	switch msg := ctx.Message().(type) {
-	case *message.Start:
-		a.handleStart(msg)
+	switch ctx.Message().(type) {
+	case *actor.Started:
+		a.handleStart()
 	case *actor.Stopping:
 		a.handleStop()
 	}
 }
 
-func (a *Actor) handleStart(msg *message.Start) {
-	if a.srv != nil {
-		log.Warn().Msg("GraphQL server already started.")
-		return
-	}
-	a.srv = makeHTTPServer(
-		msg.ListenAddr,
-		makeRouter(),
-	)
+func (a *Actor) handleStart() {
 	a.srv.start()
-	log.Info().Str("addr", msg.ListenAddr).Msg("GraphQL server started")
+	log.Info().Str("addr", a.addr).Msg("🔥 GraphQL server started")
 }
 
 func (a *Actor) handleStop() {
 	ctx, cancelFn := context.WithTimeout(context.Background(), 1*time.Second)
 	defer cancelFn()
 
-	log.Info().Msg("Stopping GraphQL server...")
+	log.Info().Msg("\U0001F9EF Stopping GraphQL server...")
 	if err := a.srv.stop(ctx); err != nil {
-		log.Err(err).Msg("Couldn't stop GraphQL server")
+		log.Err(err).Msg("❌ Couldn't stop GraphQL server")
 	}
 }
