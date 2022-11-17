@@ -7,11 +7,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"okp4/nemeton-leaderboard/graphql/model"
 	"strconv"
 	"sync"
 	"sync/atomic"
 	"time"
+
+	"okp4/nemeton-leaderboard/graphql/model"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/99designs/gqlgen/graphql/introspection"
@@ -40,8 +41,7 @@ type ResolverRoot interface {
 	Query() QueryResolver
 }
 
-type DirectiveRoot struct {
-}
+type DirectiveRoot struct{}
 
 type ComplexityRoot struct {
 	BlockRange struct {

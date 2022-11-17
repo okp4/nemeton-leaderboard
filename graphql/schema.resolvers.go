@@ -6,6 +6,7 @@ package graphql
 import (
 	"context"
 	"fmt"
+
 	"okp4/nemeton-leaderboard/graphql/generated"
 	"okp4/nemeton-leaderboard/graphql/model"
 )
