@@ -11,13 +11,13 @@ e.g. `2006-01-02T15:04:05.999999999Z07:00`
 scalar Time
 
 """
-Represents an okp4 address as [Betch32](https://en.bitcoin.it/wiki/Bech32) format prefixed by the blockchain prefix.
+Represents an okp4 address as [Bech32](https://en.bitcoin.it/wiki/Bech32) format prefixed by the blockchain prefix.
 e.g. `okp41jse8senm9hcvydhl8v9x47kfe5z82zmwtw8jvj`
 """
 scalar Address
 
 """
-Represents an okp4 validator address as [Betch32](https://en.bitcoin.it/wiki/Bech32) format prefixed by the blockchain valoper prefix.
+Represents an okp4 validator address as [Bech32](https://en.bitcoin.it/wiki/Bech32) format prefixed by the blockchain valoper prefix.
 e.g. `okp4valoper1jse8senm9hcvydhl8v9x47kfe5z82zmwtw8jvj`
 """
 scalar ValoperAddress
@@ -133,12 +133,12 @@ type Phase {
     description: String!
 
     """
-    The date the phase begin.
+    The date the phase begins.
     """
     startDate: Time!
 
     """
-    The date the phase end.
+    The date the phase ends.
     """
     endDate: Time!
 
@@ -183,12 +183,12 @@ type Task {
     description: String!
 
     """
-    The date the task being.
+    The date the task begins.
     """
     startDate: Time!
 
     """
-    The date the task end.
+    The date the task ends.
     """
     endDate: Time!
 
