@@ -30,14 +30,10 @@ func NewGrpcClient(address string, transportCreds credentials.TransportCredentia
 
 func (client *GrpcClient) Receive(ctx actor.Context) {
 	switch msg := ctx.Message().(type) {
-	case *actor.Started:
-		log.Info().Msg("GRPC connection started.")
-		break
 	case *actor.Stopping:
 		if err := client.grpcConn.Close(); err != nil {
 			log.Warn().Err(err).Msg("😥 Could not close grpc connection.")
 		}
-		break
 	case *messages.GetBlock:
 		goCTX, cancelFunc := context.WithCancel(context.Background())
 		defer cancelFunc()
@@ -49,10 +45,6 @@ func (client *GrpcClient) Receive(ctx actor.Context) {
 		ctx.Respond(&messages.GetBlockResponse{
 			Block: block,
 		})
-
-		log.Info().Fields(block).Msg("Request GetBlock")
-	default:
-		log.Info().Fields(msg).Msg("No message")
 	}
 }
 
