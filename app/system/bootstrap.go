@@ -2,6 +2,7 @@ package system
 
 import (
 	"okp4/nemeton-leaderboard/app/actor/cosmos"
+	"okp4/nemeton-leaderboard/app/actor/event"
 	"okp4/nemeton-leaderboard/app/actor/graphql"
 	"okp4/nemeton-leaderboard/app/actor/synchronization"
 
@@ -46,6 +47,10 @@ func boot(ctx actor.Context, listenAddr, grpcAddr string, tls credentials.Transp
 		}
 
 		return grpcClient
+	})
+
+	_ = actor.PropsFromProducer(func() actor.Actor {
+		return event.NewEventHandler()
 	})
 
 	blockSync := actor.PropsFromProducer(func() actor.Actor {

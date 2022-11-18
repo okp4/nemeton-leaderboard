@@ -13,3 +13,7 @@ type GetLatestBlock struct{}
 type GetBlockResponse struct {
 	Block *tmservice.Block
 }
+
+type NewEvent[E any] struct {
+	Event *E
+}
