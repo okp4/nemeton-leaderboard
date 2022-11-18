@@ -1,7 +1,7 @@
 package system
 
 import (
-	"okp4/nemeton-leaderboard/app/actor/event/store"
+	"okp4/nemeton-leaderboard/app/actor/event"
 	"okp4/nemeton-leaderboard/app/actor/graphql"
 
 	"github.com/asynkron/protoactor-go/actor"
@@ -44,10 +44,10 @@ func boot(ctx actor.Context, listenAddr, mongoURI, dbName string) {
 		log.Panic().Err(err).Str("actor", "graphql").Msg("❌Could not create actor")
 	}
 
-	eventStoreProps := actor.PropsFromProducer(func() actor.Actor {
-		return store.NewActor(mongoURI, dbName)
+	eventPublisherProps := actor.PropsFromProducer(func() actor.Actor {
+		return event.NewPublisherActor(mongoURI, dbName)
 	})
-	if _, err := ctx.SpawnNamed(eventStoreProps, "event-store"); err != nil {
-		log.Panic().Err(err).Str("actor", "event-store").Msg("❌Could not create actor")
+	if _, err := ctx.SpawnNamed(eventPublisherProps, "event-publish"); err != nil {
+		log.Panic().Err(err).Str("actor", "event-publish").Msg("❌Could not create actor")
 	}
 }

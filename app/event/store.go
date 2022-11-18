@@ -25,7 +25,7 @@ func NewStore(ctx context.Context, mongoURI, dbName string) (*Store, error) {
 	}, nil
 }
 
-func (s *Store) Push(ctx context.Context, evt Event) error {
+func (s *Store) Publish(ctx context.Context, evt Event) error {
 	_, err := s.db.Collection(collectionName).InsertOne(ctx, evt)
 	return err
 }

@@ -16,3 +16,7 @@ func NewEvent(evtType string, data interface{}) Event {
 		data:    data,
 	}
 }
+
+func (e Event) Type() string {
+	return e.evtType
+}
