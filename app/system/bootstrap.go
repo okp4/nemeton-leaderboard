@@ -49,7 +49,7 @@ func boot(ctx actor.Context, listenAddr, grpcAddr string, tls credentials.Transp
 	})
 
 	blockSync := actor.PropsFromProducer(func() actor.Actor {
-		return block.NewActor(grpcClientProps, 10112)
+		return block.NewActor(grpcClientProps, 16757)
 	})
 
 	graphqlProps := actor.PropsFromProducer(func() actor.Actor {
