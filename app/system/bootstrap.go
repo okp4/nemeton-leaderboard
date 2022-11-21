@@ -47,7 +47,7 @@ func boot(ctx actor.Context, listenAddr, mongoURI, dbName string) {
 	eventPublisherProps := actor.PropsFromProducer(func() actor.Actor {
 		return event.NewPublisherActor(mongoURI, dbName)
 	})
-	if _, err := ctx.SpawnNamed(eventPublisherProps, "event-publish"); err != nil {
+	if _, err := ctx.SpawnNamed(eventPublisherProps, "event-store"); err != nil {
 		log.Panic().Err(err).Str("actor", "event-publish").Msg("❌Could not create actor")
 	}
 }

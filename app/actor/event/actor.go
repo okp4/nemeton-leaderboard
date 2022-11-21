@@ -12,20 +12,20 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-type PublisherActor struct {
+type Actor struct {
 	mongoURI string
 	dbName   string
 	store    *event.Store
 }
 
-func NewPublisherActor(mongoURI, dbName string) *PublisherActor {
-	return &PublisherActor{
+func NewPublisherActor(mongoURI, dbName string) *Actor {
+	return &Actor{
 		mongoURI: mongoURI,
 		dbName:   dbName,
 	}
 }
 
-func (a *PublisherActor) Receive(ctx actor.Context) {
+func (a *Actor) Receive(ctx actor.Context) {
 	switch msg := ctx.Message().(type) {
 	case *actor.Started:
 		a.handleStart()
@@ -34,7 +34,7 @@ func (a *PublisherActor) Receive(ctx actor.Context) {
 	}
 }
 
-func (a *PublisherActor) handleStart() {
+func (a *Actor) handleStart() {
 	ctx, cancelFn := context.WithTimeout(context.Background(), time.Second)
 	defer cancelFn()
 
@@ -45,8 +45,8 @@ func (a *PublisherActor) handleStart() {
 	a.store = store
 }
 
-func (a *PublisherActor) handlePublishEvent(msg *message.PublishEventMessage) {
-	if err := a.store.Publish(context.Background(), msg.Event); err != nil {
+func (a *Actor) handlePublishEvent(msg *message.PublishEventMessage) {
+	if err := a.store.Store(context.Background(), msg.Event); err != nil {
 		log.Fatal().Err(err).Str("type", msg.Event.Type()).Msg("❌ Couldn't publish event")
 	}
 	log.Info().Str("type", msg.Event.Type()).Msg("💌 Event published")

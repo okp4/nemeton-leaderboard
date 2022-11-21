@@ -1,15 +1,19 @@
 package event
 
-import "time"
+import (
+	"time"
+
+	"go.mongodb.org/mongo-driver/bson/primitive"
+)
 
 type Event struct {
-	id      string `bson:"_id"`
-	evtType string `bson:"@type"`
+	id      primitive.ObjectID `bson:"_id"`
+	evtType string             `bson:"@type"`
 	date    time.Time
-	data    interface{}
+	data    map[string]interface{}
 }
 
-func NewEvent(evtType string, data interface{}) Event {
+func NewEvent(evtType string, data map[string]interface{}) Event {
 	return Event{
 		evtType: evtType,
 		date:    time.Now(),
