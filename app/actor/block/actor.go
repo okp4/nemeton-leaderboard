@@ -28,8 +28,11 @@ func NewActor(grpcClientProps *actor.Props, blockHeight int64) *Actor {
 func (a *Actor) Receive(ctx actor.Context) {
 	switch ctx.Message().(type) {
 	case *actor.Started:
+		log.Info().Msg("🔁 Start block syncing")
 		a.grpcClient = ctx.Spawn(a.grpcClientProps)
 		a.startSynchronization(ctx)
+	case *actor.Stopping:
+		log.Info().Msg("🛑 Stop block syncing")
 	}
 }
 
@@ -50,7 +53,7 @@ func (a *Actor) startSynchronization(ctx actor.Context) {
 
 			// TODO: Send to event handler the new block received
 			log.Info().Int64("blockHeight", block.Header.Height).Msg("Successful request block")
-			a.currentBlock += 1
+			a.currentBlock++
 		}
 	}()
 }

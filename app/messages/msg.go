@@ -7,7 +7,7 @@ type GetBlock struct {
 	Height int64
 }
 
-// GetLatestBlock Request the latest block of the chain
+// GetLatestBlock Request the latest block of the chain.
 type GetLatestBlock struct{}
 
 type GetBlockResponse struct {
