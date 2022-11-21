@@ -1,6 +1,7 @@
 package system
 
 import (
+	"okp4/nemeton-leaderboard/app/actor/block"
 	"okp4/nemeton-leaderboard/app/actor/cosmos"
 	"okp4/nemeton-leaderboard/app/actor/graphql"
 
@@ -38,7 +39,7 @@ func (app *App) Stop() error {
 }
 
 func boot(ctx actor.Context, listenAddr, grpcAddr string, tls credentials.TransportCredentials) {
-	_ = actor.PropsFromProducer(func() actor.Actor {
+	grpcClientProps := actor.PropsFromProducer(func() actor.Actor {
 		grpcClient, err := cosmos.NewGrpcClient(grpcAddr, tls)
 		if err != nil {
 			log.Panic().Err(err).Msg("❌ Could not create grpc client")
@@ -47,11 +48,19 @@ func boot(ctx actor.Context, listenAddr, grpcAddr string, tls credentials.Transp
 		return grpcClient
 	})
 
+	blockSync := actor.PropsFromProducer(func() actor.Actor {
+		return block.NewActor(grpcClientProps, 10112)
+	})
+
 	graphqlProps := actor.PropsFromProducer(func() actor.Actor {
 		return graphql.NewActor(listenAddr)
 	})
 
 	if _, err := ctx.SpawnNamed(graphqlProps, "graphql"); err != nil {
 		log.Panic().Err(err).Msg("❌Could not create graphql actor")
+	}
+
+	if _, err := ctx.SpawnNamed(blockSync, "blockSync"); err != nil {
+		log.Panic().Err(err).Msg("❌Could not create block sync actor")
 	}
 }
