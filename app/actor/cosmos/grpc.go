@@ -45,6 +45,18 @@ func (client *GrpcClient) Receive(ctx actor.Context) {
 		ctx.Respond(&messages.GetBlockResponse{
 			Block: block,
 		})
+
+	case *messages.GetLatestBlock:
+		goCTX, cancelFunc := context.WithCancel(context.Background())
+		defer cancelFunc()
+
+		block, err := client.GetLatestBlock(goCTX)
+		if err != nil {
+			panic(err)
+		}
+		ctx.Respond(&messages.GetBlockResponse{
+			Block: block,
+		})
 	}
 }
 
@@ -52,6 +64,17 @@ func (client *GrpcClient) GetBlock(context context.Context, height int64) (*tmse
 	serviceClient := tmservice.NewServiceClient(client.grpcConn)
 
 	query, err := serviceClient.GetBlockByHeight(context, &tmservice.GetBlockByHeightRequest{Height: height})
+	if err != nil {
+		return nil, err
+	}
+
+	return query.GetSdkBlock(), nil
+}
+
+func (client *GrpcClient) GetLatestBlock(context context.Context) (*tmservice.Block, error) {
+	serviceClient := tmservice.NewServiceClient(client.grpcConn)
+
+	query, err := serviceClient.GetLatestBlock(context, &tmservice.GetLatestBlockRequest{})
 	if err != nil {
 		return nil, err
 	}
