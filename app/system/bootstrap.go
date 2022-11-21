@@ -50,7 +50,7 @@ func boot(ctx actor.Context, listenAddr, mongoURI, dbName, grpcAddr string, tls 
 	})
 
 	blockSync := actor.PropsFromProducer(func() actor.Actor {
-		return block.NewActor(grpcClientProps, 10112)
+		return block.NewActor(grpcClientProps, 16757)
 	})
 	if _, err := ctx.SpawnNamed(blockSync, "blockSync"); err != nil {
 		log.Panic().Err(err).Msg("❌Could not create block sync actor")
