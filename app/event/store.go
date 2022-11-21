@@ -5,6 +5,7 @@ import (
 
 	"okp4/nemeton-leaderboard/app/util"
 
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
@@ -28,4 +29,8 @@ func NewStore(ctx context.Context, mongoURI, dbName string) (*Store, error) {
 func (s *Store) Store(ctx context.Context, evt Event) error {
 	_, err := s.db.Collection(collectionName).InsertOne(ctx, evt)
 	return err
+}
+
+func (s *Store) StreamFrom(ctx context.Context, from *primitive.ObjectID) (*Stream, error) {
+	return openStream(ctx, s.db.Collection(collectionName), from)
 }
