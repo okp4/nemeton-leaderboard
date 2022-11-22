@@ -1,6 +1,8 @@
 package system
 
 import (
+	"time"
+
 	"okp4/nemeton-leaderboard/app/actor/event"
 	"okp4/nemeton-leaderboard/app/actor/graphql"
 
@@ -18,9 +20,18 @@ func Bootstrap(listenAddr, mongoURI, dbName string) *App {
 		if _, ok := ctx.Message().(*actor.Started); ok {
 			boot(ctx, listenAddr, mongoURI, dbName)
 		}
-	})
+	}).Configure(actor.WithSupervisor(actor.NewAllForOneStrategy(
+		3, time.Second, func(reason interface{}) actor.Directive {
+			return actor.EscalateDirective
+		},
+	)))
 
-	ctx := actor.NewActorSystem().Root
+	ctx := actor.NewActorSystem().Root.
+		WithGuardian(actor.NewOneForOneStrategy(
+			1, time.Second, func(reason interface{}) actor.Directive {
+				return actor.EscalateDirective
+			},
+		))
 	initPID, err := ctx.SpawnNamed(initProps, "init")
 	if err != nil {
 		log.Panic().Err(err).Msg("❌ Could not create init actor")
@@ -44,10 +55,10 @@ func boot(ctx actor.Context, listenAddr, mongoURI, dbName string) {
 		log.Panic().Err(err).Str("actor", "graphql").Msg("❌Could not create actor")
 	}
 
-	eventPublisherProps := actor.PropsFromProducer(func() actor.Actor {
-		return event.NewPublisherActor(mongoURI, dbName)
+	eventStoreProps := actor.PropsFromProducer(func() actor.Actor {
+		return event.NewEventStoreActor(mongoURI, dbName)
 	})
-	if _, err := ctx.SpawnNamed(eventPublisherProps, "event-store"); err != nil {
-		log.Panic().Err(err).Str("actor", "event-publish").Msg("❌Could not create actor")
+	if _, err := ctx.SpawnNamed(eventStoreProps, "event-store"); err != nil {
+		log.Panic().Err(err).Str("actor", "event-store").Msg("❌Could not create actor")
 	}
 }
