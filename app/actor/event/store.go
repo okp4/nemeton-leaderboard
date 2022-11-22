@@ -12,29 +12,31 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-type Actor struct {
+type EventStoreActor struct {
 	mongoURI string
 	dbName   string
 	store    *event.Store
 }
 
-func NewPublisherActor(mongoURI, dbName string) *Actor {
-	return &Actor{
+func NewEventStoreActor(mongoURI, dbName string) *EventStoreActor {
+	return &EventStoreActor{
 		mongoURI: mongoURI,
 		dbName:   dbName,
 	}
 }
 
-func (a *Actor) Receive(ctx actor.Context) {
+func (a *EventStoreActor) Receive(ctx actor.Context) {
 	switch msg := ctx.Message().(type) {
 	case *actor.Started:
 		a.handleStart()
 	case *message.PublishEventMessage:
 		a.handlePublishEvent(msg)
+	case *message.SubscribeEventMessage:
+		a.handleSubscribeEvent(ctx, msg)
 	}
 }
 
-func (a *Actor) handleStart() {
+func (a *EventStoreActor) handleStart() {
 	ctx, cancelFn := context.WithTimeout(context.Background(), time.Second)
 	defer cancelFn()
 
@@ -45,9 +47,23 @@ func (a *Actor) handleStart() {
 	a.store = store
 }
 
-func (a *Actor) handlePublishEvent(msg *message.PublishEventMessage) {
+func (a *EventStoreActor) handlePublishEvent(msg *message.PublishEventMessage) {
 	if err := a.store.Store(context.Background(), msg.Event); err != nil {
 		log.Fatal().Err(err).Str("type", msg.Event.Type()).Msg("❌ Couldn't publish event")
 	}
 	log.Info().Str("type", msg.Event.Type()).Msg("💌 Event published")
+}
+
+func (a *EventStoreActor) handleSubscribeEvent(ctx actor.Context, msg *message.SubscribeEventMessage) {
+	stream, err := a.store.StreamFrom(context.Background(), msg.From)
+	if err != nil {
+		log.Fatal().Err(err).Msg("❌ Couldn't create stream")
+	}
+
+	streamProps := actor.PropsFromProducer(func() actor.Actor {
+		return NewStreamHandlerActor(stream, ctx.Sender())
+	})
+
+	ctx.Spawn(streamProps)
+	log.Info().Msg("Create stream handler for subscriber")
 }
