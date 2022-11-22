@@ -39,9 +39,11 @@ func (a *StreamHandlerActor) handleStart(ctx actor.Context) {
 	a.wg.Add(1)
 
 	go a.processStream(ctx)
+	log.Info().Msg("🚿 Event stream for subscriber started")
 }
 
 func (a *StreamHandlerActor) handleStop() {
+	log.Info().Msg("\U0001F9EF Stopping Event stream...")
 	a.stream.Close()
 	a.wg.Wait()
 }
@@ -50,11 +52,15 @@ func (a *StreamHandlerActor) processStream(ctx actor.Context) {
 	defer a.wg.Done()
 
 	for a.stream.Next() {
-		ctx.Send(a.dst, &message.NewEventMessage{Event: *a.stream.Event()})
+		evt := *a.stream.Event()
+		ctx.Send(a.dst, &message.NewEventMessage{Event: evt})
+		log.Info().Str("to", a.dst.Address).Str("id", evt.ID()).Str("type", evt.Type()).Msg(" New event sent")
 	}
 
 	if err := a.stream.Err(); err != nil {
-		log.Err(a.stream.Err()).Msg("❌ stream stopped unexpectedly")
+		log.Err(a.stream.Err()).Msg("❌ Stream stopped unexpectedly")
+	} else {
+		log.Info().Str("to", a.dst.Address).Msg(" Stream stopped")
 	}
 	ctx.Send(a.dst, &message.BrokenStreamMessage{})
 	ctx.Stop(ctx.Self())

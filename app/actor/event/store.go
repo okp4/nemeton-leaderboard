@@ -29,6 +29,8 @@ func (a *EventStoreActor) Receive(ctx actor.Context) {
 	switch msg := ctx.Message().(type) {
 	case *actor.Started:
 		a.handleStart()
+	case *actor.Stopping:
+		log.Info().Msg("\U0001F9EF Stopping Event store...")
 	case *message.PublishEventMessage:
 		a.handlePublishEvent(msg)
 	case *message.SubscribeEventMessage:
@@ -45,13 +47,14 @@ func (a *EventStoreActor) handleStart() {
 		log.Fatal().Err(err).Str("uri", a.mongoURI).Str("db", a.dbName).Msg("❌ Couldn't create event store")
 	}
 	a.store = store
+	log.Info().Msg("🚌 Event store started")
 }
 
 func (a *EventStoreActor) handlePublishEvent(msg *message.PublishEventMessage) {
 	if err := a.store.Store(context.Background(), msg.Event); err != nil {
 		log.Fatal().Err(err).Str("type", msg.Event.Type()).Msg("❌ Couldn't publish event")
 	}
-	log.Info().Str("type", msg.Event.Type()).Msg("💌 Event published")
+	log.Info().Str("id", msg.Event.ID()).Str("type", msg.Event.Type()).Msg("💌 Event published")
 }
 
 func (a *EventStoreActor) handleSubscribeEvent(ctx actor.Context, msg *message.SubscribeEventMessage) {
@@ -65,5 +68,5 @@ func (a *EventStoreActor) handleSubscribeEvent(ctx actor.Context, msg *message.S
 	})
 
 	ctx.Spawn(streamProps)
-	log.Info().Msg("Create stream handler for subscriber")
+	log.Info().Str("to", ctx.Sender().Address).Msg("®️ Event subscriber registered")
 }

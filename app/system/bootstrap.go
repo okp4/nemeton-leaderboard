@@ -52,13 +52,13 @@ func boot(ctx actor.Context, listenAddr, mongoURI, dbName string) {
 		return graphql.NewActor(listenAddr)
 	})
 	if _, err := ctx.SpawnNamed(graphqlProps, "graphql"); err != nil {
-		log.Panic().Err(err).Str("actor", "graphql").Msg("❌Could not create actor")
+		log.Panic().Err(err).Str("actor", "graphql").Msg("❌ Could not create actor")
 	}
 
 	eventStoreProps := actor.PropsFromProducer(func() actor.Actor {
 		return event.NewEventStoreActor(mongoURI, dbName)
 	})
 	if _, err := ctx.SpawnNamed(eventStoreProps, "event-store"); err != nil {
-		log.Panic().Err(err).Str("actor", "event-store").Msg("❌Could not create actor")
+		log.Panic().Err(err).Str("actor", "event-store").Msg("❌ Could not create actor")
 	}
 }

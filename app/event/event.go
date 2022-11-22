@@ -21,6 +21,10 @@ func NewEvent(evtType string, data map[string]interface{}) Event {
 	}
 }
 
+func (e Event) ID() string {
+	return e.id.String()
+}
+
 func (e Event) Type() string {
 	return e.evtType
 }
