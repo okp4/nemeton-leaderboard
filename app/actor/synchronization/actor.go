@@ -14,13 +14,15 @@ import (
 type Actor struct {
 	grpcClientProps *actor.Props
 	grpcClient      *actor.PID
+	eventHandler    *actor.PID
 	currentBlock    int64
 }
 
-func NewActor(grpcClientProps *actor.Props, blockHeight int64) *Actor {
+func NewActor(grpcClientProps *actor.Props, eventHandler *actor.PID, blockHeight int64) *Actor {
 	return &Actor{
 		grpcClientProps: grpcClientProps,
 		grpcClient:      nil,
+		eventHandler:    eventHandler,
 		currentBlock:    blockHeight,
 	}
 }
@@ -51,8 +53,10 @@ func (a *Actor) startSynchronization(ctx actor.Context) {
 				continue
 			}
 
-			// TODO: Send to event handler the new block received
 			log.Info().Int64("blockHeight", block.Header.Height).Msg("Successful request block")
+			ctx.Send(a.eventHandler, &messages.NewEvent[messages.ReceiveNewBlock]{
+				Event: &messages.ReceiveNewBlock{Block: block},
+			})
 			a.currentBlock++
 		}
 	}()
@@ -88,8 +92,10 @@ func (a *Actor) catchUpSyncBlocks(ctx actor.Context) error {
 			log.Panic().Err(err).Msg("❌ Could not get block for sync.")
 			continue
 		}
-		// TODO: Send to event handler the new latestBlock received
 		log.Info().Int64("blockHeight", block.Header.Height).Msg("Successful request block on sync")
+		ctx.Send(a.eventHandler, &messages.NewEvent[messages.ReceiveNewBlock]{
+			Event: &messages.ReceiveNewBlock{Block: block},
+		})
 	}
 
 	a.currentBlock = latestBlock.Header.Height + 1

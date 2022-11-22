@@ -49,12 +49,17 @@ func boot(ctx actor.Context, listenAddr, grpcAddr string, tls credentials.Transp
 		return grpcClient
 	})
 
-	_ = actor.PropsFromProducer(func() actor.Actor {
+	eventProps := actor.PropsFromProducer(func() actor.Actor {
 		return event.NewEventHandler()
 	})
 
+	eventPID, err := ctx.SpawnNamed(eventProps, "event")
+	if err != nil {
+		log.Panic().Err(err).Msg("❌Could not create event actor")
+	}
+
 	blockSync := actor.PropsFromProducer(func() actor.Actor {
-		return synchronization.NewActor(grpcClientProps, 16757)
+		return synchronization.NewActor(grpcClientProps, eventPID, 16757)
 	})
 
 	graphqlProps := actor.PropsFromProducer(func() actor.Actor {
