@@ -17,15 +17,30 @@ type Stream struct {
 	evtCh  chan Event
 	errCh  chan error
 	wg     *sync.WaitGroup
+
+	crtErr   error
+	crtEvent *Event
 }
 
-func (s *Stream) Next() (*Event, error) {
+func (s *Stream) Next() bool {
 	select {
 	case evt := <-s.evtCh:
-		return &evt, nil
+		s.crtEvent = &evt
+		return true
 	case err := <-s.errCh:
-		return nil, err
+		s.crtErr = err
+		return false
+	default:
+		return false
 	}
+}
+
+func (s *Stream) Err() error {
+	return s.crtErr
+}
+
+func (s *Stream) Event() *Event {
+	return s.crtEvent
 }
 
 func (s *Stream) Close() {
