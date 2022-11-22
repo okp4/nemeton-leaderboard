@@ -1,9 +1,9 @@
 package system
 
 import (
-	"okp4/nemeton-leaderboard/app/actor/block"
 	"okp4/nemeton-leaderboard/app/actor/cosmos"
 	"okp4/nemeton-leaderboard/app/actor/graphql"
+	"okp4/nemeton-leaderboard/app/actor/synchronization"
 
 	"github.com/asynkron/protoactor-go/actor"
 	"github.com/rs/zerolog/log"
@@ -49,7 +49,7 @@ func boot(ctx actor.Context, listenAddr, grpcAddr string, tls credentials.Transp
 	})
 
 	blockSync := actor.PropsFromProducer(func() actor.Actor {
-		return block.NewActor(grpcClientProps, 16757)
+		return synchronization.NewActor(grpcClientProps, 16757)
 	})
 
 	graphqlProps := actor.PropsFromProducer(func() actor.Actor {
