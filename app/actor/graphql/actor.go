@@ -37,7 +37,7 @@ func (a *Actor) handleStart() {
 	if err != nil {
 		log.Fatal().Err(err).Str("uri", a.mongoURI).Str("db", a.dbName).Msg("❌ Couldn't create graphql server")
 	}
-	makeHTTPServer(
+	a.srv = makeHTTPServer(
 		a.addr,
 		makeRouter(graphqlServer),
 	)

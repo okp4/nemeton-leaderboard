@@ -3,7 +3,7 @@ package nemeton
 import "time"
 
 type Phase struct {
-	Number      int       `bson:"number"`
+	Number      int       `bson:"_id"`
 	Name        string    `bson:"name"`
 	Description string    `bson:"description"`
 	StartDate   time.Time `bson:"startDate"`
