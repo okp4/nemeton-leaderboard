@@ -10,3 +10,11 @@ type Phase struct {
 	EndDate     time.Time `bson:"endDate"`
 	Tasks       []Task    `bson:"tasks"`
 }
+
+func (p Phase) Started() bool {
+	return time.Now().After(p.StartDate)
+}
+
+func (p Phase) Finished() bool {
+	return time.Now().After(p.EndDate)
+}

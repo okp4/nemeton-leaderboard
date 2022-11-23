@@ -6,21 +6,10 @@ package graphql
 import (
 	"context"
 	"fmt"
-
 	"okp4/nemeton-leaderboard/app/nemeton"
 	"okp4/nemeton-leaderboard/graphql/generated"
 	"okp4/nemeton-leaderboard/graphql/model"
 )
-
-// Started is the resolver for the started field.
-func (r *phaseResolver) Started(ctx context.Context, obj *nemeton.Phase) (bool, error) {
-	panic(fmt.Errorf("not implemented: Started - started"))
-}
-
-// Finished is the resolver for the finished field.
-func (r *phaseResolver) Finished(ctx context.Context, obj *nemeton.Phase) (bool, error) {
-	panic(fmt.Errorf("not implemented: Finished - finished"))
-}
 
 // Blocks is the resolver for the blocks field.
 func (r *phaseResolver) Blocks(ctx context.Context, obj *nemeton.Phase) (*model.BlockRange, error) {
@@ -52,16 +41,6 @@ func (r *queryResolver) Validator(ctx context.Context, cursor *string, rank *int
 	panic(fmt.Errorf("not implemented: Validator - validator"))
 }
 
-// Started is the resolver for the started field.
-func (r *taskResolver) Started(ctx context.Context, obj *nemeton.Task) (bool, error) {
-	panic(fmt.Errorf("not implemented: Started - started"))
-}
-
-// Finished is the resolver for the finished field.
-func (r *taskResolver) Finished(ctx context.Context, obj *nemeton.Task) (bool, error) {
-	panic(fmt.Errorf("not implemented: Finished - finished"))
-}
-
 // WithSubmission is the resolver for the withSubmission field.
 func (r *taskResolver) WithSubmission(ctx context.Context, obj *nemeton.Task) (bool, error) {
 	panic(fmt.Errorf("not implemented: WithSubmission - withSubmission"))
@@ -81,8 +60,25 @@ func (r *Resolver) Query() generated.QueryResolver { return &queryResolver{r} }
 // Task returns generated.TaskResolver implementation.
 func (r *Resolver) Task() generated.TaskResolver { return &taskResolver{r} }
 
-type (
-	phaseResolver struct{ *Resolver }
-	queryResolver struct{ *Resolver }
-	taskResolver  struct{ *Resolver }
-)
+type phaseResolver struct{ *Resolver }
+type queryResolver struct{ *Resolver }
+type taskResolver struct{ *Resolver }
+
+// !!! WARNING !!!
+// The code below was going to be deleted when updating resolvers. It has been copied here so you have
+// one last chance to move it out of harms way if you want. There are two reasons this happens:
+//   - When renaming or deleting a resolver the old code will be put in here. You can safely delete
+//     it when you're done.
+//   - You have helper methods in this file. Move them out to keep these resolver files clean.
+func (r *taskResolver) Started(ctx context.Context, obj *nemeton.Task) (bool, error) {
+	panic(fmt.Errorf("not implemented: Started - started"))
+}
+func (r *taskResolver) Finished(ctx context.Context, obj *nemeton.Task) (bool, error) {
+	panic(fmt.Errorf("not implemented: Finished - finished"))
+}
+func (r *phaseResolver) Started(ctx context.Context, obj *nemeton.Phase) (bool, error) {
+	panic(fmt.Errorf("not implemented: Started - started"))
+}
+func (r *phaseResolver) Finished(ctx context.Context, obj *nemeton.Phase) (bool, error) {
+	panic(fmt.Errorf("not implemented: Finished - finished"))
+}

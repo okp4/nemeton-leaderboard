@@ -52,10 +52,10 @@ autobind:
 models:
   Phase:
     model:
-      - okp4/nemeton-leaderboard/app/phase.Phase
+      - okp4/nemeton-leaderboard/app/nemeton.Phase
   Task:
     model:
-      - okp4/nemeton-leaderboard/app/phase.Task
+      - okp4/nemeton-leaderboard/app/nemeton.Task
   ID:
     model:
       - github.com/99designs/gqlgen/graphql.ID
