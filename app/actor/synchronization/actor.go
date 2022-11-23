@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"time"
 
+	"okp4/nemeton-leaderboard/app/event"
 	"okp4/nemeton-leaderboard/app/message"
 
 	"github.com/asynkron/protoactor-go/actor"
@@ -14,13 +15,15 @@ import (
 type Actor struct {
 	grpcClientProps *actor.Props
 	grpcClient      *actor.PID
+	eventStore      *actor.PID
 	currentBlock    int64
 }
 
-func NewActor(grpcClientProps *actor.Props, blockHeight int64) *Actor {
+func NewActor(grpcClientProps *actor.Props, eventStore *actor.PID, blockHeight int64) *Actor {
 	return &Actor{
 		grpcClientProps: grpcClientProps,
 		grpcClient:      nil,
+		eventStore:      eventStore,
 		currentBlock:    blockHeight,
 	}
 }
@@ -51,7 +54,20 @@ func (a *Actor) startSynchronization(ctx actor.Context) {
 				continue
 			}
 
-			// TODO: Send to event handler the new block received
+			blockEvent := NewBlockEvent{
+				Height:     block.Header.Height,
+				Time:       block.Header.Time,
+				Signatures: block.LastCommit.Signatures,
+			}
+
+			blockData, err := blockEvent.Marshall()
+			if err != nil {
+				log.Err(err).Msg("❌ Failed to marshall event to map interface")
+				continue
+			}
+
+			ctx.Send(a.eventStore, &message.PublishEventMessage{Event: event.NewEvent(NewBlockEventType, blockData)})
+
 			log.Info().Int64("blockHeight", block.Header.Height).Msg("Successful request block")
 			a.currentBlock++
 		}
@@ -88,7 +104,21 @@ func (a *Actor) catchUpSyncBlocks(ctx actor.Context) error {
 			log.Panic().Err(err).Msg("❌ Could not get block for sync.")
 			continue
 		}
-		// TODO: Send to event handler the new latestBlock received
+
+		blockEvent := NewBlockEvent{
+			Height:     block.Header.Height,
+			Time:       block.Header.Time,
+			Signatures: block.LastCommit.Signatures,
+		}
+
+		blockData, err := blockEvent.Marshall()
+		if err != nil {
+			log.Err(err).Msg("❌ Failed to marshall event to map interface")
+			continue
+		}
+
+		ctx.Send(a.eventStore, &message.PublishEventMessage{Event: event.NewEvent(NewBlockEventType, blockData)})
+
 		log.Info().Int64("blockHeight", block.Header.Height).Msg("Successful request block on sync")
 	}
 

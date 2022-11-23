@@ -49,8 +49,16 @@ func boot(ctx actor.Context, listenAddr, mongoURI, dbName, grpcAddr string, tls 
 		return grpcClient
 	})
 
+	eventStoreProps := actor.PropsFromProducer(func() actor.Actor {
+		return event.NewEventStoreActor(mongoURI, dbName)
+	})
+	eventStorePID, err := ctx.SpawnNamed(eventStoreProps, "event-store")
+	if err != nil {
+		log.Panic().Err(err).Str("actor", "event-store").Msg("❌ Could not create actor")
+	}
+
 	blockSync := actor.PropsFromProducer(func() actor.Actor {
-		return synchronization.NewActor(grpcClientProps, 16757)
+		return synchronization.NewActor(grpcClientProps, eventStorePID, 16757)
 	})
 	if _, err := ctx.SpawnNamed(blockSync, "blockSync"); err != nil {
 		log.Panic().Err(err).Msg("❌Could not create block sync actor")
@@ -61,12 +69,5 @@ func boot(ctx actor.Context, listenAddr, mongoURI, dbName, grpcAddr string, tls 
 	})
 	if _, err := ctx.SpawnNamed(graphqlProps, "graphql"); err != nil {
 		log.Panic().Err(err).Str("actor", "graphql").Msg("❌ Could not create actor")
-	}
-
-	eventStoreProps := actor.PropsFromProducer(func() actor.Actor {
-		return event.NewEventStoreActor(mongoURI, dbName)
-	})
-	if _, err := ctx.SpawnNamed(eventStoreProps, "event-store"); err != nil {
-		log.Panic().Err(err).Str("actor", "event-store").Msg("❌ Could not create actor")
 	}
 }
