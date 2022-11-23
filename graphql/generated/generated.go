@@ -12,6 +12,7 @@ import (
 	"sync/atomic"
 	"time"
 
+	"okp4/nemeton-leaderboard/app/nemeton"
 	"okp4/nemeton-leaderboard/graphql/model"
 
 	"github.com/99designs/gqlgen/graphql"
@@ -38,7 +39,9 @@ type Config struct {
 }
 
 type ResolverRoot interface {
+	Phase() PhaseResolver
 	Query() QueryResolver
+	Task() TaskResolver
 }
 
 type DirectiveRoot struct{}
@@ -161,12 +164,24 @@ type ComplexityRoot struct {
 	}
 }
 
+type PhaseResolver interface {
+	Started(ctx context.Context, obj *nemeton.Phase) (bool, error)
+	Finished(ctx context.Context, obj *nemeton.Phase) (bool, error)
+
+	Blocks(ctx context.Context, obj *nemeton.Phase) (*model.BlockRange, error)
+}
 type QueryResolver interface {
-	Phase(ctx context.Context, number int) (*model.Phase, error)
+	Phase(ctx context.Context, number int) (*nemeton.Phase, error)
 	Phases(ctx context.Context) (*model.Phases, error)
 	Board(ctx context.Context, search *string, first *int, after *string) (*model.BoardConnection, error)
 	ValidatorCount(ctx context.Context) (int, error)
 	Validator(ctx context.Context, cursor *string, rank *int, valoper *string, delegator *string, discord *string, twitter *string) (*model.Validator, error)
+}
+type TaskResolver interface {
+	Started(ctx context.Context, obj *nemeton.Task) (bool, error)
+	Finished(ctx context.Context, obj *nemeton.Task) (bool, error)
+	WithSubmission(ctx context.Context, obj *nemeton.Task) (bool, error)
+	Rewards(ctx context.Context, obj *nemeton.Task) (*int, error)
 }
 
 type executableSchema struct {
@@ -766,13 +781,13 @@ e.g. ` + "`" + `2006-01-02T15:04:05.999999999Z07:00` + "`" + `
 scalar Time
 
 """
-Represents an okp4 address as [Betch32](https://en.bitcoin.it/wiki/Bech32) format prefixed by the blockchain prefix.
+Represents an okp4 address as [Bech32](https://en.bitcoin.it/wiki/Bech32) format prefixed by the blockchain prefix.
 e.g. ` + "`" + `okp41jse8senm9hcvydhl8v9x47kfe5z82zmwtw8jvj` + "`" + `
 """
 scalar Address
 
 """
-Represents an okp4 validator address as [Betch32](https://en.bitcoin.it/wiki/Bech32) format prefixed by the blockchain valoper prefix.
+Represents an okp4 validator address as [Bech32](https://en.bitcoin.it/wiki/Bech32) format prefixed by the blockchain valoper prefix.
 e.g. ` + "`" + `okp4valoper1jse8senm9hcvydhl8v9x47kfe5z82zmwtw8jvj` + "`" + `
 """
 scalar ValoperAddress
@@ -788,6 +803,11 @@ Represents an [Uniform Resource Identifier](https://fr.wikipedia.org/wiki/Unifor
 e.g. ` + "`" + `` + "`" + `
 """
 scalar URI
+
+directive @goField(
+    forceResolver: Boolean
+    name: String
+) on INPUT_FIELD_DEFINITION | FIELD_DEFINITION
 
 type Query {
     """
@@ -888,12 +908,12 @@ type Phase {
     description: String!
 
     """
-    The date the phase begin.
+    The date the phase begins.
     """
     startDate: Time!
 
     """
-    The date the phase end.
+    The date the phase ends.
     """
     endDate: Time!
 
@@ -915,7 +935,7 @@ type Phase {
     """
     The current block range of the phase. In the case the phase hasn't started its size is 0, for a phase in progress the range will evolve.
     """
-    blocks: BlockRange!
+    blocks: BlockRange! @goField(forceResolver: true)
 }
 
 """
@@ -938,12 +958,12 @@ type Task {
     description: String!
 
     """
-    The date the task being.
+    The date the task begins.
     """
     startDate: Time!
 
     """
-    The date the task end.
+    The date the task ends.
     """
     endDate: Time!
 
@@ -2119,9 +2139,9 @@ func (ec *executionContext) _PerPhaseTasks_phase(ctx context.Context, field grap
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*model.Phase)
+	res := resTmp.(*nemeton.Phase)
 	fc.Result = res
-	return ec.marshalNPhase2ᚖokp4ᚋnemetonᚑleaderboardᚋgraphqlᚋmodelᚐPhase(ctx, field.Selections, res)
+	return ec.marshalNPhase2ᚖokp4ᚋnemetonᚑleaderboardᚋappᚋphaseᚐPhase(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_PerPhaseTasks_phase(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -2201,7 +2221,7 @@ func (ec *executionContext) fieldContext_PerPhaseTasks_tasks(ctx context.Context
 	return fc, nil
 }
 
-func (ec *executionContext) _Phase_number(ctx context.Context, field graphql.CollectedField, obj *model.Phase) (ret graphql.Marshaler) {
+func (ec *executionContext) _Phase_number(ctx context.Context, field graphql.CollectedField, obj *nemeton.Phase) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Phase_number(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -2245,7 +2265,7 @@ func (ec *executionContext) fieldContext_Phase_number(ctx context.Context, field
 	return fc, nil
 }
 
-func (ec *executionContext) _Phase_name(ctx context.Context, field graphql.CollectedField, obj *model.Phase) (ret graphql.Marshaler) {
+func (ec *executionContext) _Phase_name(ctx context.Context, field graphql.CollectedField, obj *nemeton.Phase) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Phase_name(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -2289,7 +2309,7 @@ func (ec *executionContext) fieldContext_Phase_name(ctx context.Context, field g
 	return fc, nil
 }
 
-func (ec *executionContext) _Phase_description(ctx context.Context, field graphql.CollectedField, obj *model.Phase) (ret graphql.Marshaler) {
+func (ec *executionContext) _Phase_description(ctx context.Context, field graphql.CollectedField, obj *nemeton.Phase) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Phase_description(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -2333,7 +2353,7 @@ func (ec *executionContext) fieldContext_Phase_description(ctx context.Context, 
 	return fc, nil
 }
 
-func (ec *executionContext) _Phase_startDate(ctx context.Context, field graphql.CollectedField, obj *model.Phase) (ret graphql.Marshaler) {
+func (ec *executionContext) _Phase_startDate(ctx context.Context, field graphql.CollectedField, obj *nemeton.Phase) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Phase_startDate(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -2377,7 +2397,7 @@ func (ec *executionContext) fieldContext_Phase_startDate(ctx context.Context, fi
 	return fc, nil
 }
 
-func (ec *executionContext) _Phase_endDate(ctx context.Context, field graphql.CollectedField, obj *model.Phase) (ret graphql.Marshaler) {
+func (ec *executionContext) _Phase_endDate(ctx context.Context, field graphql.CollectedField, obj *nemeton.Phase) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Phase_endDate(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -2421,7 +2441,7 @@ func (ec *executionContext) fieldContext_Phase_endDate(ctx context.Context, fiel
 	return fc, nil
 }
 
-func (ec *executionContext) _Phase_started(ctx context.Context, field graphql.CollectedField, obj *model.Phase) (ret graphql.Marshaler) {
+func (ec *executionContext) _Phase_started(ctx context.Context, field graphql.CollectedField, obj *nemeton.Phase) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Phase_started(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -2435,7 +2455,7 @@ func (ec *executionContext) _Phase_started(ctx context.Context, field graphql.Co
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Started, nil
+		return ec.resolvers.Phase().Started(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2456,8 +2476,8 @@ func (ec *executionContext) fieldContext_Phase_started(ctx context.Context, fiel
 	fc = &graphql.FieldContext{
 		Object:     "Phase",
 		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
+		IsMethod:   true,
+		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Boolean does not have child fields")
 		},
@@ -2465,7 +2485,7 @@ func (ec *executionContext) fieldContext_Phase_started(ctx context.Context, fiel
 	return fc, nil
 }
 
-func (ec *executionContext) _Phase_finished(ctx context.Context, field graphql.CollectedField, obj *model.Phase) (ret graphql.Marshaler) {
+func (ec *executionContext) _Phase_finished(ctx context.Context, field graphql.CollectedField, obj *nemeton.Phase) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Phase_finished(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -2479,7 +2499,7 @@ func (ec *executionContext) _Phase_finished(ctx context.Context, field graphql.C
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Finished, nil
+		return ec.resolvers.Phase().Finished(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2500,8 +2520,8 @@ func (ec *executionContext) fieldContext_Phase_finished(ctx context.Context, fie
 	fc = &graphql.FieldContext{
 		Object:     "Phase",
 		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
+		IsMethod:   true,
+		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Boolean does not have child fields")
 		},
@@ -2509,7 +2529,7 @@ func (ec *executionContext) fieldContext_Phase_finished(ctx context.Context, fie
 	return fc, nil
 }
 
-func (ec *executionContext) _Phase_tasks(ctx context.Context, field graphql.CollectedField, obj *model.Phase) (ret graphql.Marshaler) {
+func (ec *executionContext) _Phase_tasks(ctx context.Context, field graphql.CollectedField, obj *nemeton.Phase) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Phase_tasks(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -2535,9 +2555,9 @@ func (ec *executionContext) _Phase_tasks(ctx context.Context, field graphql.Coll
 		}
 		return graphql.Null
 	}
-	res := resTmp.([]*model.Task)
+	res := resTmp.([]nemeton.Task)
 	fc.Result = res
-	return ec.marshalNTask2ᚕᚖokp4ᚋnemetonᚑleaderboardᚋgraphqlᚋmodelᚐTaskᚄ(ctx, field.Selections, res)
+	return ec.marshalNTask2ᚕokp4ᚋnemetonᚑleaderboardᚋappᚋphaseᚐTaskᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Phase_tasks(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -2573,7 +2593,7 @@ func (ec *executionContext) fieldContext_Phase_tasks(ctx context.Context, field 
 	return fc, nil
 }
 
-func (ec *executionContext) _Phase_blocks(ctx context.Context, field graphql.CollectedField, obj *model.Phase) (ret graphql.Marshaler) {
+func (ec *executionContext) _Phase_blocks(ctx context.Context, field graphql.CollectedField, obj *nemeton.Phase) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Phase_blocks(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -2587,7 +2607,7 @@ func (ec *executionContext) _Phase_blocks(ctx context.Context, field graphql.Col
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Blocks, nil
+		return ec.resolvers.Phase().Blocks(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2608,8 +2628,8 @@ func (ec *executionContext) fieldContext_Phase_blocks(ctx context.Context, field
 	fc = &graphql.FieldContext{
 		Object:     "Phase",
 		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
+		IsMethod:   true,
+		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
 			case "from":
@@ -2651,9 +2671,9 @@ func (ec *executionContext) _Phases_all(ctx context.Context, field graphql.Colle
 		}
 		return graphql.Null
 	}
-	res := resTmp.([]*model.Phase)
+	res := resTmp.([]*nemeton.Phase)
 	fc.Result = res
-	return ec.marshalNPhase2ᚕᚖokp4ᚋnemetonᚑleaderboardᚋgraphqlᚋmodelᚐPhaseᚄ(ctx, field.Selections, res)
+	return ec.marshalNPhase2ᚕᚖokp4ᚋnemetonᚑleaderboardᚋappᚋphaseᚐPhaseᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Phases_all(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -2715,9 +2735,9 @@ func (ec *executionContext) _Phases_ongoing(ctx context.Context, field graphql.C
 		}
 		return graphql.Null
 	}
-	res := resTmp.([]*model.Phase)
+	res := resTmp.([]*nemeton.Phase)
 	fc.Result = res
-	return ec.marshalNPhase2ᚕᚖokp4ᚋnemetonᚑleaderboardᚋgraphqlᚋmodelᚐPhaseᚄ(ctx, field.Selections, res)
+	return ec.marshalNPhase2ᚕᚖokp4ᚋnemetonᚑleaderboardᚋappᚋphaseᚐPhaseᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Phases_ongoing(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -2779,9 +2799,9 @@ func (ec *executionContext) _Phases_finished(ctx context.Context, field graphql.
 		}
 		return graphql.Null
 	}
-	res := resTmp.([]*model.Phase)
+	res := resTmp.([]*nemeton.Phase)
 	fc.Result = res
-	return ec.marshalNPhase2ᚕᚖokp4ᚋnemetonᚑleaderboardᚋgraphqlᚋmodelᚐPhaseᚄ(ctx, field.Selections, res)
+	return ec.marshalNPhase2ᚕᚖokp4ᚋnemetonᚑleaderboardᚋappᚋphaseᚐPhaseᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Phases_finished(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -2840,9 +2860,9 @@ func (ec *executionContext) _Phases_current(ctx context.Context, field graphql.C
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(*model.Phase)
+	res := resTmp.(*nemeton.Phase)
 	fc.Result = res
-	return ec.marshalOPhase2ᚖokp4ᚋnemetonᚑleaderboardᚋgraphqlᚋmodelᚐPhase(ctx, field.Selections, res)
+	return ec.marshalOPhase2ᚖokp4ᚋnemetonᚑleaderboardᚋappᚋphaseᚐPhase(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Phases_current(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -2901,9 +2921,9 @@ func (ec *executionContext) _Query_phase(ctx context.Context, field graphql.Coll
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(*model.Phase)
+	res := resTmp.(*nemeton.Phase)
 	fc.Result = res
-	return ec.marshalOPhase2ᚖokp4ᚋnemetonᚑleaderboardᚋgraphqlᚋmodelᚐPhase(ctx, field.Selections, res)
+	return ec.marshalOPhase2ᚖokp4ᚋnemetonᚑleaderboardᚋappᚋphaseᚐPhase(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_phase(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -3342,9 +3362,9 @@ func (ec *executionContext) _SubmissionTask_task(ctx context.Context, field grap
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*model.Task)
+	res := resTmp.(*nemeton.Task)
 	fc.Result = res
-	return ec.marshalNTask2ᚖokp4ᚋnemetonᚑleaderboardᚋgraphqlᚋmodelᚐTask(ctx, field.Selections, res)
+	return ec.marshalNTask2ᚖokp4ᚋnemetonᚑleaderboardᚋappᚋphaseᚐTask(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_SubmissionTask_task(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -3512,7 +3532,7 @@ func (ec *executionContext) fieldContext_SubmissionTask_submitted(ctx context.Co
 	return fc, nil
 }
 
-func (ec *executionContext) _Task_id(ctx context.Context, field graphql.CollectedField, obj *model.Task) (ret graphql.Marshaler) {
+func (ec *executionContext) _Task_id(ctx context.Context, field graphql.CollectedField, obj *nemeton.Task) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Task_id(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -3556,7 +3576,7 @@ func (ec *executionContext) fieldContext_Task_id(ctx context.Context, field grap
 	return fc, nil
 }
 
-func (ec *executionContext) _Task_name(ctx context.Context, field graphql.CollectedField, obj *model.Task) (ret graphql.Marshaler) {
+func (ec *executionContext) _Task_name(ctx context.Context, field graphql.CollectedField, obj *nemeton.Task) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Task_name(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -3600,7 +3620,7 @@ func (ec *executionContext) fieldContext_Task_name(ctx context.Context, field gr
 	return fc, nil
 }
 
-func (ec *executionContext) _Task_description(ctx context.Context, field graphql.CollectedField, obj *model.Task) (ret graphql.Marshaler) {
+func (ec *executionContext) _Task_description(ctx context.Context, field graphql.CollectedField, obj *nemeton.Task) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Task_description(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -3644,7 +3664,7 @@ func (ec *executionContext) fieldContext_Task_description(ctx context.Context, f
 	return fc, nil
 }
 
-func (ec *executionContext) _Task_startDate(ctx context.Context, field graphql.CollectedField, obj *model.Task) (ret graphql.Marshaler) {
+func (ec *executionContext) _Task_startDate(ctx context.Context, field graphql.CollectedField, obj *nemeton.Task) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Task_startDate(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -3688,7 +3708,7 @@ func (ec *executionContext) fieldContext_Task_startDate(ctx context.Context, fie
 	return fc, nil
 }
 
-func (ec *executionContext) _Task_endDate(ctx context.Context, field graphql.CollectedField, obj *model.Task) (ret graphql.Marshaler) {
+func (ec *executionContext) _Task_endDate(ctx context.Context, field graphql.CollectedField, obj *nemeton.Task) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Task_endDate(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -3732,7 +3752,7 @@ func (ec *executionContext) fieldContext_Task_endDate(ctx context.Context, field
 	return fc, nil
 }
 
-func (ec *executionContext) _Task_started(ctx context.Context, field graphql.CollectedField, obj *model.Task) (ret graphql.Marshaler) {
+func (ec *executionContext) _Task_started(ctx context.Context, field graphql.CollectedField, obj *nemeton.Task) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Task_started(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -3746,7 +3766,7 @@ func (ec *executionContext) _Task_started(ctx context.Context, field graphql.Col
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Started, nil
+		return ec.resolvers.Task().Started(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -3767,8 +3787,8 @@ func (ec *executionContext) fieldContext_Task_started(ctx context.Context, field
 	fc = &graphql.FieldContext{
 		Object:     "Task",
 		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
+		IsMethod:   true,
+		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Boolean does not have child fields")
 		},
@@ -3776,7 +3796,7 @@ func (ec *executionContext) fieldContext_Task_started(ctx context.Context, field
 	return fc, nil
 }
 
-func (ec *executionContext) _Task_finished(ctx context.Context, field graphql.CollectedField, obj *model.Task) (ret graphql.Marshaler) {
+func (ec *executionContext) _Task_finished(ctx context.Context, field graphql.CollectedField, obj *nemeton.Task) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Task_finished(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -3790,7 +3810,7 @@ func (ec *executionContext) _Task_finished(ctx context.Context, field graphql.Co
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Finished, nil
+		return ec.resolvers.Task().Finished(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -3811,8 +3831,8 @@ func (ec *executionContext) fieldContext_Task_finished(ctx context.Context, fiel
 	fc = &graphql.FieldContext{
 		Object:     "Task",
 		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
+		IsMethod:   true,
+		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Boolean does not have child fields")
 		},
@@ -3820,7 +3840,7 @@ func (ec *executionContext) fieldContext_Task_finished(ctx context.Context, fiel
 	return fc, nil
 }
 
-func (ec *executionContext) _Task_withSubmission(ctx context.Context, field graphql.CollectedField, obj *model.Task) (ret graphql.Marshaler) {
+func (ec *executionContext) _Task_withSubmission(ctx context.Context, field graphql.CollectedField, obj *nemeton.Task) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Task_withSubmission(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -3834,7 +3854,7 @@ func (ec *executionContext) _Task_withSubmission(ctx context.Context, field grap
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.WithSubmission, nil
+		return ec.resolvers.Task().WithSubmission(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -3855,8 +3875,8 @@ func (ec *executionContext) fieldContext_Task_withSubmission(ctx context.Context
 	fc = &graphql.FieldContext{
 		Object:     "Task",
 		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
+		IsMethod:   true,
+		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Boolean does not have child fields")
 		},
@@ -3864,7 +3884,7 @@ func (ec *executionContext) fieldContext_Task_withSubmission(ctx context.Context
 	return fc, nil
 }
 
-func (ec *executionContext) _Task_rewards(ctx context.Context, field graphql.CollectedField, obj *model.Task) (ret graphql.Marshaler) {
+func (ec *executionContext) _Task_rewards(ctx context.Context, field graphql.CollectedField, obj *nemeton.Task) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Task_rewards(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -3878,7 +3898,7 @@ func (ec *executionContext) _Task_rewards(ctx context.Context, field graphql.Col
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Rewards, nil
+		return ec.resolvers.Task().Rewards(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -3896,8 +3916,8 @@ func (ec *executionContext) fieldContext_Task_rewards(ctx context.Context, field
 	fc = &graphql.FieldContext{
 		Object:     "Task",
 		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
+		IsMethod:   true,
+		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Int does not have child fields")
 		},
@@ -4084,9 +4104,9 @@ func (ec *executionContext) _UptimeTask_task(ctx context.Context, field graphql.
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*model.Task)
+	res := resTmp.(*nemeton.Task)
 	fc.Result = res
-	return ec.marshalNTask2ᚖokp4ᚋnemetonᚑleaderboardᚋgraphqlᚋmodelᚐTask(ctx, field.Selections, res)
+	return ec.marshalNTask2ᚖokp4ᚋnemetonᚑleaderboardᚋappᚋphaseᚐTask(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_UptimeTask_task(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -7090,7 +7110,7 @@ func (ec *executionContext) _PerPhaseTasks(ctx context.Context, sel ast.Selectio
 
 var phaseImplementors = []string{"Phase"}
 
-func (ec *executionContext) _Phase(ctx context.Context, sel ast.SelectionSet, obj *model.Phase) graphql.Marshaler {
+func (ec *executionContext) _Phase(ctx context.Context, sel ast.SelectionSet, obj *nemeton.Phase) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, phaseImplementors)
 	out := graphql.NewFieldSet(fields)
 	var invalids uint32
@@ -7103,64 +7123,100 @@ func (ec *executionContext) _Phase(ctx context.Context, sel ast.SelectionSet, ob
 			out.Values[i] = ec._Phase_number(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "name":
 
 			out.Values[i] = ec._Phase_name(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "description":
 
 			out.Values[i] = ec._Phase_description(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "startDate":
 
 			out.Values[i] = ec._Phase_startDate(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "endDate":
 
 			out.Values[i] = ec._Phase_endDate(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "started":
+			field := field
 
-			out.Values[i] = ec._Phase_started(ctx, field, obj)
-
-			if out.Values[i] == graphql.Null {
-				invalids++
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Phase_started(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
 			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+			})
 		case "finished":
+			field := field
 
-			out.Values[i] = ec._Phase_finished(ctx, field, obj)
-
-			if out.Values[i] == graphql.Null {
-				invalids++
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Phase_finished(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
 			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+			})
 		case "tasks":
 
 			out.Values[i] = ec._Phase_tasks(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "blocks":
+			field := field
 
-			out.Values[i] = ec._Phase_blocks(ctx, field, obj)
-
-			if out.Values[i] == graphql.Null {
-				invalids++
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Phase_blocks(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
 			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+			})
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -7420,7 +7476,7 @@ func (ec *executionContext) _SubmissionTask(ctx context.Context, sel ast.Selecti
 
 var taskImplementors = []string{"Task"}
 
-func (ec *executionContext) _Task(ctx context.Context, sel ast.SelectionSet, obj *model.Task) graphql.Marshaler {
+func (ec *executionContext) _Task(ctx context.Context, sel ast.SelectionSet, obj *nemeton.Task) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, taskImplementors)
 	out := graphql.NewFieldSet(fields)
 	var invalids uint32
@@ -7433,61 +7489,109 @@ func (ec *executionContext) _Task(ctx context.Context, sel ast.SelectionSet, obj
 			out.Values[i] = ec._Task_id(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "name":
 
 			out.Values[i] = ec._Task_name(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "description":
 
 			out.Values[i] = ec._Task_description(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "startDate":
 
 			out.Values[i] = ec._Task_startDate(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "endDate":
 
 			out.Values[i] = ec._Task_endDate(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "started":
+			field := field
 
-			out.Values[i] = ec._Task_started(ctx, field, obj)
-
-			if out.Values[i] == graphql.Null {
-				invalids++
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Task_started(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
 			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+			})
 		case "finished":
+			field := field
 
-			out.Values[i] = ec._Task_finished(ctx, field, obj)
-
-			if out.Values[i] == graphql.Null {
-				invalids++
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Task_finished(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
 			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+			})
 		case "withSubmission":
+			field := field
 
-			out.Values[i] = ec._Task_withSubmission(ctx, field, obj)
-
-			if out.Values[i] == graphql.Null {
-				invalids++
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Task_withSubmission(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
 			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+			})
 		case "rewards":
+			field := field
 
-			out.Values[i] = ec._Task_rewards(ctx, field, obj)
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Task_rewards(ctx, field, obj)
+				return res
+			}
 
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+			})
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -8075,6 +8179,10 @@ func (ec *executionContext) marshalNAddress2string(ctx context.Context, sel ast.
 	return res
 }
 
+func (ec *executionContext) marshalNBlockRange2okp4ᚋnemetonᚑleaderboardᚋgraphqlᚋmodelᚐBlockRange(ctx context.Context, sel ast.SelectionSet, v model.BlockRange) graphql.Marshaler {
+	return ec._BlockRange(ctx, sel, &v)
+}
+
 func (ec *executionContext) marshalNBlockRange2ᚕᚖokp4ᚋnemetonᚑleaderboardᚋgraphqlᚋmodelᚐBlockRangeᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.BlockRange) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
@@ -8282,7 +8390,7 @@ func (ec *executionContext) marshalNPerPhaseTasks2ᚖokp4ᚋnemetonᚑleaderboar
 	return ec._PerPhaseTasks(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNPhase2ᚕᚖokp4ᚋnemetonᚑleaderboardᚋgraphqlᚋmodelᚐPhaseᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Phase) graphql.Marshaler {
+func (ec *executionContext) marshalNPhase2ᚕᚖokp4ᚋnemetonᚑleaderboardᚋappᚋphaseᚐPhaseᚄ(ctx context.Context, sel ast.SelectionSet, v []*nemeton.Phase) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -8306,7 +8414,7 @@ func (ec *executionContext) marshalNPhase2ᚕᚖokp4ᚋnemetonᚑleaderboardᚋg
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNPhase2ᚖokp4ᚋnemetonᚑleaderboardᚋgraphqlᚋmodelᚐPhase(ctx, sel, v[i])
+			ret[i] = ec.marshalNPhase2ᚖokp4ᚋnemetonᚑleaderboardᚋappᚋphaseᚐPhase(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -8326,7 +8434,7 @@ func (ec *executionContext) marshalNPhase2ᚕᚖokp4ᚋnemetonᚑleaderboardᚋg
 	return ret
 }
 
-func (ec *executionContext) marshalNPhase2ᚖokp4ᚋnemetonᚑleaderboardᚋgraphqlᚋmodelᚐPhase(ctx context.Context, sel ast.SelectionSet, v *model.Phase) graphql.Marshaler {
+func (ec *executionContext) marshalNPhase2ᚖokp4ᚋnemetonᚑleaderboardᚋappᚋphaseᚐPhase(ctx context.Context, sel ast.SelectionSet, v *nemeton.Phase) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -8365,7 +8473,11 @@ func (ec *executionContext) marshalNString2string(ctx context.Context, sel ast.S
 	return res
 }
 
-func (ec *executionContext) marshalNTask2ᚕᚖokp4ᚋnemetonᚑleaderboardᚋgraphqlᚋmodelᚐTaskᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Task) graphql.Marshaler {
+func (ec *executionContext) marshalNTask2okp4ᚋnemetonᚑleaderboardᚋappᚋphaseᚐTask(ctx context.Context, sel ast.SelectionSet, v nemeton.Task) graphql.Marshaler {
+	return ec._Task(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNTask2ᚕokp4ᚋnemetonᚑleaderboardᚋappᚋphaseᚐTaskᚄ(ctx context.Context, sel ast.SelectionSet, v []nemeton.Task) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -8389,7 +8501,7 @@ func (ec *executionContext) marshalNTask2ᚕᚖokp4ᚋnemetonᚑleaderboardᚋgr
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNTask2ᚖokp4ᚋnemetonᚑleaderboardᚋgraphqlᚋmodelᚐTask(ctx, sel, v[i])
+			ret[i] = ec.marshalNTask2okp4ᚋnemetonᚑleaderboardᚋappᚋphaseᚐTask(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -8409,7 +8521,7 @@ func (ec *executionContext) marshalNTask2ᚕᚖokp4ᚋnemetonᚑleaderboardᚋgr
 	return ret
 }
 
-func (ec *executionContext) marshalNTask2ᚖokp4ᚋnemetonᚑleaderboardᚋgraphqlᚋmodelᚐTask(ctx context.Context, sel ast.SelectionSet, v *model.Task) graphql.Marshaler {
+func (ec *executionContext) marshalNTask2ᚖokp4ᚋnemetonᚑleaderboardᚋappᚋphaseᚐTask(ctx context.Context, sel ast.SelectionSet, v *nemeton.Task) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -8933,7 +9045,7 @@ func (ec *executionContext) marshalOLink2ᚖokp4ᚋnemetonᚑleaderboardᚋgraph
 	return ec._Link(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalOPhase2ᚖokp4ᚋnemetonᚑleaderboardᚋgraphqlᚋmodelᚐPhase(ctx context.Context, sel ast.SelectionSet, v *model.Phase) graphql.Marshaler {
+func (ec *executionContext) marshalOPhase2ᚖokp4ᚋnemetonᚑleaderboardᚋappᚋphaseᚐPhase(ctx context.Context, sel ast.SelectionSet, v *nemeton.Phase) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}

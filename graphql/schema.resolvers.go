@@ -7,12 +7,28 @@ import (
 	"context"
 	"fmt"
 
+	"okp4/nemeton-leaderboard/app/nemeton"
 	"okp4/nemeton-leaderboard/graphql/generated"
 	"okp4/nemeton-leaderboard/graphql/model"
 )
 
+// Started is the resolver for the started field.
+func (r *phaseResolver) Started(ctx context.Context, obj *nemeton.Phase) (bool, error) {
+	panic(fmt.Errorf("not implemented: Started - started"))
+}
+
+// Finished is the resolver for the finished field.
+func (r *phaseResolver) Finished(ctx context.Context, obj *nemeton.Phase) (bool, error) {
+	panic(fmt.Errorf("not implemented: Finished - finished"))
+}
+
+// Blocks is the resolver for the blocks field.
+func (r *phaseResolver) Blocks(ctx context.Context, obj *nemeton.Phase) (*model.BlockRange, error) {
+	panic(fmt.Errorf("not implemented: Blocks - blocks"))
+}
+
 // Phase is the resolver for the phase field.
-func (r *queryResolver) Phase(ctx context.Context, number int) (*model.Phase, error) {
+func (r *queryResolver) Phase(ctx context.Context, number int) (*nemeton.Phase, error) {
 	panic(fmt.Errorf("not implemented: Phase - phase"))
 }
 
@@ -36,7 +52,37 @@ func (r *queryResolver) Validator(ctx context.Context, cursor *string, rank *int
 	panic(fmt.Errorf("not implemented: Validator - validator"))
 }
 
+// Started is the resolver for the started field.
+func (r *taskResolver) Started(ctx context.Context, obj *nemeton.Task) (bool, error) {
+	panic(fmt.Errorf("not implemented: Started - started"))
+}
+
+// Finished is the resolver for the finished field.
+func (r *taskResolver) Finished(ctx context.Context, obj *nemeton.Task) (bool, error) {
+	panic(fmt.Errorf("not implemented: Finished - finished"))
+}
+
+// WithSubmission is the resolver for the withSubmission field.
+func (r *taskResolver) WithSubmission(ctx context.Context, obj *nemeton.Task) (bool, error) {
+	panic(fmt.Errorf("not implemented: WithSubmission - withSubmission"))
+}
+
+// Rewards is the resolver for the rewards field.
+func (r *taskResolver) Rewards(ctx context.Context, obj *nemeton.Task) (*int, error) {
+	panic(fmt.Errorf("not implemented: Rewards - rewards"))
+}
+
+// Phase returns generated.PhaseResolver implementation.
+func (r *Resolver) Phase() generated.PhaseResolver { return &phaseResolver{r} }
+
 // Query returns generated.QueryResolver implementation.
 func (r *Resolver) Query() generated.QueryResolver { return &queryResolver{r} }
 
-type queryResolver struct{ *Resolver }
+// Task returns generated.TaskResolver implementation.
+func (r *Resolver) Task() generated.TaskResolver { return &taskResolver{r} }
+
+type (
+	phaseResolver struct{ *Resolver }
+	queryResolver struct{ *Resolver }
+	taskResolver  struct{ *Resolver }
+)
