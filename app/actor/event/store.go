@@ -52,9 +52,9 @@ func (a *EventStoreActor) handleStart() {
 
 func (a *EventStoreActor) handlePublishEvent(msg *message.PublishEventMessage) {
 	if err := a.store.Store(context.Background(), msg.Event); err != nil {
-		log.Fatal().Err(err).Str("type", msg.Event.Type()).Msg("❌ Couldn't publish event")
+		log.Fatal().Err(err).Str("type", msg.Event.EvtType).Msg("❌ Couldn't publish event")
 	}
-	log.Info().Str("id", msg.Event.ID()).Str("type", msg.Event.Type()).Msg("💌 Event published")
+	log.Info().Str("type", msg.Event.EvtType).Msg("💌 Event published")
 }
 
 func (a *EventStoreActor) handleSubscribeEvent(ctx actor.Context, msg *message.SubscribeEventMessage) {
@@ -64,9 +64,9 @@ func (a *EventStoreActor) handleSubscribeEvent(ctx actor.Context, msg *message.S
 	}
 
 	streamProps := actor.PropsFromProducer(func() actor.Actor {
-		return NewStreamHandlerActor(stream, ctx.Sender())
+		return NewStreamHandlerActor(stream, msg.PID)
 	})
 
 	ctx.Spawn(streamProps)
-	log.Info().Str("to", ctx.Sender().Address).Msg("®️ Event subscriber registered")
+	log.Info().Str("to", msg.PID.Address).Msg("®️ Event subscriber registered")
 }

@@ -54,13 +54,13 @@ func (a *StreamHandlerActor) processStream(ctx actor.Context) {
 	for a.stream.Next() {
 		evt := *a.stream.Event()
 		ctx.Send(a.dst, &message.NewEventMessage{Event: evt})
-		log.Info().Str("to", a.dst.Address).Str("id", evt.ID()).Str("type", evt.Type()).Msg(" New event sent")
+		log.Info().Str("id", evt.ID.Hex()).Str("type", evt.EvtType).Msg("➡️ New event sent")
 	}
 
 	if err := a.stream.Err(); err != nil {
 		log.Err(a.stream.Err()).Msg("❌ Stream stopped unexpectedly")
 	} else {
-		log.Info().Str("to", a.dst.Address).Msg(" Stream stopped")
+		log.Info().Msg("🛑 Stream stopped")
 	}
 	ctx.Send(a.dst, &message.BrokenStreamMessage{})
 	ctx.Stop(ctx.Self())
