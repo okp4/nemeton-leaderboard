@@ -7,16 +7,16 @@ import (
 )
 
 type Event struct {
-	ID      primitive.ObjectID `bson:"_id,omitempty"`
-	EvtType string             `bson:"@type"`
-	Date    time.Time
-	Data    map[string]interface{}
+	ID   primitive.ObjectID `bson:"_id,omitempty"`
+	Type string             `bson:"@type"`
+	Date time.Time
+	Data map[string]interface{}
 }
 
 func NewEvent(evtType string, data map[string]interface{}) Event {
 	return Event{
-		EvtType: evtType,
-		Date:    time.Now(),
-		Data:    data,
+		Type: evtType,
+		Date: time.Now(),
+		Data: data,
 	}
 }

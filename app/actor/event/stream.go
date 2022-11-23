@@ -54,7 +54,7 @@ func (a *StreamHandlerActor) processStream(ctx actor.Context) {
 	for a.stream.Next() {
 		evt := *a.stream.Event()
 		ctx.Send(a.dst, &message.NewEventMessage{Event: evt})
-		log.Info().Str("id", evt.ID.Hex()).Str("type", evt.EvtType).Msg("➡️ New event sent")
+		log.Info().Str("id", evt.ID.Hex()).Str("type", evt.Type).Msg("➡️ New event sent")
 	}
 
 	if err := a.stream.Err(); err != nil {

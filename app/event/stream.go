@@ -101,7 +101,11 @@ func (s *Stream) start(ctx context.Context, watch *mongo.ChangeStream, catchUp *
 	}
 }
 
-func (s *Stream) readWatch(ctx context.Context, watch *mongo.ChangeStream, idsToIgnore map[primitive.ObjectID]interface{}) (*Event, error) {
+func (s *Stream) readWatch(
+	ctx context.Context,
+	watch *mongo.ChangeStream,
+	idsToIgnore map[primitive.ObjectID]interface{},
+) (*Event, error) {
 	if !watch.TryNext(ctx) {
 		return nil, watch.Err()
 	}

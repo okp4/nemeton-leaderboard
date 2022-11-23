@@ -2,7 +2,6 @@ package event
 
 import (
 	"context"
-	"time"
 
 	"okp4/nemeton-leaderboard/app/message"
 
@@ -12,20 +11,20 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-type EventStoreActor struct {
+type StoreActor struct {
 	mongoURI string
 	dbName   string
 	store    *event.Store
 }
 
-func NewEventStoreActor(mongoURI, dbName string) *EventStoreActor {
-	return &EventStoreActor{
+func NewEventStoreActor(mongoURI, dbName string) *StoreActor {
+	return &StoreActor{
 		mongoURI: mongoURI,
 		dbName:   dbName,
 	}
 }
 
-func (a *EventStoreActor) Receive(ctx actor.Context) {
+func (a *StoreActor) Receive(ctx actor.Context) {
 	switch msg := ctx.Message().(type) {
 	case *actor.Started:
 		a.handleStart()
@@ -38,11 +37,8 @@ func (a *EventStoreActor) Receive(ctx actor.Context) {
 	}
 }
 
-func (a *EventStoreActor) handleStart() {
-	ctx, cancelFn := context.WithTimeout(context.Background(), time.Second)
-	defer cancelFn()
-
-	store, err := event.NewStore(ctx, a.mongoURI, a.dbName)
+func (a *StoreActor) handleStart() {
+	store, err := event.NewStore(context.Background(), a.mongoURI, a.dbName)
 	if err != nil {
 		log.Fatal().Err(err).Str("uri", a.mongoURI).Str("db", a.dbName).Msg("❌ Couldn't create event store")
 	}
@@ -50,14 +46,14 @@ func (a *EventStoreActor) handleStart() {
 	log.Info().Msg("🚌 Event store started")
 }
 
-func (a *EventStoreActor) handlePublishEvent(msg *message.PublishEventMessage) {
+func (a *StoreActor) handlePublishEvent(msg *message.PublishEventMessage) {
 	if err := a.store.Store(context.Background(), msg.Event); err != nil {
-		log.Fatal().Err(err).Str("type", msg.Event.EvtType).Msg("❌ Couldn't publish event")
+		log.Fatal().Err(err).Str("type", msg.Event.Type).Msg("❌ Couldn't publish event")
 	}
-	log.Info().Str("type", msg.Event.EvtType).Msg("💌 Event published")
+	log.Info().Str("type", msg.Event.Type).Msg("💌 Event published")
 }
 
-func (a *EventStoreActor) handleSubscribeEvent(ctx actor.Context, msg *message.SubscribeEventMessage) {
+func (a *StoreActor) handleSubscribeEvent(ctx actor.Context, msg *message.SubscribeEventMessage) {
 	stream, err := a.store.StreamFrom(context.Background(), msg.From)
 	if err != nil {
 		log.Fatal().Err(err).Msg("❌ Couldn't create stream")
