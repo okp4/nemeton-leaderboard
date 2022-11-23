@@ -7,6 +7,7 @@ import (
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 const collectionName = "offsets"
@@ -41,6 +42,7 @@ func (s *Store) Save(ctx context.Context, offset interface{}) error {
 					"offset": offset,
 				},
 			},
+			options.Update().SetUpsert(true),
 		)
 	return err
 }
