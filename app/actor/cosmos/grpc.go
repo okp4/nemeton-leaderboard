@@ -3,7 +3,7 @@ package cosmos
 import (
 	"context"
 
-	"okp4/nemeton-leaderboard/app/messages"
+	"okp4/nemeton-leaderboard/app/message"
 
 	"github.com/asynkron/protoactor-go/actor"
 	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
@@ -34,7 +34,7 @@ func (client *GrpcClient) Receive(ctx actor.Context) {
 		if err := client.grpcConn.Close(); err != nil {
 			log.Warn().Err(err).Msg("😥 Could not close grpc connection.")
 		}
-	case *messages.GetBlock:
+	case *message.GetBlock:
 		goCTX, cancelFunc := context.WithCancel(context.Background())
 		defer cancelFunc()
 
@@ -42,11 +42,11 @@ func (client *GrpcClient) Receive(ctx actor.Context) {
 		if err != nil {
 			panic(err)
 		}
-		ctx.Respond(&messages.GetBlockResponse{
+		ctx.Respond(&message.GetBlockResponse{
 			Block: block,
 		})
 
-	case *messages.GetLatestBlock:
+	case *message.GetLatestBlock:
 		goCTX, cancelFunc := context.WithCancel(context.Background())
 		defer cancelFunc()
 
@@ -54,7 +54,7 @@ func (client *GrpcClient) Receive(ctx actor.Context) {
 		if err != nil {
 			panic(err)
 		}
-		ctx.Respond(&messages.GetBlockResponse{
+		ctx.Respond(&message.GetBlockResponse{
 			Block: block,
 		})
 	}

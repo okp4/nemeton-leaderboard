@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"okp4/nemeton-leaderboard/app/messages"
+	"okp4/nemeton-leaderboard/app/message"
 
 	"github.com/asynkron/protoactor-go/actor"
 	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
@@ -60,14 +60,14 @@ func (a *Actor) startSynchronization(ctx actor.Context) {
 
 func (a *Actor) catchUpSyncBlocks(ctx actor.Context) error {
 	// Check first the latest latestBlock height before sync
-	result, err := ctx.RequestFuture(a.grpcClient, &messages.GetLatestBlock{}, 5*time.Second).Result()
+	result, err := ctx.RequestFuture(a.grpcClient, &message.GetLatestBlock{}, 5*time.Second).Result()
 	if err != nil {
 		return err
 	}
 
 	var latestBlock *tmservice.Block
 	switch resp := result.(type) {
-	case *messages.GetBlockResponse:
+	case *message.GetBlockResponse:
 		latestBlock = resp.Block
 	default:
 		return fmt.Errorf("wrong response message")
@@ -97,7 +97,7 @@ func (a *Actor) catchUpSyncBlocks(ctx actor.Context) error {
 }
 
 func (a *Actor) getBlock(ctx actor.Context, height int64) (*tmservice.Block, error) {
-	result, err := ctx.RequestFuture(a.grpcClient, &messages.GetBlock{Height: height}, 5*time.Second).Result()
+	result, err := ctx.RequestFuture(a.grpcClient, &message.GetBlock{Height: height}, 5*time.Second).Result()
 	if err != nil {
 		log.Err(err).Msg("⚠️ Failed request current block.")
 		return nil, err
@@ -105,7 +105,7 @@ func (a *Actor) getBlock(ctx actor.Context, height int64) (*tmservice.Block, err
 
 	var block *tmservice.Block
 	switch resp := result.(type) {
-	case *messages.GetBlockResponse:
+	case *message.GetBlockResponse:
 		block = resp.Block
 	default:
 		return nil, fmt.Errorf("wrong response message")
