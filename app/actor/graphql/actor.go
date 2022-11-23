@@ -9,17 +9,17 @@ import (
 )
 
 type Actor struct {
-	addr string
-	srv  *server
+	addr     string
+	mongoURI string
+	dbName   string
+	srv      *server
 }
 
-func NewActor(addr string) *Actor {
+func NewActor(httpAddr, mongoURI, dbName string) *Actor {
 	return &Actor{
-		addr: addr,
-		srv: makeHTTPServer(
-			addr,
-			makeRouter(),
-		),
+		addr:     httpAddr,
+		mongoURI: mongoURI,
+		dbName:   dbName,
 	}
 }
 
@@ -33,6 +33,14 @@ func (a *Actor) Receive(ctx actor.Context) {
 }
 
 func (a *Actor) handleStart() {
+	graphqlServer, err := NewGraphQLServer(context.Background(), a.mongoURI, a.dbName)
+	if err != nil {
+		log.Fatal().Err(err).Str("uri", a.mongoURI).Str("db", a.dbName).Msg("❌ Couldn't create graphql server")
+	}
+	makeHTTPServer(
+		a.addr,
+		makeRouter(graphqlServer),
+	)
 	a.srv.start()
 	log.Info().Str("addr", a.addr).Msg("🔥 GraphQL server started")
 }

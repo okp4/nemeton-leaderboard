@@ -38,7 +38,7 @@ func (app *App) Stop() error {
 
 func boot(ctx actor.Context, listenAddr, mongoURI, dbName string) {
 	graphqlProps := actor.PropsFromProducer(func() actor.Actor {
-		return graphql.NewActor(listenAddr)
+		return graphql.NewActor(listenAddr, mongoURI, dbName)
 	})
 	if _, err := ctx.SpawnNamed(graphqlProps, "graphql"); err != nil {
 		log.Panic().Err(err).Str("actor", "graphql").Msg("❌ Could not create actor")
