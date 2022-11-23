@@ -23,7 +23,7 @@ type NewEventMessage struct {
 
 type BrokenStreamMessage struct{}
 
-// GetBlock Ask to requets a block at a given height
+// GetBlock Ask to requets a block at a given height.
 type GetBlock struct {
 	// Height of the block to get
 	Height int64

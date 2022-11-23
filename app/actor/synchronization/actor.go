@@ -25,14 +25,14 @@ type Actor struct {
 	currentBlock    int64
 }
 
-func NewActor(grpcClientProps *actor.Props, eventStore *actor.PID, mongoUri, dbName string) (*Actor, error) {
+func NewActor(grpcClientProps *actor.Props, eventStore *actor.PID, mongoURI, dbName string) (*Actor, error) {
 	ctx := context.Background()
-	store, err := offset.NewStore(ctx, mongoUri, dbName, ownerOffset)
+	store, err := offset.NewStore(ctx, mongoURI, dbName, ownerOffset)
 	if err != nil {
 		return nil, err
 	}
 
-	storeValue, err := store.Get(ctx)
+	storeValue, _ := store.Get(ctx)
 	var currentBlock int64
 	switch resp := storeValue.(type) {
 	case int64:
