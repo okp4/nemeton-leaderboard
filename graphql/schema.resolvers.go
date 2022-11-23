@@ -29,7 +29,7 @@ func (r *phaseResolver) Blocks(ctx context.Context, obj *nemeton.Phase) (*model.
 
 // Phase is the resolver for the phase field.
 func (r *queryResolver) Phase(ctx context.Context, number int) (*nemeton.Phase, error) {
-	panic(fmt.Errorf("not implemented: Phase - phase"))
+	return r.store.GetPhase(number), nil
 }
 
 // Phases is the resolver for the phases field.
