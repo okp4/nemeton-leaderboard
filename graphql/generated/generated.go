@@ -7,18 +7,21 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/url"
+	"okp4/nemeton-leaderboard/app/nemeton"
+	"okp4/nemeton-leaderboard/graphql/model"
+	"okp4/nemeton-leaderboard/graphql/scalar"
 	"strconv"
 	"sync"
 	"sync/atomic"
 	"time"
 
-	"okp4/nemeton-leaderboard/app/nemeton"
-	"okp4/nemeton-leaderboard/graphql/model"
-
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/99designs/gqlgen/graphql/introspection"
+	"github.com/cosmos/cosmos-sdk/types"
 	gqlparser "github.com/vektah/gqlparser/v2"
 	"github.com/vektah/gqlparser/v2/ast"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // region    ************************** generated!.gotpl **************************
@@ -44,7 +47,8 @@ type ResolverRoot interface {
 	Query() QueryResolver
 }
 
-type DirectiveRoot struct{}
+type DirectiveRoot struct {
+}
 
 type ComplexityRoot struct {
 	BlockRange struct {
@@ -101,10 +105,10 @@ type ComplexityRoot struct {
 	}
 
 	Query struct {
-		Board          func(childComplexity int, search *string, first *int, after *string) int
+		Board          func(childComplexity int, search *string, first *int, after *primitive.ObjectID) int
 		Phase          func(childComplexity int, number int) int
 		Phases         func(childComplexity int) int
-		Validator      func(childComplexity int, cursor *string, rank *int, valoper *string, delegator *string, discord *string, twitter *string) int
+		Validator      func(childComplexity int, cursor *primitive.ObjectID, rank *int, valoper types.ValAddress, delegator *string, discord *string, twitter *string) int
 		ValidatorCount func(childComplexity int) int
 	}
 
@@ -176,9 +180,9 @@ type PhasesResolver interface {
 type QueryResolver interface {
 	Phase(ctx context.Context, number int) (*nemeton.Phase, error)
 	Phases(ctx context.Context) (*model.Phases, error)
-	Board(ctx context.Context, search *string, first *int, after *string) (*model.BoardConnection, error)
+	Board(ctx context.Context, search *string, first *int, after *primitive.ObjectID) (*model.BoardConnection, error)
 	ValidatorCount(ctx context.Context) (int, error)
-	Validator(ctx context.Context, cursor *string, rank *int, valoper *string, delegator *string, discord *string, twitter *string) (*model.Validator, error)
+	Validator(ctx context.Context, cursor *primitive.ObjectID, rank *int, valoper types.ValAddress, delegator *string, discord *string, twitter *string) (*model.Validator, error)
 }
 
 type executableSchema struct {
@@ -409,7 +413,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.Board(childComplexity, args["search"].(*string), args["first"].(*int), args["after"].(*string)), true
+		return e.complexity.Query.Board(childComplexity, args["search"].(*string), args["first"].(*int), args["after"].(*primitive.ObjectID)), true
 
 	case "Query.phase":
 		if e.complexity.Query.Phase == nil {
@@ -440,7 +444,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.Validator(childComplexity, args["cursor"].(*string), args["rank"].(*int), args["valoper"].(*string), args["delegator"].(*string), args["discord"].(*string), args["twitter"].(*string)), true
+		return e.complexity.Query.Validator(childComplexity, args["cursor"].(*primitive.ObjectID), args["rank"].(*int), args["valoper"].(types.ValAddress), args["delegator"].(*string), args["discord"].(*string), args["twitter"].(*string)), true
 
 	case "Query.validatorCount":
 		if e.complexity.Query.ValidatorCount == nil {
@@ -781,7 +785,7 @@ scalar Time
 Represents an okp4 address as [Bech32](https://en.bitcoin.it/wiki/Bech32) format prefixed by the blockchain prefix.
 e.g. ` + "`" + `okp41jse8senm9hcvydhl8v9x47kfe5z82zmwtw8jvj` + "`" + `
 """
-scalar Address
+scalar AccAddress
 
 """
 Represents an okp4 validator address as [Bech32](https://en.bitcoin.it/wiki/Bech32) format prefixed by the blockchain valoper prefix.
@@ -797,7 +801,7 @@ scalar PGPKeyID
 
 """
 Represents an [Uniform Resource Identifier](https://fr.wikipedia.org/wiki/Uniform_Resource_Identifier) to permanently identify a resource.
-e.g. ` + "`" + `` + "`" + `
+e.g. ` + "`" + `https://okp4.network/` + "`" + `
 """
 scalar URI
 
@@ -854,7 +858,7 @@ type Query {
         cursor: Cursor
         rank: Int
         valoper: ValoperAddress
-        delegator: Address
+        delegator: AccAddress
         discord: String
         twitter: String
     ): Validator
@@ -1087,7 +1091,7 @@ type Validator {
     """
     The address of the validator node delegator.
     """
-    delegator: Address!
+    delegator: AccAddress!
 
     """
     The validator twitter account.
@@ -1337,10 +1341,10 @@ func (ec *executionContext) field_Query_board_args(ctx context.Context, rawArgs 
 		}
 	}
 	args["first"] = arg1
-	var arg2 *string
+	var arg2 *primitive.ObjectID
 	if tmp, ok := rawArgs["after"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("after"))
-		arg2, err = ec.unmarshalOCursor2ᚖstring(ctx, tmp)
+		arg2, err = ec.unmarshalOCursor2ᚖgoᚗmongodbᚗorgᚋmongoᚑdriverᚋbsonᚋprimitiveᚐObjectID(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -1367,10 +1371,10 @@ func (ec *executionContext) field_Query_phase_args(ctx context.Context, rawArgs 
 func (ec *executionContext) field_Query_validator_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 *string
+	var arg0 *primitive.ObjectID
 	if tmp, ok := rawArgs["cursor"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("cursor"))
-		arg0, err = ec.unmarshalOCursor2ᚖstring(ctx, tmp)
+		arg0, err = ec.unmarshalOCursor2ᚖgoᚗmongodbᚗorgᚋmongoᚑdriverᚋbsonᚋprimitiveᚐObjectID(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -1385,10 +1389,10 @@ func (ec *executionContext) field_Query_validator_args(ctx context.Context, rawA
 		}
 	}
 	args["rank"] = arg1
-	var arg2 *string
+	var arg2 types.ValAddress
 	if tmp, ok := rawArgs["valoper"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("valoper"))
-		arg2, err = ec.unmarshalOValoperAddress2ᚖstring(ctx, tmp)
+		arg2, err = ec.unmarshalOValoperAddress2githubᚗcomᚋcosmosᚋcosmosᚑsdkᚋtypesᚐValAddress(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -1397,7 +1401,7 @@ func (ec *executionContext) field_Query_validator_args(ctx context.Context, rawA
 	var arg3 *string
 	if tmp, ok := rawArgs["delegator"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("delegator"))
-		arg3, err = ec.unmarshalOAddress2ᚖstring(ctx, tmp)
+		arg3, err = ec.unmarshalOAccAddress2ᚖstring(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -1739,9 +1743,9 @@ func (ec *executionContext) _Identity_pgp(ctx context.Context, field graphql.Col
 		}
 		return graphql.Null
 	}
-	res := resTmp.(string)
+	res := resTmp.(uint64)
 	fc.Result = res
-	return ec.marshalNPGPKeyID2string(ctx, field.Selections, res)
+	return ec.marshalNPGPKeyID2uint64(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Identity_pgp(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -1828,9 +1832,9 @@ func (ec *executionContext) _Link_href(ctx context.Context, field graphql.Collec
 		}
 		return graphql.Null
 	}
-	res := resTmp.(string)
+	res := resTmp.(*url.URL)
 	fc.Result = res
-	return ec.marshalNURI2string(ctx, field.Selections, res)
+	return ec.marshalNURI2ᚖnetᚋurlᚐURL(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Link_href(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -1872,9 +1876,9 @@ func (ec *executionContext) _PageInfo_startCursor(ctx context.Context, field gra
 		}
 		return graphql.Null
 	}
-	res := resTmp.(string)
+	res := resTmp.(primitive.ObjectID)
 	fc.Result = res
-	return ec.marshalNCursor2string(ctx, field.Selections, res)
+	return ec.marshalNCursor2goᚗmongodbᚗorgᚋmongoᚑdriverᚋbsonᚋprimitiveᚐObjectID(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_PageInfo_startCursor(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -1916,9 +1920,9 @@ func (ec *executionContext) _PageInfo_endCursor(ctx context.Context, field graph
 		}
 		return graphql.Null
 	}
-	res := resTmp.(string)
+	res := resTmp.(primitive.ObjectID)
 	fc.Result = res
-	return ec.marshalNCursor2string(ctx, field.Selections, res)
+	return ec.marshalNCursor2goᚗmongodbᚗorgᚋmongoᚑdriverᚋbsonᚋprimitiveᚐObjectID(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_PageInfo_endCursor(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -3035,7 +3039,7 @@ func (ec *executionContext) _Query_board(ctx context.Context, field graphql.Coll
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Board(rctx, fc.Args["search"].(*string), fc.Args["first"].(*int), fc.Args["after"].(*string))
+		return ec.resolvers.Query().Board(rctx, fc.Args["search"].(*string), fc.Args["first"].(*int), fc.Args["after"].(*primitive.ObjectID))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -3140,7 +3144,7 @@ func (ec *executionContext) _Query_validator(ctx context.Context, field graphql.
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Validator(rctx, fc.Args["cursor"].(*string), fc.Args["rank"].(*int), fc.Args["valoper"].(*string), fc.Args["delegator"].(*string), fc.Args["discord"].(*string), fc.Args["twitter"].(*string))
+		return ec.resolvers.Query().Validator(rctx, fc.Args["cursor"].(*primitive.ObjectID), fc.Args["rank"].(*int), fc.Args["valoper"].(types.ValAddress), fc.Args["delegator"].(*string), fc.Args["discord"].(*string), fc.Args["twitter"].(*string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -4572,9 +4576,9 @@ func (ec *executionContext) _Validator_valoper(ctx context.Context, field graphq
 		}
 		return graphql.Null
 	}
-	res := resTmp.(string)
+	res := resTmp.(types.ValAddress)
 	fc.Result = res
-	return ec.marshalNValoperAddress2string(ctx, field.Selections, res)
+	return ec.marshalNValoperAddress2githubᚗcomᚋcosmosᚋcosmosᚑsdkᚋtypesᚐValAddress(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Validator_valoper(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -4618,7 +4622,7 @@ func (ec *executionContext) _Validator_delegator(ctx context.Context, field grap
 	}
 	res := resTmp.(string)
 	fc.Result = res
-	return ec.marshalNAddress2string(ctx, field.Selections, res)
+	return ec.marshalNAccAddress2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Validator_delegator(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -4628,7 +4632,7 @@ func (ec *executionContext) fieldContext_Validator_delegator(ctx context.Context
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Address does not have child fields")
+			return nil, errors.New("field of type AccAddress does not have child fields")
 		},
 	}
 	return fc, nil
@@ -4978,9 +4982,9 @@ func (ec *executionContext) _ValidatorEdge_cursor(ctx context.Context, field gra
 		}
 		return graphql.Null
 	}
-	res := resTmp.(string)
+	res := resTmp.(primitive.ObjectID)
 	fc.Result = res
-	return ec.marshalNCursor2string(ctx, field.Selections, res)
+	return ec.marshalNCursor2goᚗmongodbᚗorgᚋmongoᚑdriverᚋbsonᚋprimitiveᚐObjectID(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_ValidatorEdge_cursor(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -7189,6 +7193,7 @@ func (ec *executionContext) _Phase(ctx context.Context, sel ast.SelectionSet, ob
 
 			out.Concurrently(i, func() graphql.Marshaler {
 				return innerFunc(ctx)
+
 			})
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
@@ -7229,6 +7234,7 @@ func (ec *executionContext) _Phases(ctx context.Context, sel ast.SelectionSet, o
 
 			out.Concurrently(i, func() graphql.Marshaler {
 				return innerFunc(ctx)
+
 			})
 		case "ongoing":
 			field := field
@@ -7248,6 +7254,7 @@ func (ec *executionContext) _Phases(ctx context.Context, sel ast.SelectionSet, o
 
 			out.Concurrently(i, func() graphql.Marshaler {
 				return innerFunc(ctx)
+
 			})
 		case "finished":
 			field := field
@@ -7267,6 +7274,7 @@ func (ec *executionContext) _Phases(ctx context.Context, sel ast.SelectionSet, o
 
 			out.Concurrently(i, func() graphql.Marshaler {
 				return innerFunc(ctx)
+
 			})
 		case "current":
 			field := field
@@ -7283,6 +7291,7 @@ func (ec *executionContext) _Phases(ctx context.Context, sel ast.SelectionSet, o
 
 			out.Concurrently(i, func() graphql.Marshaler {
 				return innerFunc(ctx)
+
 			})
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
@@ -8137,12 +8146,12 @@ func (ec *executionContext) ___Type(ctx context.Context, sel ast.SelectionSet, o
 
 // region    ***************************** type.gotpl *****************************
 
-func (ec *executionContext) unmarshalNAddress2string(ctx context.Context, v interface{}) (string, error) {
+func (ec *executionContext) unmarshalNAccAddress2string(ctx context.Context, v interface{}) (string, error) {
 	res, err := graphql.UnmarshalString(v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNAddress2string(ctx context.Context, sel ast.SelectionSet, v string) graphql.Marshaler {
+func (ec *executionContext) marshalNAccAddress2string(ctx context.Context, sel ast.SelectionSet, v string) graphql.Marshaler {
 	res := graphql.MarshalString(v)
 	if res == graphql.Null {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
@@ -8239,13 +8248,13 @@ func (ec *executionContext) marshalNBoolean2bool(ctx context.Context, sel ast.Se
 	return res
 }
 
-func (ec *executionContext) unmarshalNCursor2string(ctx context.Context, v interface{}) (string, error) {
-	res, err := graphql.UnmarshalString(v)
+func (ec *executionContext) unmarshalNCursor2goᚗmongodbᚗorgᚋmongoᚑdriverᚋbsonᚋprimitiveᚐObjectID(ctx context.Context, v interface{}) (primitive.ObjectID, error) {
+	res, err := scalar.UnmarshalCursor(v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNCursor2string(ctx context.Context, sel ast.SelectionSet, v string) graphql.Marshaler {
-	res := graphql.MarshalString(v)
+func (ec *executionContext) marshalNCursor2goᚗmongodbᚗorgᚋmongoᚑdriverᚋbsonᚋprimitiveᚐObjectID(ctx context.Context, sel ast.SelectionSet, v primitive.ObjectID) graphql.Marshaler {
+	res := scalar.MarshalCursor(v)
 	if res == graphql.Null {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -8284,13 +8293,13 @@ func (ec *executionContext) marshalNInt2int(ctx context.Context, sel ast.Selecti
 	return res
 }
 
-func (ec *executionContext) unmarshalNPGPKeyID2string(ctx context.Context, v interface{}) (string, error) {
-	res, err := graphql.UnmarshalString(v)
+func (ec *executionContext) unmarshalNPGPKeyID2uint64(ctx context.Context, v interface{}) (uint64, error) {
+	res, err := graphql.UnmarshalUint64(v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNPGPKeyID2string(ctx context.Context, sel ast.SelectionSet, v string) graphql.Marshaler {
-	res := graphql.MarshalString(v)
+func (ec *executionContext) marshalNPGPKeyID2uint64(ctx context.Context, sel ast.SelectionSet, v uint64) graphql.Marshaler {
+	res := graphql.MarshalUint64(v)
 	if res == graphql.Null {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -8573,13 +8582,19 @@ func (ec *executionContext) marshalNTime2timeᚐTime(ctx context.Context, sel as
 	return res
 }
 
-func (ec *executionContext) unmarshalNURI2string(ctx context.Context, v interface{}) (string, error) {
-	res, err := graphql.UnmarshalString(v)
+func (ec *executionContext) unmarshalNURI2ᚖnetᚋurlᚐURL(ctx context.Context, v interface{}) (*url.URL, error) {
+	res, err := scalar.UnmarshalURI(v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNURI2string(ctx context.Context, sel ast.SelectionSet, v string) graphql.Marshaler {
-	res := graphql.MarshalString(v)
+func (ec *executionContext) marshalNURI2ᚖnetᚋurlᚐURL(ctx context.Context, sel ast.SelectionSet, v *url.URL) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	res := scalar.MarshalURI(v)
 	if res == graphql.Null {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -8662,13 +8677,19 @@ func (ec *executionContext) marshalNValidatorStatus2okp4ᚋnemetonᚑleaderboard
 	return v
 }
 
-func (ec *executionContext) unmarshalNValoperAddress2string(ctx context.Context, v interface{}) (string, error) {
-	res, err := graphql.UnmarshalString(v)
+func (ec *executionContext) unmarshalNValoperAddress2githubᚗcomᚋcosmosᚋcosmosᚑsdkᚋtypesᚐValAddress(ctx context.Context, v interface{}) (types.ValAddress, error) {
+	res, err := scalar.UnmarshalValoperAddress(v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNValoperAddress2string(ctx context.Context, sel ast.SelectionSet, v string) graphql.Marshaler {
-	res := graphql.MarshalString(v)
+func (ec *executionContext) marshalNValoperAddress2githubᚗcomᚋcosmosᚋcosmosᚑsdkᚋtypesᚐValAddress(ctx context.Context, sel ast.SelectionSet, v types.ValAddress) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	res := scalar.MarshalValoperAddress(v)
 	if res == graphql.Null {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -8930,7 +8951,7 @@ func (ec *executionContext) marshalN__TypeKind2string(ctx context.Context, sel a
 	return res
 }
 
-func (ec *executionContext) unmarshalOAddress2ᚖstring(ctx context.Context, v interface{}) (*string, error) {
+func (ec *executionContext) unmarshalOAccAddress2ᚖstring(ctx context.Context, v interface{}) (*string, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -8938,7 +8959,7 @@ func (ec *executionContext) unmarshalOAddress2ᚖstring(ctx context.Context, v i
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalOAddress2ᚖstring(ctx context.Context, sel ast.SelectionSet, v *string) graphql.Marshaler {
+func (ec *executionContext) marshalOAccAddress2ᚖstring(ctx context.Context, sel ast.SelectionSet, v *string) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
@@ -8972,19 +8993,19 @@ func (ec *executionContext) marshalOBoolean2ᚖbool(ctx context.Context, sel ast
 	return res
 }
 
-func (ec *executionContext) unmarshalOCursor2ᚖstring(ctx context.Context, v interface{}) (*string, error) {
+func (ec *executionContext) unmarshalOCursor2ᚖgoᚗmongodbᚗorgᚋmongoᚑdriverᚋbsonᚋprimitiveᚐObjectID(ctx context.Context, v interface{}) (*primitive.ObjectID, error) {
 	if v == nil {
 		return nil, nil
 	}
-	res, err := graphql.UnmarshalString(v)
+	res, err := scalar.UnmarshalCursor(v)
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalOCursor2ᚖstring(ctx context.Context, sel ast.SelectionSet, v *string) graphql.Marshaler {
+func (ec *executionContext) marshalOCursor2ᚖgoᚗmongodbᚗorgᚋmongoᚑdriverᚋbsonᚋprimitiveᚐObjectID(ctx context.Context, sel ast.SelectionSet, v *primitive.ObjectID) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
-	res := graphql.MarshalString(*v)
+	res := scalar.MarshalCursor(*v)
 	return res
 }
 
@@ -9055,19 +9076,19 @@ func (ec *executionContext) marshalOValidator2ᚖokp4ᚋnemetonᚑleaderboardᚋ
 	return ec._Validator(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalOValoperAddress2ᚖstring(ctx context.Context, v interface{}) (*string, error) {
+func (ec *executionContext) unmarshalOValoperAddress2githubᚗcomᚋcosmosᚋcosmosᚑsdkᚋtypesᚐValAddress(ctx context.Context, v interface{}) (types.ValAddress, error) {
 	if v == nil {
 		return nil, nil
 	}
-	res, err := graphql.UnmarshalString(v)
-	return &res, graphql.ErrorOnPath(ctx, err)
+	res, err := scalar.UnmarshalValoperAddress(v)
+	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalOValoperAddress2ᚖstring(ctx context.Context, sel ast.SelectionSet, v *string) graphql.Marshaler {
+func (ec *executionContext) marshalOValoperAddress2githubᚗcomᚋcosmosᚋcosmosᚑsdkᚋtypesᚐValAddress(ctx context.Context, sel ast.SelectionSet, v types.ValAddress) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
-	res := graphql.MarshalString(*v)
+	res := scalar.MarshalValoperAddress(v)
 	return res
 }
 

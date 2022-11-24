@@ -67,3 +67,21 @@ models:
       - github.com/99designs/gqlgen/graphql.Int
       - github.com/99designs/gqlgen/graphql.Int64
       - github.com/99designs/gqlgen/graphql.Int32
+  Time:
+    model:
+      - github.com/99designs/gqlgen/graphql.Time
+  Address:
+    model:
+      - okp4/nemeton-leaderboard/graphql/scalar.Address
+  ValoperAddress:
+    model:
+      - okp4/nemeton-leaderboard/graphql/scalar.ValoperAddress
+  PGPKeyID:
+    model:
+      - github.com/99designs/gqlgen/graphql.Uint64
+  URI:
+    model:
+      - okp4/nemeton-leaderboard/graphql/scalar.URI
+  Cursor:
+    model:
+      - okp4/nemeton-leaderboard/graphql/scalar.Cursor

@@ -6,10 +6,12 @@ package graphql
 import (
 	"context"
 	"fmt"
-
 	"okp4/nemeton-leaderboard/app/nemeton"
 	"okp4/nemeton-leaderboard/graphql/generated"
 	"okp4/nemeton-leaderboard/graphql/model"
+
+	"github.com/cosmos/cosmos-sdk/types"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // Blocks is the resolver for the blocks field.
@@ -48,7 +50,7 @@ func (r *queryResolver) Phases(ctx context.Context) (*model.Phases, error) {
 }
 
 // Board is the resolver for the board field.
-func (r *queryResolver) Board(ctx context.Context, search *string, first *int, after *string) (*model.BoardConnection, error) {
+func (r *queryResolver) Board(ctx context.Context, search *string, first *int, after *primitive.ObjectID) (*model.BoardConnection, error) {
 	panic(fmt.Errorf("not implemented: Board - board"))
 }
 
@@ -58,7 +60,7 @@ func (r *queryResolver) ValidatorCount(ctx context.Context) (int, error) {
 }
 
 // Validator is the resolver for the validator field.
-func (r *queryResolver) Validator(ctx context.Context, cursor *string, rank *int, valoper *string, delegator *string, discord *string, twitter *string) (*model.Validator, error) {
+func (r *queryResolver) Validator(ctx context.Context, cursor *primitive.ObjectID, rank *int, valoper types.ValAddress, delegator *string, discord *string, twitter *string) (*model.Validator, error) {
 	panic(fmt.Errorf("not implemented: Validator - validator"))
 }
 
@@ -71,8 +73,6 @@ func (r *Resolver) Phases() generated.PhasesResolver { return &phasesResolver{r}
 // Query returns generated.QueryResolver implementation.
 func (r *Resolver) Query() generated.QueryResolver { return &queryResolver{r} }
 
-type (
-	phaseResolver  struct{ *Resolver }
-	phasesResolver struct{ *Resolver }
-	queryResolver  struct{ *Resolver }
-)
+type phaseResolver struct{ *Resolver }
+type phasesResolver struct{ *Resolver }
+type queryResolver struct{ *Resolver }

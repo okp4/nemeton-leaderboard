@@ -5,9 +5,12 @@ package model
 import (
 	"fmt"
 	"io"
+	"net/url"
+	"okp4/nemeton-leaderboard/app/nemeton"
 	"strconv"
 
-	"okp4/nemeton-leaderboard/app/nemeton"
+	"github.com/cosmos/cosmos-sdk/types"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // Represents the progress/result of a task assigned to a validator.
@@ -42,7 +45,7 @@ type BoardConnection struct {
 // Represents an identity on https://keybase.io/
 type Identity struct {
 	// The identity PGP key id.
-	PGP string `json:"pgp"`
+	PGP uint64 `json:"pgp"`
 	// The resolved identity picture, if any.
 	Picture *Link `json:"picture"`
 }
@@ -55,15 +58,15 @@ type Link struct {
 	// [RFC6570](https://tools.ietf.org/html/rfc6570).
 	//
 	// If the value is a URI Template then the Link Object shall have a `templated` attribute whose value is true.
-	Href string `json:"href"`
+	Href *url.URL `json:"href"`
 }
 
 // Contains information on a connection page.
 type PageInfo struct {
 	// The cursor of the first element of the page.
-	StartCursor string `json:"startCursor"`
+	StartCursor primitive.ObjectID `json:"startCursor"`
 	// The cursor of the last element of the page.
-	EndCursor string `json:"endCursor"`
+	EndCursor primitive.ObjectID `json:"endCursor"`
 	// `true` if there is other elements after the endCursor.
 	HasNextPage bool `json:"hasNextPage"`
 	// The number of elements in the page.
@@ -165,7 +168,7 @@ type Validator struct {
 	// The validator identity on https://keybase.io/, can be used to retrieve its picture.
 	Identity *Identity `json:"identity"`
 	// The validator node valoper address.
-	Valoper string `json:"valoper"`
+	Valoper types.ValAddress `json:"valoper"`
 	// The address of the validator node delegator.
 	Delegator string `json:"delegator"`
 	// The validator twitter account.
@@ -187,7 +190,7 @@ type Validator struct {
 // Represents an edge to a validator.
 type ValidatorEdge struct {
 	// The validator's cursor.
-	Cursor string `json:"cursor"`
+	Cursor primitive.ObjectID `json:"cursor"`
 	// The validator.
 	Node *Validator `json:"node"`
 }

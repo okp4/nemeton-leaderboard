@@ -14,7 +14,7 @@ scalar Time
 Represents an okp4 address as [Bech32](https://en.bitcoin.it/wiki/Bech32) format prefixed by the blockchain prefix.
 e.g. `okp41jse8senm9hcvydhl8v9x47kfe5z82zmwtw8jvj`
 """
-scalar Address
+scalar AccAddress
 
 """
 Represents an okp4 validator address as [Bech32](https://en.bitcoin.it/wiki/Bech32) format prefixed by the blockchain valoper prefix.
@@ -30,7 +30,7 @@ scalar PGPKeyID
 
 """
 Represents an [Uniform Resource Identifier](https://fr.wikipedia.org/wiki/Uniform_Resource_Identifier) to permanently identify a resource.
-e.g. ``
+e.g. `https://okp4.network/`
 """
 scalar URI
 
@@ -87,7 +87,7 @@ type Query {
         cursor: Cursor
         rank: Int
         valoper: ValoperAddress
-        delegator: Address
+        delegator: AccAddress
         discord: String
         twitter: String
     ): Validator
@@ -320,7 +320,7 @@ type Validator {
     """
     The address of the validator node delegator.
     """
-    delegator: Address!
+    delegator: AccAddress!
 
     """
     The validator twitter account.
