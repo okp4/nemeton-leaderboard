@@ -24,17 +24,17 @@ func (r *phasesResolver) All(ctx context.Context, obj *model.Phases) ([]*nemeton
 
 // Ongoing is the resolver for the ongoing field.
 func (r *phasesResolver) Ongoing(ctx context.Context, obj *model.Phases) ([]*nemeton.Phase, error) {
-	panic(fmt.Errorf("not implemented: Ongoing - ongoing"))
+	return r.store.GetUnstartedPhases(), nil
 }
 
 // Finished is the resolver for the finished field.
 func (r *phasesResolver) Finished(ctx context.Context, obj *model.Phases) ([]*nemeton.Phase, error) {
-	panic(fmt.Errorf("not implemented: Finished - finished"))
+	return r.store.GetFinishedPhases(), nil
 }
 
 // Current is the resolver for the current field.
 func (r *phasesResolver) Current(ctx context.Context, obj *model.Phases) (*nemeton.Phase, error) {
-	panic(fmt.Errorf("not implemented: Current - current"))
+	return r.store.GetCurrentPhase(), nil
 }
 
 // Phase is the resolver for the phase field.

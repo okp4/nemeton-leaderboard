@@ -66,9 +66,18 @@ func (s *Store) init(ctx context.Context) error {
 }
 
 func (s *Store) GetPhase(number int) *Phase {
-	for i, phase := range s.phases {
+	for _, phase := range s.phases {
 		if phase.Number == number {
-			return s.phases[i]
+			return phase
+		}
+	}
+	return nil
+}
+
+func (s *Store) GetCurrentPhase() *Phase {
+	for _, phase := range s.phases {
+		if phase.InProgress() {
+			return phase
 		}
 	}
 	return nil
@@ -76,4 +85,26 @@ func (s *Store) GetPhase(number int) *Phase {
 
 func (s *Store) GetAllPhases() []*Phase {
 	return s.phases
+}
+
+func (s *Store) GetUnstartedPhases() []*Phase {
+	return s.GetPhases(func(p Phase) bool {
+		return !p.Started()
+	})
+}
+
+func (s *Store) GetFinishedPhases() []*Phase {
+	return s.GetPhases(func(p Phase) bool {
+		return p.Finished()
+	})
+}
+
+func (s *Store) GetPhases(criteriaFn func(p Phase) bool) []*Phase {
+	var filtered []*Phase
+	for _, phase := range s.phases {
+		if criteriaFn(*phase) {
+			filtered = append(filtered, phase)
+		}
+	}
+	return filtered
 }

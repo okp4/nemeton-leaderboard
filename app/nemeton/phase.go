@@ -18,3 +18,7 @@ func (p Phase) Started() bool {
 func (p Phase) Finished() bool {
 	return time.Now().After(p.EndDate)
 }
+
+func (p Phase) InProgress() bool {
+	return p.Started() && !p.Finished()
+}
