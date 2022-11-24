@@ -35,3 +35,6 @@ type GetLatestBlock struct{}
 type GetBlockResponse struct {
 	Block *tmservice.Block
 }
+
+// SyncBlock used for ask synchronization to request new block on chain.
+type SyncBlock struct{}

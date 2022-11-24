@@ -10,6 +10,7 @@ import (
 	"okp4/nemeton-leaderboard/app/offset"
 
 	"github.com/asynkron/protoactor-go/actor"
+	"github.com/asynkron/protoactor-go/scheduler"
 	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
 	"github.com/rs/zerolog/log"
 )
@@ -55,52 +56,51 @@ func (a *Actor) Receive(ctx actor.Context) {
 	switch ctx.Message().(type) {
 	case *actor.Started:
 		log.Info().Msg("🔁 Start block syncing")
+
 		a.grpcClient = ctx.Spawn(a.grpcClientProps)
-		a.startSynchronization(ctx)
+
+		err := a.catchUpSyncBlocks(ctx)
+		if err != nil {
+			log.Panic().Err(err).Msg("❌ Could not catch up to latest block sync")
+		}
+
+		scheduler.NewTimerScheduler(ctx).SendRepeatedly(0, 5*time.Second, ctx.Self(), &message.SyncBlock{})
+	case *message.SyncBlock:
+		a.syncBlock(ctx)
 	case *actor.Stopping:
 		log.Info().Msg("🛑 Stop block syncing")
 	}
 }
 
-func (a *Actor) startSynchronization(ctx actor.Context) {
-	err := a.catchUpSyncBlocks(ctx)
+func (a *Actor) syncBlock(ctx actor.Context) {
+	block, err := a.getBlock(ctx, a.currentBlock+1)
 	if err != nil {
-		log.Err(err).Msg("❌ Could not catch up to latest block sync")
+		log.Err(err).Msg("❌ Could not get block.")
 		return
 	}
 
-	go func() {
-		for range time.Tick(5 * time.Second) {
-			block, err := a.getBlock(ctx, a.currentBlock+1)
-			if err != nil {
-				log.Err(err).Msg("❌ Could not get block.")
-				continue
-			}
+	blockEvent := NewBlockEvent{
+		Height:     block.Header.Height,
+		Time:       block.Header.Time,
+		Signatures: block.LastCommit.Signatures,
+	}
 
-			blockEvent := NewBlockEvent{
-				Height:     block.Header.Height,
-				Time:       block.Header.Time,
-				Signatures: block.LastCommit.Signatures,
-			}
+	blockData, err := blockEvent.Marshall()
+	if err != nil {
+		log.Err(err).Msg("❌ Failed to marshall event to map interface")
+		return
+	}
 
-			blockData, err := blockEvent.Marshall()
-			if err != nil {
-				log.Err(err).Msg("❌ Failed to marshall event to map interface")
-				continue
-			}
+	ctx.Send(a.eventStore, &message.PublishEventMessage{Event: event.NewEvent(NewBlockEventType, blockData)})
 
-			ctx.Send(a.eventStore, &message.PublishEventMessage{Event: event.NewEvent(NewBlockEventType, blockData)})
+	log.Info().Int64("blockHeight", block.Header.Height).Msg("Successful request block")
 
-			log.Info().Int64("blockHeight", block.Header.Height).Msg("Successful request block")
+	if a.offsetStore.Save(a.context, block.Header.Height) != nil {
+		log.Err(err).Msg("❌ Failed saved current block height into database")
+		return
+	}
 
-			if a.offsetStore.Save(a.context, block.Header.Height) != nil {
-				log.Err(err).Msg("❌ Failed saved current block height into database")
-				continue
-			}
-
-			a.currentBlock = block.Header.Height
-		}
-	}()
+	a.currentBlock = block.Header.Height
 }
 
 func (a *Actor) catchUpSyncBlocks(ctx actor.Context) error {

@@ -35,24 +35,18 @@ func (client *GrpcClient) Receive(ctx actor.Context) {
 			log.Warn().Err(err).Msg("😥 Could not close grpc connection.")
 		}
 	case *message.GetBlock:
-		goCTX, cancelFunc := context.WithCancel(context.Background())
-		defer cancelFunc()
-
-		block, err := client.GetBlock(goCTX, msg.Height)
+		block, err := client.GetBlock(context.Background(), msg.Height)
 		if err != nil {
-			panic(err)
+			log.Panic().Err(err).Msg("❌ Failed request get block.")
 		}
 		ctx.Respond(&message.GetBlockResponse{
 			Block: block,
 		})
 
 	case *message.GetLatestBlock:
-		goCTX, cancelFunc := context.WithCancel(context.Background())
-		defer cancelFunc()
-
-		block, err := client.GetLatestBlock(goCTX)
+		block, err := client.GetLatestBlock(context.Background())
 		if err != nil {
-			panic(err)
+			log.Panic().Err(err).Msg("❌ Failed request get latest block.")
 		}
 		ctx.Respond(&message.GetBlockResponse{
 			Block: block,
