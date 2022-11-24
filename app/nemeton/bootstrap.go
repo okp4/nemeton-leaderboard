@@ -2,6 +2,7 @@ package nemeton
 
 import "time"
 
+// nolint: funlen,lll
 func bootstrapPhases() []Phase {
 	r100 := 100
 	r200 := 200
