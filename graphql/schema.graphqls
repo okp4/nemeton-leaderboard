@@ -300,7 +300,7 @@ type Validator {
     """
     The validator position in the board.
     """
-    rank: Int!
+    rank: Int! @goField(forceResolver: true)
 
     """
     The validator moniker.
@@ -310,7 +310,7 @@ type Validator {
     """
     The validator identity on https://keybase.io/, can be used to retrieve its picture.
     """
-    identity: Identity
+    identity: Identity @goField(forceResolver: true)
 
     """
     The validator node valoper address.
@@ -350,12 +350,12 @@ type Validator {
     """
     The validator affected tasks, does not reference not tasks who has not started yet.
     """
-    tasks: Tasks
+    tasks: Tasks @goField(forceResolver: true)
 
     """
     The blocks the validator has not signed.
     """
-    missedBlocks: [BlockRange!]!
+    missedBlocks: [BlockRange!]! @goField(forceResolver: true)
 }
 
 """
@@ -370,7 +370,7 @@ type Identity {
     """
     The resolved identity picture, if any.
     """
-    picture: Link
+    picture: Link @goField(forceResolver: true)
 }
 
 """

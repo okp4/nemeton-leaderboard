@@ -6,6 +6,7 @@ package graphql
 import (
 	"context"
 	"fmt"
+
 	"okp4/nemeton-leaderboard/app/nemeton"
 	"okp4/nemeton-leaderboard/graphql/generated"
 	"okp4/nemeton-leaderboard/graphql/model"
@@ -13,6 +14,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/types"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
+
+// Picture is the resolver for the picture field.
+func (r *identityResolver) Picture(ctx context.Context, obj *model.Identity) (*model.Link, error) {
+	panic(fmt.Errorf("not implemented: Picture - picture"))
+}
 
 // Blocks is the resolver for the blocks field.
 func (r *phaseResolver) Blocks(ctx context.Context, obj *nemeton.Phase) (*model.BlockRange, error) {
@@ -60,9 +66,37 @@ func (r *queryResolver) ValidatorCount(ctx context.Context) (int, error) {
 }
 
 // Validator is the resolver for the validator field.
-func (r *queryResolver) Validator(ctx context.Context, cursor *primitive.ObjectID, rank *int, valoper types.ValAddress, delegator *string, discord *string, twitter *string) (*model.Validator, error) {
+func (r *queryResolver) Validator(ctx context.Context, cursor *primitive.ObjectID, rank *int, valoper types.ValAddress, delegator types.AccAddress, discord *string, twitter *string) (*nemeton.Validator, error) {
 	panic(fmt.Errorf("not implemented: Validator - validator"))
 }
+
+// Rank is the resolver for the rank field.
+func (r *validatorResolver) Rank(ctx context.Context, obj *nemeton.Validator) (int, error) {
+	panic(fmt.Errorf("not implemented: Rank - rank"))
+}
+
+// Identity is the resolver for the identity field.
+func (r *validatorResolver) Identity(ctx context.Context, obj *nemeton.Validator) (*model.Identity, error) {
+	panic(fmt.Errorf("not implemented: Identity - identity"))
+}
+
+// Status is the resolver for the status field.
+func (r *validatorResolver) Status(ctx context.Context, obj *nemeton.Validator) (model.ValidatorStatus, error) {
+	panic(fmt.Errorf("not implemented: Status - status"))
+}
+
+// Tasks is the resolver for the tasks field.
+func (r *validatorResolver) Tasks(ctx context.Context, obj *nemeton.Validator) (*model.Tasks, error) {
+	panic(fmt.Errorf("not implemented: Tasks - tasks"))
+}
+
+// MissedBlocks is the resolver for the missedBlocks field.
+func (r *validatorResolver) MissedBlocks(ctx context.Context, obj *nemeton.Validator) ([]*model.BlockRange, error) {
+	panic(fmt.Errorf("not implemented: MissedBlocks - missedBlocks"))
+}
+
+// Identity returns generated.IdentityResolver implementation.
+func (r *Resolver) Identity() generated.IdentityResolver { return &identityResolver{r} }
 
 // Phase returns generated.PhaseResolver implementation.
 func (r *Resolver) Phase() generated.PhaseResolver { return &phaseResolver{r} }
@@ -73,6 +107,13 @@ func (r *Resolver) Phases() generated.PhasesResolver { return &phasesResolver{r}
 // Query returns generated.QueryResolver implementation.
 func (r *Resolver) Query() generated.QueryResolver { return &queryResolver{r} }
 
-type phaseResolver struct{ *Resolver }
-type phasesResolver struct{ *Resolver }
-type queryResolver struct{ *Resolver }
+// Validator returns generated.ValidatorResolver implementation.
+func (r *Resolver) Validator() generated.ValidatorResolver { return &validatorResolver{r} }
+
+type (
+	identityResolver  struct{ *Resolver }
+	phaseResolver     struct{ *Resolver }
+	phasesResolver    struct{ *Resolver }
+	queryResolver     struct{ *Resolver }
+	validatorResolver struct{ *Resolver }
+)

@@ -6,10 +6,10 @@ import (
 	"fmt"
 	"io"
 	"net/url"
-	"okp4/nemeton-leaderboard/app/nemeton"
 	"strconv"
 
-	"github.com/cosmos/cosmos-sdk/types"
+	"okp4/nemeton-leaderboard/app/nemeton"
+
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -159,40 +159,12 @@ func (this UptimeTask) GetCompleted() bool { return this.Completed }
 // The number of points earned by the validator on this task.
 func (this UptimeTask) GetEarnedPoints() int { return this.EarnedPoints }
 
-// Represents a validator, a participant or a druid in the Nemeton program.
-type Validator struct {
-	// The validator position in the board.
-	Rank int `json:"rank"`
-	// The validator moniker.
-	Moniker string `json:"moniker"`
-	// The validator identity on https://keybase.io/, can be used to retrieve its picture.
-	Identity *Identity `json:"identity"`
-	// The validator node valoper address.
-	Valoper types.ValAddress `json:"valoper"`
-	// The address of the validator node delegator.
-	Delegator string `json:"delegator"`
-	// The validator twitter account.
-	Twitter *string `json:"twitter"`
-	// The validator discord account.
-	Discord string `json:"discord"`
-	// The validator country.
-	Country string `json:"country"`
-	// The validator current status.
-	Status ValidatorStatus `json:"status"`
-	// The validator points count.
-	Points int `json:"points"`
-	// The validator affected tasks, does not reference not tasks who has not started yet.
-	Tasks *Tasks `json:"tasks"`
-	// The blocks the validator has not signed.
-	MissedBlocks []*BlockRange `json:"missedBlocks"`
-}
-
 // Represents an edge to a validator.
 type ValidatorEdge struct {
 	// The validator's cursor.
 	Cursor primitive.ObjectID `json:"cursor"`
 	// The validator.
-	Node *Validator `json:"node"`
+	Node *nemeton.Validator `json:"node"`
 }
 
 // Represents the status of a validator node on the blockchain.

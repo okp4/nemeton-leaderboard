@@ -56,6 +56,9 @@ models:
   Task:
     model:
       - okp4/nemeton-leaderboard/app/nemeton.Task
+  Validator:
+    model:
+      - okp4/nemeton-leaderboard/app/nemeton.Validator
   ID:
     model:
       - github.com/99designs/gqlgen/graphql.ID
@@ -70,9 +73,9 @@ models:
   Time:
     model:
       - github.com/99designs/gqlgen/graphql.Time
-  Address:
+  AccAddress:
     model:
-      - okp4/nemeton-leaderboard/graphql/scalar.Address
+      - okp4/nemeton-leaderboard/graphql/scalar.AccAddress
   ValoperAddress:
     model:
       - okp4/nemeton-leaderboard/graphql/scalar.ValoperAddress
