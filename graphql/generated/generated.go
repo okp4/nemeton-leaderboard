@@ -7,12 +7,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"okp4/nemeton-leaderboard/app/nemeton"
-	"okp4/nemeton-leaderboard/graphql/model"
 	"strconv"
 	"sync"
 	"sync/atomic"
 	"time"
+
+	"okp4/nemeton-leaderboard/app/nemeton"
+	"okp4/nemeton-leaderboard/graphql/model"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/99designs/gqlgen/graphql/introspection"
@@ -39,12 +40,11 @@ type Config struct {
 
 type ResolverRoot interface {
 	Phase() PhaseResolver
+	Phases() PhasesResolver
 	Query() QueryResolver
-	Task() TaskResolver
 }
 
-type DirectiveRoot struct {
-}
+type DirectiveRoot struct{}
 
 type ComplexityRoot struct {
 	BlockRange struct {
@@ -167,16 +167,18 @@ type ComplexityRoot struct {
 type PhaseResolver interface {
 	Blocks(ctx context.Context, obj *nemeton.Phase) (*model.BlockRange, error)
 }
+type PhasesResolver interface {
+	All(ctx context.Context, obj *model.Phases) ([]*nemeton.Phase, error)
+	Ongoing(ctx context.Context, obj *model.Phases) ([]*nemeton.Phase, error)
+	Finished(ctx context.Context, obj *model.Phases) ([]*nemeton.Phase, error)
+	Current(ctx context.Context, obj *model.Phases) (*nemeton.Phase, error)
+}
 type QueryResolver interface {
 	Phase(ctx context.Context, number int) (*nemeton.Phase, error)
 	Phases(ctx context.Context) (*model.Phases, error)
 	Board(ctx context.Context, search *string, first *int, after *string) (*model.BoardConnection, error)
 	ValidatorCount(ctx context.Context) (int, error)
 	Validator(ctx context.Context, cursor *string, rank *int, valoper *string, delegator *string, discord *string, twitter *string) (*model.Validator, error)
-}
-type TaskResolver interface {
-	WithSubmission(ctx context.Context, obj *nemeton.Task) (bool, error)
-	Rewards(ctx context.Context, obj *nemeton.Task) (*int, error)
 }
 
 type executableSchema struct {
@@ -865,22 +867,22 @@ type Phases {
     """
     Retrieve all the phases.
     """
-    all: [Phase!]!
+    all: [Phase!]! @goField(forceResolver: true)
 
     """
     Retrieve all the ongoing phases, those who hasn't started yet.
     """
-    ongoing: [Phase!]!
+    ongoing: [Phase!]! @goField(forceResolver: true)
 
     """
     Retrieve all the finished phases.
     """
-    finished: [Phase!]!
+    finished: [Phase!]! @goField(forceResolver: true)
 
     """
     Retrieve the current phase.
     """
-    current: Phase
+    current: Phase @goField(forceResolver: true)
 }
 
 """
@@ -2654,7 +2656,7 @@ func (ec *executionContext) _Phases_all(ctx context.Context, field graphql.Colle
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.All, nil
+		return ec.resolvers.Phases().All(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2675,8 +2677,8 @@ func (ec *executionContext) fieldContext_Phases_all(ctx context.Context, field g
 	fc = &graphql.FieldContext{
 		Object:     "Phases",
 		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
+		IsMethod:   true,
+		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
 			case "number":
@@ -2718,7 +2720,7 @@ func (ec *executionContext) _Phases_ongoing(ctx context.Context, field graphql.C
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Ongoing, nil
+		return ec.resolvers.Phases().Ongoing(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2739,8 +2741,8 @@ func (ec *executionContext) fieldContext_Phases_ongoing(ctx context.Context, fie
 	fc = &graphql.FieldContext{
 		Object:     "Phases",
 		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
+		IsMethod:   true,
+		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
 			case "number":
@@ -2782,7 +2784,7 @@ func (ec *executionContext) _Phases_finished(ctx context.Context, field graphql.
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Finished, nil
+		return ec.resolvers.Phases().Finished(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2803,8 +2805,8 @@ func (ec *executionContext) fieldContext_Phases_finished(ctx context.Context, fi
 	fc = &graphql.FieldContext{
 		Object:     "Phases",
 		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
+		IsMethod:   true,
+		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
 			case "number":
@@ -2846,7 +2848,7 @@ func (ec *executionContext) _Phases_current(ctx context.Context, field graphql.C
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Current, nil
+		return ec.resolvers.Phases().Current(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2864,8 +2866,8 @@ func (ec *executionContext) fieldContext_Phases_current(ctx context.Context, fie
 	fc = &graphql.FieldContext{
 		Object:     "Phases",
 		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
+		IsMethod:   true,
+		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
 			case "number":
@@ -3849,7 +3851,7 @@ func (ec *executionContext) _Task_withSubmission(ctx context.Context, field grap
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Task().WithSubmission(rctx, obj)
+		return obj.WithSubmission(), nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -3871,7 +3873,7 @@ func (ec *executionContext) fieldContext_Task_withSubmission(ctx context.Context
 		Object:     "Task",
 		Field:      field,
 		IsMethod:   true,
-		IsResolver: true,
+		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Boolean does not have child fields")
 		},
@@ -3893,7 +3895,7 @@ func (ec *executionContext) _Task_rewards(ctx context.Context, field graphql.Col
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Task().Rewards(rctx, obj)
+		return obj.Rewards, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -3911,8 +3913,8 @@ func (ec *executionContext) fieldContext_Task_rewards(ctx context.Context, field
 	fc = &graphql.FieldContext{
 		Object:     "Task",
 		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
+		IsMethod:   false,
+		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Int does not have child fields")
 		},
@@ -7187,7 +7189,6 @@ func (ec *executionContext) _Phase(ctx context.Context, sel ast.SelectionSet, ob
 
 			out.Concurrently(i, func() graphql.Marshaler {
 				return innerFunc(ctx)
-
 			})
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
@@ -7211,30 +7212,78 @@ func (ec *executionContext) _Phases(ctx context.Context, sel ast.SelectionSet, o
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("Phases")
 		case "all":
+			field := field
 
-			out.Values[i] = ec._Phases_all(ctx, field, obj)
-
-			if out.Values[i] == graphql.Null {
-				invalids++
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Phases_all(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
 			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+			})
 		case "ongoing":
+			field := field
 
-			out.Values[i] = ec._Phases_ongoing(ctx, field, obj)
-
-			if out.Values[i] == graphql.Null {
-				invalids++
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Phases_ongoing(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
 			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+			})
 		case "finished":
+			field := field
 
-			out.Values[i] = ec._Phases_finished(ctx, field, obj)
-
-			if out.Values[i] == graphql.Null {
-				invalids++
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Phases_finished(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
 			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+			})
 		case "current":
+			field := field
 
-			out.Values[i] = ec._Phases_current(ctx, field, obj)
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Phases_current(ctx, field, obj)
+				return res
+			}
 
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+			})
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -7461,87 +7510,61 @@ func (ec *executionContext) _Task(ctx context.Context, sel ast.SelectionSet, obj
 			out.Values[i] = ec._Task_id(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&invalids, 1)
+				invalids++
 			}
 		case "name":
 
 			out.Values[i] = ec._Task_name(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&invalids, 1)
+				invalids++
 			}
 		case "description":
 
 			out.Values[i] = ec._Task_description(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&invalids, 1)
+				invalids++
 			}
 		case "startDate":
 
 			out.Values[i] = ec._Task_startDate(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&invalids, 1)
+				invalids++
 			}
 		case "endDate":
 
 			out.Values[i] = ec._Task_endDate(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&invalids, 1)
+				invalids++
 			}
 		case "started":
 
 			out.Values[i] = ec._Task_started(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&invalids, 1)
+				invalids++
 			}
 		case "finished":
 
 			out.Values[i] = ec._Task_finished(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&invalids, 1)
+				invalids++
 			}
 		case "withSubmission":
-			field := field
 
-			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._Task_withSubmission(ctx, field, obj)
-				if res == graphql.Null {
-					atomic.AddUint32(&invalids, 1)
-				}
-				return res
+			out.Values[i] = ec._Task_withSubmission(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
 			}
-
-			out.Concurrently(i, func() graphql.Marshaler {
-				return innerFunc(ctx)
-
-			})
 		case "rewards":
-			field := field
 
-			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._Task_rewards(ctx, field, obj)
-				return res
-			}
+			out.Values[i] = ec._Task_rewards(ctx, field, obj)
 
-			out.Concurrently(i, func() graphql.Marshaler {
-				return innerFunc(ctx)
-
-			})
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}

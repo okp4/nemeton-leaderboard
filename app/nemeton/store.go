@@ -13,7 +13,7 @@ const collectionName = "phases"
 
 type Store struct {
 	db     *mongo.Database
-	phases []Phase
+	phases []*Phase
 }
 
 func NewStore(ctx context.Context, mongoURI, dbName string) (*Store, error) {
@@ -59,7 +59,7 @@ func (s *Store) init(ctx context.Context) error {
 		if err := c.Decode(&phase); err != nil {
 			return err
 		}
-		s.phases = append(s.phases, phase)
+		s.phases = append(s.phases, &phase)
 	}
 
 	return nil
@@ -68,8 +68,12 @@ func (s *Store) init(ctx context.Context) error {
 func (s *Store) GetPhase(number int) *Phase {
 	for i, phase := range s.phases {
 		if phase.Number == number {
-			return &s.phases[i]
+			return s.phases[i]
 		}
 	}
 	return nil
+}
+
+func (s *Store) GetAllPhases() []*Phase {
+	return s.phases
 }

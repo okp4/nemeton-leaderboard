@@ -8,6 +8,7 @@ type Task struct {
 	Description string    `bson:"description"`
 	StartDate   time.Time `bson:"startDate"`
 	EndDate     time.Time `bson:"endDate"`
+	Rewards     *int      `bson:"rewards,omitempty"`
 }
 
 func (t Task) Started() bool {

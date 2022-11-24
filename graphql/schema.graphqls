@@ -100,22 +100,22 @@ type Phases {
     """
     Retrieve all the phases.
     """
-    all: [Phase!]!
+    all: [Phase!]! @goField(forceResolver: true)
 
     """
     Retrieve all the ongoing phases, those who hasn't started yet.
     """
-    ongoing: [Phase!]!
+    ongoing: [Phase!]! @goField(forceResolver: true)
 
     """
     Retrieve all the finished phases.
     """
-    finished: [Phase!]!
+    finished: [Phase!]! @goField(forceResolver: true)
 
     """
     Retrieve the current phase.
     """
-    current: Phase
+    current: Phase @goField(forceResolver: true)
 }
 
 """

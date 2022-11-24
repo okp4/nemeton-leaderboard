@@ -6,6 +6,7 @@ package graphql
 import (
 	"context"
 	"fmt"
+
 	"okp4/nemeton-leaderboard/app/nemeton"
 	"okp4/nemeton-leaderboard/graphql/generated"
 	"okp4/nemeton-leaderboard/graphql/model"
@@ -16,6 +17,26 @@ func (r *phaseResolver) Blocks(ctx context.Context, obj *nemeton.Phase) (*model.
 	panic(fmt.Errorf("not implemented: Blocks - blocks"))
 }
 
+// All is the resolver for the all field.
+func (r *phasesResolver) All(ctx context.Context, obj *model.Phases) ([]*nemeton.Phase, error) {
+	return r.store.GetAllPhases(), nil
+}
+
+// Ongoing is the resolver for the ongoing field.
+func (r *phasesResolver) Ongoing(ctx context.Context, obj *model.Phases) ([]*nemeton.Phase, error) {
+	panic(fmt.Errorf("not implemented: Ongoing - ongoing"))
+}
+
+// Finished is the resolver for the finished field.
+func (r *phasesResolver) Finished(ctx context.Context, obj *model.Phases) ([]*nemeton.Phase, error) {
+	panic(fmt.Errorf("not implemented: Finished - finished"))
+}
+
+// Current is the resolver for the current field.
+func (r *phasesResolver) Current(ctx context.Context, obj *model.Phases) (*nemeton.Phase, error) {
+	panic(fmt.Errorf("not implemented: Current - current"))
+}
+
 // Phase is the resolver for the phase field.
 func (r *queryResolver) Phase(ctx context.Context, number int) (*nemeton.Phase, error) {
 	return r.store.GetPhase(number), nil
@@ -23,7 +44,7 @@ func (r *queryResolver) Phase(ctx context.Context, number int) (*nemeton.Phase, 
 
 // Phases is the resolver for the phases field.
 func (r *queryResolver) Phases(ctx context.Context) (*model.Phases, error) {
-	panic(fmt.Errorf("not implemented: Phases - phases"))
+	return &model.Phases{}, nil
 }
 
 // Board is the resolver for the board field.
@@ -41,44 +62,17 @@ func (r *queryResolver) Validator(ctx context.Context, cursor *string, rank *int
 	panic(fmt.Errorf("not implemented: Validator - validator"))
 }
 
-// WithSubmission is the resolver for the withSubmission field.
-func (r *taskResolver) WithSubmission(ctx context.Context, obj *nemeton.Task) (bool, error) {
-	panic(fmt.Errorf("not implemented: WithSubmission - withSubmission"))
-}
-
-// Rewards is the resolver for the rewards field.
-func (r *taskResolver) Rewards(ctx context.Context, obj *nemeton.Task) (*int, error) {
-	panic(fmt.Errorf("not implemented: Rewards - rewards"))
-}
-
 // Phase returns generated.PhaseResolver implementation.
 func (r *Resolver) Phase() generated.PhaseResolver { return &phaseResolver{r} }
+
+// Phases returns generated.PhasesResolver implementation.
+func (r *Resolver) Phases() generated.PhasesResolver { return &phasesResolver{r} }
 
 // Query returns generated.QueryResolver implementation.
 func (r *Resolver) Query() generated.QueryResolver { return &queryResolver{r} }
 
-// Task returns generated.TaskResolver implementation.
-func (r *Resolver) Task() generated.TaskResolver { return &taskResolver{r} }
-
-type phaseResolver struct{ *Resolver }
-type queryResolver struct{ *Resolver }
-type taskResolver struct{ *Resolver }
-
-// !!! WARNING !!!
-// The code below was going to be deleted when updating resolvers. It has been copied here so you have
-// one last chance to move it out of harms way if you want. There are two reasons this happens:
-//   - When renaming or deleting a resolver the old code will be put in here. You can safely delete
-//     it when you're done.
-//   - You have helper methods in this file. Move them out to keep these resolver files clean.
-func (r *taskResolver) Started(ctx context.Context, obj *nemeton.Task) (bool, error) {
-	panic(fmt.Errorf("not implemented: Started - started"))
-}
-func (r *taskResolver) Finished(ctx context.Context, obj *nemeton.Task) (bool, error) {
-	panic(fmt.Errorf("not implemented: Finished - finished"))
-}
-func (r *phaseResolver) Started(ctx context.Context, obj *nemeton.Phase) (bool, error) {
-	panic(fmt.Errorf("not implemented: Started - started"))
-}
-func (r *phaseResolver) Finished(ctx context.Context, obj *nemeton.Phase) (bool, error) {
-	panic(fmt.Errorf("not implemented: Finished - finished"))
-}
+type (
+	phaseResolver  struct{ *Resolver }
+	phasesResolver struct{ *Resolver }
+	queryResolver  struct{ *Resolver }
+)
