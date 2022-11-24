@@ -19,7 +19,9 @@ func UnmarshalAccAddress(v interface{}) (types.AccAddress, error) {
 
 func MarshalAccAddress(addr types.AccAddress) graphql.Marshaler {
 	return graphql.WriterFunc(func(w io.Writer) {
+		_, _ = w.Write([]byte(`"`))
 		_, _ = w.Write(addr)
+		_, _ = w.Write([]byte(`"`))
 	})
 }
 
@@ -34,6 +36,8 @@ func UnmarshalValoperAddress(v interface{}) (types.ValAddress, error) {
 
 func MarshalValoperAddress(addr types.ValAddress) graphql.Marshaler {
 	return graphql.WriterFunc(func(w io.Writer) {
+		_, _ = w.Write([]byte(`"`))
 		_, _ = w.Write(addr)
+		_, _ = w.Write([]byte(`"`))
 	})
 }
