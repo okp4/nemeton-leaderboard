@@ -162,6 +162,7 @@ type ComplexityRoot struct {
 		Tasks        func(childComplexity int) int
 		Twitter      func(childComplexity int) int
 		Valoper      func(childComplexity int) int
+		Website      func(childComplexity int) int
 	}
 
 	ValidatorEdge struct {
@@ -718,6 +719,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Validator.Valoper(childComplexity), true
 
+	case "Validator.website":
+		if e.complexity.Validator.Website == nil {
+			break
+		}
+
+		return e.complexity.Validator.Website(childComplexity), true
+
 	case "ValidatorEdge.cursor":
 		if e.complexity.ValidatorEdge.Cursor == nil {
 			break
@@ -1112,6 +1120,11 @@ type Validator {
     The validator twitter account.
     """
     twitter: String
+
+    """
+    The validator website.
+    """
+    website: URI
 
     """
     The validator discord account.
@@ -3193,6 +3206,8 @@ func (ec *executionContext) fieldContext_Query_validator(ctx context.Context, fi
 				return ec.fieldContext_Validator_delegator(ctx, field)
 			case "twitter":
 				return ec.fieldContext_Validator_twitter(ctx, field)
+			case "website":
+				return ec.fieldContext_Validator_website(ctx, field)
 			case "discord":
 				return ec.fieldContext_Validator_discord(ctx, field)
 			case "country":
@@ -4694,6 +4709,47 @@ func (ec *executionContext) fieldContext_Validator_twitter(ctx context.Context, 
 	return fc, nil
 }
 
+func (ec *executionContext) _Validator_website(ctx context.Context, field graphql.CollectedField, obj *nemeton.Validator) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Validator_website(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Website, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*url.URL)
+	fc.Result = res
+	return ec.marshalOURI2ᚖnetᚋurlᚐURL(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Validator_website(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Validator",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type URI does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Validator_discord(ctx context.Context, field graphql.CollectedField, obj *nemeton.Validator) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Validator_discord(ctx, field)
 	if err != nil {
@@ -5066,6 +5122,8 @@ func (ec *executionContext) fieldContext_ValidatorEdge_node(ctx context.Context,
 				return ec.fieldContext_Validator_delegator(ctx, field)
 			case "twitter":
 				return ec.fieldContext_Validator_twitter(ctx, field)
+			case "website":
+				return ec.fieldContext_Validator_website(ctx, field)
 			case "discord":
 				return ec.fieldContext_Validator_discord(ctx, field)
 			case "country":
@@ -7789,6 +7847,10 @@ func (ec *executionContext) _Validator(ctx context.Context, sel ast.SelectionSet
 
 			out.Values[i] = ec._Validator_twitter(ctx, field, obj)
 
+		case "website":
+
+			out.Values[i] = ec._Validator_website(ctx, field, obj)
+
 		case "discord":
 
 			out.Values[i] = ec._Validator_discord(ctx, field, obj)
@@ -9155,6 +9217,22 @@ func (ec *executionContext) marshalOTasks2ᚖokp4ᚋnemetonᚑleaderboardᚋgrap
 		return graphql.Null
 	}
 	return ec._Tasks(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalOURI2ᚖnetᚋurlᚐURL(ctx context.Context, v interface{}) (*url.URL, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := scalar.UnmarshalURI(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOURI2ᚖnetᚋurlᚐURL(ctx context.Context, sel ast.SelectionSet, v *url.URL) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	res := scalar.MarshalURI(v)
+	return res
 }
 
 func (ec *executionContext) marshalOValidator2ᚖokp4ᚋnemetonᚑleaderboardᚋappᚋnemetonᚐValidator(ctx context.Context, sel ast.SelectionSet, v *nemeton.Validator) graphql.Marshaler {

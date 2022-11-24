@@ -67,7 +67,25 @@ func (r *queryResolver) ValidatorCount(ctx context.Context) (int, error) {
 
 // Validator is the resolver for the validator field.
 func (r *queryResolver) Validator(ctx context.Context, cursor *primitive.ObjectID, rank *int, valoper types.ValAddress, delegator types.AccAddress, discord *string, twitter *string) (*nemeton.Validator, error) {
-	panic(fmt.Errorf("not implemented: Validator - validator"))
+	if cursor != nil {
+		return r.store.GetValidatorByID(ctx, *cursor)
+	}
+	if rank != nil {
+		panic(fmt.Errorf("not implemented: Validator - validator"))
+	}
+	if !valoper.Empty() {
+		return r.store.GetValidatorByValoper(ctx, valoper)
+	}
+	if !delegator.Empty() {
+		return r.store.GetValidatorByDelegator(ctx, delegator)
+	}
+	if discord != nil {
+		return r.store.GetValidatorByDiscord(ctx, *discord)
+	}
+	if twitter != nil {
+		return r.store.GetValidatorByTwitter(ctx, *twitter)
+	}
+	return nil, fmt.Errorf("one option must be passed")
 }
 
 // Rank is the resolver for the rank field.

@@ -328,6 +328,11 @@ type Validator {
     twitter: String
 
     """
+    The validator website.
+    """
+    website: URI
+
+    """
     The validator discord account.
     """
     discord: String!
