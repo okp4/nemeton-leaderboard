@@ -2,6 +2,7 @@ package nemeton
 
 import (
 	"context"
+	"errors"
 
 	"okp4/nemeton-leaderboard/app/util"
 
@@ -137,7 +138,7 @@ func (s *Store) GetValidatorByTwitter(ctx context.Context, twitter string) (*Val
 func (s *Store) GetValidatorBy(ctx context.Context, filter bson.M) (*Validator, error) {
 	res := s.db.Collection(validatorsCollectionName).FindOne(ctx, filter)
 	if err := res.Err(); err != nil {
-		if err == mongo.ErrNoDocuments {
+		if errors.Is(err, mongo.ErrNoDocuments) {
 			return nil, nil
 		}
 		return nil, err
