@@ -7,8 +7,8 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/types"
 	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 const (
@@ -114,8 +114,8 @@ func (s *Store) GetPhases(criteriaFn func(p Phase) bool) []*Phase {
 	return filtered
 }
 
-func (s *Store) GetValidatorByID(ctx context.Context, id primitive.ObjectID) (*Validator, error) {
-	return s.GetValidatorBy(ctx, bson.M{"_id": id})
+func (s *Store) GetValidatorByCursor(ctx context.Context, c Cursor) (*Validator, error) {
+	return s.GetValidatorBy(ctx, bson.M{"_id": c.objectID})
 }
 
 func (s *Store) GetValidatorByValoper(ctx context.Context, addr types.ValAddress) (*Validator, error) {
@@ -145,4 +145,52 @@ func (s *Store) GetValidatorBy(ctx context.Context, filter bson.M) (*Validator, 
 
 	var val Validator
 	return &val, res.Decode(&val)
+}
+
+func (s *Store) GetBoard(ctx context.Context, limit int, after *Cursor) ([]*Validator, bool, error) {
+	var filter bson.M
+	if after != nil {
+		filter = bson.M{
+			"$or": bson.A{
+				bson.M{
+					"points": bson.M{"$lt": after.points},
+				},
+				bson.M{
+					"points": after.points,
+					"_id":    bson.M{"$gt": after.objectID},
+				},
+			},
+		}
+	}
+	c, err := s.db.Collection(validatorsCollectionName).Find(
+		ctx,
+		filter,
+		options.Find().
+			SetSort(
+				bson.D{
+					bson.E{Key: "points", Value: -1},
+					bson.E{Key: "_id", Value: 1},
+				},
+			).
+			SetLimit(int64(limit+1)),
+	)
+	if err != nil {
+		return nil, false, err
+	}
+	defer func() {
+		_ = c.Close(ctx)
+	}()
+
+	validators := make([]*Validator, 0, limit)
+	count := 0
+	for count < limit && c.Next(ctx) {
+		count++
+		var validator Validator
+		if err := c.Decode(&validator); err != nil {
+			return nil, false, err
+		}
+		validators = append(validators, &validator)
+	}
+
+	return validators, c.Next(ctx), nil
 }

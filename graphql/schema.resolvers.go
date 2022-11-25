@@ -12,7 +12,6 @@ import (
 	"okp4/nemeton-leaderboard/graphql/model"
 
 	"github.com/cosmos/cosmos-sdk/types"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // Picture is the resolver for the picture field.
@@ -56,8 +55,36 @@ func (r *queryResolver) Phases(ctx context.Context) (*model.Phases, error) {
 }
 
 // Board is the resolver for the board field.
-func (r *queryResolver) Board(ctx context.Context, search *string, first *int, after *primitive.ObjectID) (*model.BoardConnection, error) {
-	panic(fmt.Errorf("not implemented: Board - board"))
+func (r *queryResolver) Board(ctx context.Context, search *string, first *int, after *nemeton.Cursor) (*model.BoardConnection, error) {
+	validators, hasNext, err := r.store.GetBoard(ctx, *first, after)
+	if err != nil {
+		return nil, err
+	}
+
+	edges := make([]*model.ValidatorEdge, 0, len(validators))
+	for _, validator := range validators {
+		edges = append(edges, &model.ValidatorEdge{
+			Cursor: validator.Cursor(),
+			Node:   validator,
+		})
+	}
+
+	var startCursor *nemeton.Cursor
+	var endCursor *nemeton.Cursor
+	if len(edges) > 0 {
+		startCursor = edges[0].Cursor
+		endCursor = edges[len(validators)-1].Cursor
+	}
+
+	return &model.BoardConnection{
+		Edges: edges,
+		PageInfo: &model.PageInfo{
+			StartCursor: startCursor,
+			EndCursor:   endCursor,
+			HasNextPage: hasNext,
+			Count:       len(validators),
+		},
+	}, nil
 }
 
 // ValidatorCount is the resolver for the validatorCount field.
@@ -66,9 +93,9 @@ func (r *queryResolver) ValidatorCount(ctx context.Context) (int, error) {
 }
 
 // Validator is the resolver for the validator field.
-func (r *queryResolver) Validator(ctx context.Context, cursor *primitive.ObjectID, rank *int, valoper types.ValAddress, delegator types.AccAddress, discord *string, twitter *string) (*nemeton.Validator, error) {
+func (r *queryResolver) Validator(ctx context.Context, cursor *nemeton.Cursor, rank *int, valoper types.ValAddress, delegator types.AccAddress, discord *string, twitter *string) (*nemeton.Validator, error) {
 	if cursor != nil {
-		return r.store.GetValidatorByID(ctx, *cursor)
+		return r.store.GetValidatorByCursor(ctx, *cursor)
 	}
 	if rank != nil {
 		panic(fmt.Errorf("not implemented: Validator - validator"))
@@ -135,3 +162,13 @@ type (
 	queryResolver     struct{ *Resolver }
 	validatorResolver struct{ *Resolver }
 )
+
+// !!! WARNING !!!
+// The code below was going to be deleted when updating resolvers. It has been copied here so you have
+// one last chance to move it out of harms way if you want. There are two reasons this happens:
+//   - When renaming or deleting a resolver the old code will be put in here. You can safely delete
+//     it when you're done.
+//   - You have helper methods in this file. Move them out to keep these resolver files clean.
+func (r *validatorResolver) Points(ctx context.Context, obj *nemeton.Validator) (int, error) {
+	panic(fmt.Errorf("not implemented: Points - points"))
+}

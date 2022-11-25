@@ -9,8 +9,6 @@ import (
 	"strconv"
 
 	"okp4/nemeton-leaderboard/app/nemeton"
-
-	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // Represents the progress/result of a task assigned to a validator.
@@ -64,9 +62,9 @@ type Link struct {
 // Contains information on a connection page.
 type PageInfo struct {
 	// The cursor of the first element of the page.
-	StartCursor primitive.ObjectID `json:"startCursor"`
+	StartCursor *nemeton.Cursor `json:"startCursor"`
 	// The cursor of the last element of the page.
-	EndCursor primitive.ObjectID `json:"endCursor"`
+	EndCursor *nemeton.Cursor `json:"endCursor"`
 	// `true` if there is other elements after the endCursor.
 	HasNextPage bool `json:"hasNextPage"`
 	// The number of elements in the page.
@@ -162,7 +160,7 @@ func (this UptimeTask) GetEarnedPoints() int { return this.EarnedPoints }
 // Represents an edge to a validator.
 type ValidatorEdge struct {
 	// The validator's cursor.
-	Cursor primitive.ObjectID `json:"cursor"`
+	Cursor *nemeton.Cursor `json:"cursor"`
 	// The validator.
 	Node *nemeton.Validator `json:"node"`
 }

@@ -70,6 +70,7 @@ models:
       - github.com/99designs/gqlgen/graphql.Int
       - github.com/99designs/gqlgen/graphql.Int64
       - github.com/99designs/gqlgen/graphql.Int32
+      - github.com/99designs/gqlgen/graphql.Uint64
   Time:
     model:
       - github.com/99designs/gqlgen/graphql.Time

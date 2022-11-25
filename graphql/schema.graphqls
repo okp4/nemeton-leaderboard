@@ -275,12 +275,12 @@ type PageInfo {
     """
     The cursor of the first element of the page.
     """
-    startCursor: Cursor!
+    startCursor: Cursor
 
     """
     The cursor of the last element of the page.
     """
-    endCursor: Cursor!
+    endCursor: Cursor
 
     """
     `true` if there is other elements after the endCursor.

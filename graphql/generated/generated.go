@@ -22,7 +22,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/types"
 	gqlparser "github.com/vektah/gqlparser/v2"
 	"github.com/vektah/gqlparser/v2/ast"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // region    ************************** generated!.gotpl **************************
@@ -107,10 +106,10 @@ type ComplexityRoot struct {
 	}
 
 	Query struct {
-		Board          func(childComplexity int, search *string, first *int, after *primitive.ObjectID) int
+		Board          func(childComplexity int, search *string, first *int, after *nemeton.Cursor) int
 		Phase          func(childComplexity int, number int) int
 		Phases         func(childComplexity int) int
-		Validator      func(childComplexity int, cursor *primitive.ObjectID, rank *int, valoper types.ValAddress, delegator types.AccAddress, discord *string, twitter *string) int
+		Validator      func(childComplexity int, cursor *nemeton.Cursor, rank *int, valoper types.ValAddress, delegator types.AccAddress, discord *string, twitter *string) int
 		ValidatorCount func(childComplexity int) int
 	}
 
@@ -186,9 +185,9 @@ type PhasesResolver interface {
 type QueryResolver interface {
 	Phase(ctx context.Context, number int) (*nemeton.Phase, error)
 	Phases(ctx context.Context) (*model.Phases, error)
-	Board(ctx context.Context, search *string, first *int, after *primitive.ObjectID) (*model.BoardConnection, error)
+	Board(ctx context.Context, search *string, first *int, after *nemeton.Cursor) (*model.BoardConnection, error)
 	ValidatorCount(ctx context.Context) (int, error)
-	Validator(ctx context.Context, cursor *primitive.ObjectID, rank *int, valoper types.ValAddress, delegator types.AccAddress, discord *string, twitter *string) (*nemeton.Validator, error)
+	Validator(ctx context.Context, cursor *nemeton.Cursor, rank *int, valoper types.ValAddress, delegator types.AccAddress, discord *string, twitter *string) (*nemeton.Validator, error)
 }
 type ValidatorResolver interface {
 	Rank(ctx context.Context, obj *nemeton.Validator) (int, error)
@@ -429,7 +428,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.Board(childComplexity, args["search"].(*string), args["first"].(*int), args["after"].(*primitive.ObjectID)), true
+		return e.complexity.Query.Board(childComplexity, args["search"].(*string), args["first"].(*int), args["after"].(*nemeton.Cursor)), true
 
 	case "Query.phase":
 		if e.complexity.Query.Phase == nil {
@@ -460,7 +459,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.Validator(childComplexity, args["cursor"].(*primitive.ObjectID), args["rank"].(*int), args["valoper"].(types.ValAddress), args["delegator"].(types.AccAddress), args["discord"].(*string), args["twitter"].(*string)), true
+		return e.complexity.Query.Validator(childComplexity, args["cursor"].(*nemeton.Cursor), args["rank"].(*int), args["valoper"].(types.ValAddress), args["delegator"].(types.AccAddress), args["discord"].(*string), args["twitter"].(*string)), true
 
 	case "Query.validatorCount":
 		if e.complexity.Query.ValidatorCount == nil {
@@ -1069,12 +1068,12 @@ type PageInfo {
     """
     The cursor of the first element of the page.
     """
-    startCursor: Cursor!
+    startCursor: Cursor
 
     """
     The cursor of the last element of the page.
     """
-    endCursor: Cursor!
+    endCursor: Cursor
 
     """
     ` + "`" + `true` + "`" + ` if there is other elements after the endCursor.
@@ -1369,10 +1368,10 @@ func (ec *executionContext) field_Query_board_args(ctx context.Context, rawArgs 
 		}
 	}
 	args["first"] = arg1
-	var arg2 *primitive.ObjectID
+	var arg2 *nemeton.Cursor
 	if tmp, ok := rawArgs["after"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("after"))
-		arg2, err = ec.unmarshalOCursor2ᚖgoᚗmongodbᚗorgᚋmongoᚑdriverᚋbsonᚋprimitiveᚐObjectID(ctx, tmp)
+		arg2, err = ec.unmarshalOCursor2ᚖokp4ᚋnemetonᚑleaderboardᚋappᚋnemetonᚐCursor(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -1399,10 +1398,10 @@ func (ec *executionContext) field_Query_phase_args(ctx context.Context, rawArgs 
 func (ec *executionContext) field_Query_validator_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 *primitive.ObjectID
+	var arg0 *nemeton.Cursor
 	if tmp, ok := rawArgs["cursor"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("cursor"))
-		arg0, err = ec.unmarshalOCursor2ᚖgoᚗmongodbᚗorgᚋmongoᚑdriverᚋbsonᚋprimitiveᚐObjectID(ctx, tmp)
+		arg0, err = ec.unmarshalOCursor2ᚖokp4ᚋnemetonᚑleaderboardᚋappᚋnemetonᚐCursor(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -1899,14 +1898,11 @@ func (ec *executionContext) _PageInfo_startCursor(ctx context.Context, field gra
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
 		return graphql.Null
 	}
-	res := resTmp.(primitive.ObjectID)
+	res := resTmp.(*nemeton.Cursor)
 	fc.Result = res
-	return ec.marshalNCursor2goᚗmongodbᚗorgᚋmongoᚑdriverᚋbsonᚋprimitiveᚐObjectID(ctx, field.Selections, res)
+	return ec.marshalOCursor2ᚖokp4ᚋnemetonᚑleaderboardᚋappᚋnemetonᚐCursor(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_PageInfo_startCursor(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -1943,14 +1939,11 @@ func (ec *executionContext) _PageInfo_endCursor(ctx context.Context, field graph
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
 		return graphql.Null
 	}
-	res := resTmp.(primitive.ObjectID)
+	res := resTmp.(*nemeton.Cursor)
 	fc.Result = res
-	return ec.marshalNCursor2goᚗmongodbᚗorgᚋmongoᚑdriverᚋbsonᚋprimitiveᚐObjectID(ctx, field.Selections, res)
+	return ec.marshalOCursor2ᚖokp4ᚋnemetonᚑleaderboardᚋappᚋnemetonᚐCursor(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_PageInfo_endCursor(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -3067,7 +3060,7 @@ func (ec *executionContext) _Query_board(ctx context.Context, field graphql.Coll
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Board(rctx, fc.Args["search"].(*string), fc.Args["first"].(*int), fc.Args["after"].(*primitive.ObjectID))
+		return ec.resolvers.Query().Board(rctx, fc.Args["search"].(*string), fc.Args["first"].(*int), fc.Args["after"].(*nemeton.Cursor))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -3172,7 +3165,7 @@ func (ec *executionContext) _Query_validator(ctx context.Context, field graphql.
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Validator(rctx, fc.Args["cursor"].(*primitive.ObjectID), fc.Args["rank"].(*int), fc.Args["valoper"].(types.ValAddress), fc.Args["delegator"].(types.AccAddress), fc.Args["discord"].(*string), fc.Args["twitter"].(*string))
+		return ec.resolvers.Query().Validator(rctx, fc.Args["cursor"].(*nemeton.Cursor), fc.Args["rank"].(*int), fc.Args["valoper"].(types.ValAddress), fc.Args["delegator"].(types.AccAddress), fc.Args["discord"].(*string), fc.Args["twitter"].(*string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -4908,9 +4901,9 @@ func (ec *executionContext) _Validator_points(ctx context.Context, field graphql
 		}
 		return graphql.Null
 	}
-	res := resTmp.(int)
+	res := resTmp.(uint64)
 	fc.Result = res
-	return ec.marshalNInt2int(ctx, field.Selections, res)
+	return ec.marshalNInt2uint64(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Validator_points(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -5053,9 +5046,9 @@ func (ec *executionContext) _ValidatorEdge_cursor(ctx context.Context, field gra
 		}
 		return graphql.Null
 	}
-	res := resTmp.(primitive.ObjectID)
+	res := resTmp.(*nemeton.Cursor)
 	fc.Result = res
-	return ec.marshalNCursor2goᚗmongodbᚗorgᚋmongoᚑdriverᚋbsonᚋprimitiveᚐObjectID(ctx, field.Selections, res)
+	return ec.marshalNCursor2ᚖokp4ᚋnemetonᚑleaderboardᚋappᚋnemetonᚐCursor(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_ValidatorEdge_cursor(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -7110,16 +7103,10 @@ func (ec *executionContext) _PageInfo(ctx context.Context, sel ast.SelectionSet,
 
 			out.Values[i] = ec._PageInfo_startCursor(ctx, field, obj)
 
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
 		case "endCursor":
 
 			out.Values[i] = ec._PageInfo_endCursor(ctx, field, obj)
 
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
 		case "hasNextPage":
 
 			out.Values[i] = ec._PageInfo_hasNextPage(ctx, field, obj)
@@ -8398,12 +8385,18 @@ func (ec *executionContext) marshalNBoolean2bool(ctx context.Context, sel ast.Se
 	return res
 }
 
-func (ec *executionContext) unmarshalNCursor2goᚗmongodbᚗorgᚋmongoᚑdriverᚋbsonᚋprimitiveᚐObjectID(ctx context.Context, v interface{}) (primitive.ObjectID, error) {
+func (ec *executionContext) unmarshalNCursor2ᚖokp4ᚋnemetonᚑleaderboardᚋappᚋnemetonᚐCursor(ctx context.Context, v interface{}) (*nemeton.Cursor, error) {
 	res, err := scalar.UnmarshalCursor(v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNCursor2goᚗmongodbᚗorgᚋmongoᚑdriverᚋbsonᚋprimitiveᚐObjectID(ctx context.Context, sel ast.SelectionSet, v primitive.ObjectID) graphql.Marshaler {
+func (ec *executionContext) marshalNCursor2ᚖokp4ᚋnemetonᚑleaderboardᚋappᚋnemetonᚐCursor(ctx context.Context, sel ast.SelectionSet, v *nemeton.Cursor) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
 	res := scalar.MarshalCursor(v)
 	if res == graphql.Null {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
@@ -8435,6 +8428,21 @@ func (ec *executionContext) unmarshalNInt2int(ctx context.Context, v interface{}
 
 func (ec *executionContext) marshalNInt2int(ctx context.Context, sel ast.SelectionSet, v int) graphql.Marshaler {
 	res := graphql.MarshalInt(v)
+	if res == graphql.Null {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+	}
+	return res
+}
+
+func (ec *executionContext) unmarshalNInt2uint64(ctx context.Context, v interface{}) (uint64, error) {
+	res, err := graphql.UnmarshalUint64(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNInt2uint64(ctx context.Context, sel ast.SelectionSet, v uint64) graphql.Marshaler {
+	res := graphql.MarshalUint64(v)
 	if res == graphql.Null {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -9143,19 +9151,19 @@ func (ec *executionContext) marshalOBoolean2ᚖbool(ctx context.Context, sel ast
 	return res
 }
 
-func (ec *executionContext) unmarshalOCursor2ᚖgoᚗmongodbᚗorgᚋmongoᚑdriverᚋbsonᚋprimitiveᚐObjectID(ctx context.Context, v interface{}) (*primitive.ObjectID, error) {
+func (ec *executionContext) unmarshalOCursor2ᚖokp4ᚋnemetonᚑleaderboardᚋappᚋnemetonᚐCursor(ctx context.Context, v interface{}) (*nemeton.Cursor, error) {
 	if v == nil {
 		return nil, nil
 	}
 	res, err := scalar.UnmarshalCursor(v)
-	return &res, graphql.ErrorOnPath(ctx, err)
+	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalOCursor2ᚖgoᚗmongodbᚗorgᚋmongoᚑdriverᚋbsonᚋprimitiveᚐObjectID(ctx context.Context, sel ast.SelectionSet, v *primitive.ObjectID) graphql.Marshaler {
+func (ec *executionContext) marshalOCursor2ᚖokp4ᚋnemetonᚑleaderboardᚋappᚋnemetonᚐCursor(ctx context.Context, sel ast.SelectionSet, v *nemeton.Cursor) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
-	res := scalar.MarshalCursor(*v)
+	res := scalar.MarshalCursor(v)
 	return res
 }
 
