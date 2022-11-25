@@ -16,13 +16,13 @@ func UnmarshalCursor(v interface{}) (*nemeton.Cursor, error) {
 	}
 
 	c := &nemeton.Cursor{}
-	return c, c.FromHex(strCursor)
+	return c, c.Unmarshal(strCursor)
 }
 
 func MarshalCursor(c *nemeton.Cursor) graphql.Marshaler {
 	return graphql.WriterFunc(func(w io.Writer) {
 		_, _ = w.Write([]byte(`"`))
-		_, _ = w.Write([]byte(c.Hex()))
+		_, _ = w.Write([]byte(c.Marshal()))
 		_, _ = w.Write([]byte(`"`))
 	})
 }
