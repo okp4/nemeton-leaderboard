@@ -56,6 +56,9 @@ models:
   Task:
     model:
       - okp4/nemeton-leaderboard/app/nemeton.Task
+  Validator:
+    model:
+      - okp4/nemeton-leaderboard/app/nemeton.Validator
   ID:
     model:
       - github.com/99designs/gqlgen/graphql.ID
@@ -67,3 +70,22 @@ models:
       - github.com/99designs/gqlgen/graphql.Int
       - github.com/99designs/gqlgen/graphql.Int64
       - github.com/99designs/gqlgen/graphql.Int32
+      - github.com/99designs/gqlgen/graphql.Uint64
+  Time:
+    model:
+      - github.com/99designs/gqlgen/graphql.Time
+  AccAddress:
+    model:
+      - okp4/nemeton-leaderboard/graphql/scalar.AccAddress
+  ValoperAddress:
+    model:
+      - okp4/nemeton-leaderboard/graphql/scalar.ValoperAddress
+  PGPKeyID:
+    model:
+      - github.com/99designs/gqlgen/graphql.Uint64
+  URI:
+    model:
+      - okp4/nemeton-leaderboard/graphql/scalar.URI
+  Cursor:
+    model:
+      - okp4/nemeton-leaderboard/graphql/scalar.Cursor

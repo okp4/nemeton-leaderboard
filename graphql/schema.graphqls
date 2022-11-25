@@ -14,7 +14,7 @@ scalar Time
 Represents an okp4 address as [Bech32](https://en.bitcoin.it/wiki/Bech32) format prefixed by the blockchain prefix.
 e.g. `okp41jse8senm9hcvydhl8v9x47kfe5z82zmwtw8jvj`
 """
-scalar Address
+scalar AccAddress
 
 """
 Represents an okp4 validator address as [Bech32](https://en.bitcoin.it/wiki/Bech32) format prefixed by the blockchain valoper prefix.
@@ -30,7 +30,7 @@ scalar PGPKeyID
 
 """
 Represents an [Uniform Resource Identifier](https://fr.wikipedia.org/wiki/Uniform_Resource_Identifier) to permanently identify a resource.
-e.g. ``
+e.g. `https://okp4.network/`
 """
 scalar URI
 
@@ -87,7 +87,7 @@ type Query {
         cursor: Cursor
         rank: Int
         valoper: ValoperAddress
-        delegator: Address
+        delegator: AccAddress
         discord: String
         twitter: String
     ): Validator
@@ -275,12 +275,12 @@ type PageInfo {
     """
     The cursor of the first element of the page.
     """
-    startCursor: Cursor!
+    startCursor: Cursor
 
     """
     The cursor of the last element of the page.
     """
-    endCursor: Cursor!
+    endCursor: Cursor
 
     """
     `true` if there is other elements after the endCursor.
@@ -300,7 +300,7 @@ type Validator {
     """
     The validator position in the board.
     """
-    rank: Int!
+    rank: Int! @goField(forceResolver: true)
 
     """
     The validator moniker.
@@ -310,7 +310,7 @@ type Validator {
     """
     The validator identity on https://keybase.io/, can be used to retrieve its picture.
     """
-    identity: Identity
+    identity: Identity @goField(forceResolver: true)
 
     """
     The validator node valoper address.
@@ -320,12 +320,17 @@ type Validator {
     """
     The address of the validator node delegator.
     """
-    delegator: Address!
+    delegator: AccAddress!
 
     """
     The validator twitter account.
     """
     twitter: String
+
+    """
+    The validator website.
+    """
+    website: URI
 
     """
     The validator discord account.
@@ -350,12 +355,12 @@ type Validator {
     """
     The validator affected tasks, does not reference not tasks who has not started yet.
     """
-    tasks: Tasks
+    tasks: Tasks @goField(forceResolver: true)
 
     """
     The blocks the validator has not signed.
     """
-    missedBlocks: [BlockRange!]!
+    missedBlocks: [BlockRange!]! @goField(forceResolver: true)
 }
 
 """
@@ -370,7 +375,7 @@ type Identity {
     """
     The resolved identity picture, if any.
     """
-    picture: Link
+    picture: Link @goField(forceResolver: true)
 }
 
 """

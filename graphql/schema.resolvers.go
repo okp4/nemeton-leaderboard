@@ -10,7 +10,14 @@ import (
 	"okp4/nemeton-leaderboard/app/nemeton"
 	"okp4/nemeton-leaderboard/graphql/generated"
 	"okp4/nemeton-leaderboard/graphql/model"
+
+	"github.com/cosmos/cosmos-sdk/types"
 )
+
+// Picture is the resolver for the picture field.
+func (r *identityResolver) Picture(ctx context.Context, obj *model.Identity) (*model.Link, error) {
+	panic(fmt.Errorf("not implemented: Picture - picture"))
+}
 
 // Blocks is the resolver for the blocks field.
 func (r *phaseResolver) Blocks(ctx context.Context, obj *nemeton.Phase) (*model.BlockRange, error) {
@@ -48,19 +55,94 @@ func (r *queryResolver) Phases(ctx context.Context) (*model.Phases, error) {
 }
 
 // Board is the resolver for the board field.
-func (r *queryResolver) Board(ctx context.Context, search *string, first *int, after *string) (*model.BoardConnection, error) {
-	panic(fmt.Errorf("not implemented: Board - board"))
+func (r *queryResolver) Board(ctx context.Context, search *string, first *int, after *nemeton.Cursor) (*model.BoardConnection, error) {
+	validators, hasNext, err := r.store.GetBoard(ctx, *first, after)
+	if err != nil {
+		return nil, err
+	}
+
+	edges := make([]*model.ValidatorEdge, 0, len(validators))
+	for _, validator := range validators {
+		edges = append(edges, &model.ValidatorEdge{
+			Cursor: validator.Cursor(),
+			Node:   validator,
+		})
+	}
+
+	var startCursor *nemeton.Cursor
+	var endCursor *nemeton.Cursor
+	if len(edges) > 0 {
+		startCursor = edges[0].Cursor
+		endCursor = edges[len(validators)-1].Cursor
+	}
+
+	return &model.BoardConnection{
+		Edges: edges,
+		PageInfo: &model.PageInfo{
+			StartCursor: startCursor,
+			EndCursor:   endCursor,
+			HasNextPage: hasNext,
+			Count:       len(validators),
+		},
+	}, nil
 }
 
 // ValidatorCount is the resolver for the validatorCount field.
 func (r *queryResolver) ValidatorCount(ctx context.Context) (int, error) {
-	panic(fmt.Errorf("not implemented: ValidatorCount - validatorCount"))
+	count, err := r.store.CountValidators(ctx)
+	return int(count), err
 }
 
 // Validator is the resolver for the validator field.
-func (r *queryResolver) Validator(ctx context.Context, cursor *string, rank *int, valoper *string, delegator *string, discord *string, twitter *string) (*model.Validator, error) {
-	panic(fmt.Errorf("not implemented: Validator - validator"))
+func (r *queryResolver) Validator(ctx context.Context, cursor *nemeton.Cursor, rank *int, valoper types.ValAddress, delegator types.AccAddress, discord *string, twitter *string) (*nemeton.Validator, error) {
+	if cursor != nil {
+		return r.store.GetValidatorByCursor(ctx, *cursor)
+	}
+	if rank != nil {
+		panic(fmt.Errorf("not implemented: Validator - validator"))
+	}
+	if !valoper.Empty() {
+		return r.store.GetValidatorByValoper(ctx, valoper)
+	}
+	if !delegator.Empty() {
+		return r.store.GetValidatorByDelegator(ctx, delegator)
+	}
+	if discord != nil {
+		return r.store.GetValidatorByDiscord(ctx, *discord)
+	}
+	if twitter != nil {
+		return r.store.GetValidatorByTwitter(ctx, *twitter)
+	}
+	return nil, fmt.Errorf("one option must be passed")
 }
+
+// Rank is the resolver for the rank field.
+func (r *validatorResolver) Rank(ctx context.Context, obj *nemeton.Validator) (int, error) {
+	return r.store.GetValidatorRank(ctx, *obj.Cursor())
+}
+
+// Identity is the resolver for the identity field.
+func (r *validatorResolver) Identity(ctx context.Context, obj *nemeton.Validator) (*model.Identity, error) {
+	panic(fmt.Errorf("not implemented: Identity - identity"))
+}
+
+// Status is the resolver for the status field.
+func (r *validatorResolver) Status(ctx context.Context, obj *nemeton.Validator) (model.ValidatorStatus, error) {
+	panic(fmt.Errorf("not implemented: Status - status"))
+}
+
+// Tasks is the resolver for the tasks field.
+func (r *validatorResolver) Tasks(ctx context.Context, obj *nemeton.Validator) (*model.Tasks, error) {
+	panic(fmt.Errorf("not implemented: Tasks - tasks"))
+}
+
+// MissedBlocks is the resolver for the missedBlocks field.
+func (r *validatorResolver) MissedBlocks(ctx context.Context, obj *nemeton.Validator) ([]*model.BlockRange, error) {
+	panic(fmt.Errorf("not implemented: MissedBlocks - missedBlocks"))
+}
+
+// Identity returns generated.IdentityResolver implementation.
+func (r *Resolver) Identity() generated.IdentityResolver { return &identityResolver{r} }
 
 // Phase returns generated.PhaseResolver implementation.
 func (r *Resolver) Phase() generated.PhaseResolver { return &phaseResolver{r} }
@@ -71,8 +153,13 @@ func (r *Resolver) Phases() generated.PhasesResolver { return &phasesResolver{r}
 // Query returns generated.QueryResolver implementation.
 func (r *Resolver) Query() generated.QueryResolver { return &queryResolver{r} }
 
+// Validator returns generated.ValidatorResolver implementation.
+func (r *Resolver) Validator() generated.ValidatorResolver { return &validatorResolver{r} }
+
 type (
-	phaseResolver  struct{ *Resolver }
-	phasesResolver struct{ *Resolver }
-	queryResolver  struct{ *Resolver }
+	identityResolver  struct{ *Resolver }
+	phaseResolver     struct{ *Resolver }
+	phasesResolver    struct{ *Resolver }
+	queryResolver     struct{ *Resolver }
+	validatorResolver struct{ *Resolver }
 )

@@ -5,6 +5,7 @@ package model
 import (
 	"fmt"
 	"io"
+	"net/url"
 	"strconv"
 
 	"okp4/nemeton-leaderboard/app/nemeton"
@@ -42,7 +43,7 @@ type BoardConnection struct {
 // Represents an identity on https://keybase.io/
 type Identity struct {
 	// The identity PGP key id.
-	PGP string `json:"pgp"`
+	PGP uint64 `json:"pgp"`
 	// The resolved identity picture, if any.
 	Picture *Link `json:"picture"`
 }
@@ -55,15 +56,15 @@ type Link struct {
 	// [RFC6570](https://tools.ietf.org/html/rfc6570).
 	//
 	// If the value is a URI Template then the Link Object shall have a `templated` attribute whose value is true.
-	Href string `json:"href"`
+	Href *url.URL `json:"href"`
 }
 
 // Contains information on a connection page.
 type PageInfo struct {
 	// The cursor of the first element of the page.
-	StartCursor string `json:"startCursor"`
+	StartCursor *nemeton.Cursor `json:"startCursor"`
 	// The cursor of the last element of the page.
-	EndCursor string `json:"endCursor"`
+	EndCursor *nemeton.Cursor `json:"endCursor"`
 	// `true` if there is other elements after the endCursor.
 	HasNextPage bool `json:"hasNextPage"`
 	// The number of elements in the page.
@@ -156,40 +157,12 @@ func (this UptimeTask) GetCompleted() bool { return this.Completed }
 // The number of points earned by the validator on this task.
 func (this UptimeTask) GetEarnedPoints() int { return this.EarnedPoints }
 
-// Represents a validator, a participant or a druid in the Nemeton program.
-type Validator struct {
-	// The validator position in the board.
-	Rank int `json:"rank"`
-	// The validator moniker.
-	Moniker string `json:"moniker"`
-	// The validator identity on https://keybase.io/, can be used to retrieve its picture.
-	Identity *Identity `json:"identity"`
-	// The validator node valoper address.
-	Valoper string `json:"valoper"`
-	// The address of the validator node delegator.
-	Delegator string `json:"delegator"`
-	// The validator twitter account.
-	Twitter *string `json:"twitter"`
-	// The validator discord account.
-	Discord string `json:"discord"`
-	// The validator country.
-	Country string `json:"country"`
-	// The validator current status.
-	Status ValidatorStatus `json:"status"`
-	// The validator points count.
-	Points int `json:"points"`
-	// The validator affected tasks, does not reference not tasks who has not started yet.
-	Tasks *Tasks `json:"tasks"`
-	// The blocks the validator has not signed.
-	MissedBlocks []*BlockRange `json:"missedBlocks"`
-}
-
 // Represents an edge to a validator.
 type ValidatorEdge struct {
 	// The validator's cursor.
-	Cursor string `json:"cursor"`
+	Cursor *nemeton.Cursor `json:"cursor"`
 	// The validator.
-	Node *Validator `json:"node"`
+	Node *nemeton.Validator `json:"node"`
 }
 
 // Represents the status of a validator node on the blockchain.

@@ -46,7 +46,6 @@ linters:
     - nakedret
     - nestif
     - nilerr
-    - nilnil
     - noctx
     - prealloc
     - predeclared
