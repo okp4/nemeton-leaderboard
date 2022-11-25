@@ -4,21 +4,25 @@ import (
 	"fmt"
 	"io"
 
+	"okp4/nemeton-leaderboard/app/nemeton"
+
 	"github.com/99designs/gqlgen/graphql"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-func UnmarshalCursor(v interface{}) (primitive.ObjectID, error) {
+func UnmarshalCursor(v interface{}) (*nemeton.Cursor, error) {
 	strCursor, ok := v.(string)
 	if !ok {
-		return primitive.ObjectID{}, fmt.Errorf("expect type 'string' and got type '%T'", v)
+		return nil, fmt.Errorf("expect type 'string' and got type '%T'", v)
 	}
 
-	return primitive.ObjectIDFromHex(strCursor)
+	c := &nemeton.Cursor{}
+	return c, c.FromHex(strCursor)
 }
 
-func MarshalCursor(c primitive.ObjectID) graphql.Marshaler {
+func MarshalCursor(c *nemeton.Cursor) graphql.Marshaler {
 	return graphql.WriterFunc(func(w io.Writer) {
+		_, _ = w.Write([]byte(`"`))
 		_, _ = w.Write([]byte(c.Hex()))
+		_, _ = w.Write([]byte(`"`))
 	})
 }
