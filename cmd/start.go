@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"crypto/tls"
 	"os"
 	"os/signal"
 	"syscall"
@@ -9,24 +10,32 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
+	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/credentials/insecure"
 )
 
 const (
 	FlagGraphQLAddress = "address"
 	FlagMongoURI       = "mongo-uri"
 	FlagDatabaseName   = "db"
+	FlagGrpcAddress    = "grpc-address"
+	FlagNoTLS          = "no-tls"
+	FlagTLSSkipVerify  = "tls-skip-verify"
 )
 
 var (
-	graphqlAddr string
-	mongoURI    string
-	dbName      string
+	graphqlAddr   string
+	mongoURI      string
+	dbName        string
+	grpcAddress   string
+	noTLS         bool
+	tlsSkipVerify bool
 
 	startCmd = &cobra.Command{
 		Use:   "start",
 		Short: "Start the leaderboard service",
 		Run: func(cmd *cobra.Command, args []string) {
-			app := system.Bootstrap(graphqlAddr, mongoURI, dbName)
+			app := system.Bootstrap(graphqlAddr, mongoURI, dbName, grpcAddress, getTransportCredentials())
 
 			kill := make(chan os.Signal, 1)
 			signal.Notify(kill, syscall.SIGINT, syscall.SIGTERM)
@@ -46,4 +55,21 @@ func init() {
 	startCmd.PersistentFlags().StringVar(&graphqlAddr, FlagGraphQLAddress, ":8080", "GraphQL listen address")
 	startCmd.PersistentFlags().StringVar(&mongoURI, FlagMongoURI, "mongodb://localhost:27017", "MongoDB connection string")
 	startCmd.PersistentFlags().StringVar(&dbName, FlagDatabaseName, "nemeton", "Database name")
+	startCmd.PersistentFlags().StringVar(&grpcAddress, FlagGrpcAddress, "127.0.0.1:9090", "The grpc okp4 server url")
+	startCmd.PersistentFlags().BoolVar(&noTLS, FlagNoTLS, false, "No encryption with the GRPC endpoint")
+	startCmd.PersistentFlags().BoolVar(&tlsSkipVerify,
+		FlagTLSSkipVerify,
+		false,
+		"Encryption with the GRPC endpoint but skip certificates verification")
+}
+
+func getTransportCredentials() credentials.TransportCredentials {
+	switch {
+	case noTLS:
+		return insecure.NewCredentials()
+	case tlsSkipVerify:
+		return credentials.NewTLS(&tls.Config{InsecureSkipVerify: true}) // #nosec G402 : skip lint since it's an optional flag
+	default:
+		return credentials.NewTLS(&tls.Config{MinVersion: tls.VersionTLS12})
+	}
 }
