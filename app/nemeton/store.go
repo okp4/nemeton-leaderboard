@@ -147,6 +147,10 @@ func (s *Store) GetValidatorBy(ctx context.Context, filter bson.M) (*Validator, 
 	return &val, res.Decode(&val)
 }
 
+func (s *Store) CountValidators(ctx context.Context) (int64, error) {
+	return s.db.Collection(validatorsCollectionName).CountDocuments(ctx, bson.M{})
+}
+
 func (s *Store) GetBoard(ctx context.Context, limit int, after *Cursor) ([]*Validator, bool, error) {
 	var filter bson.M
 	if after != nil {
