@@ -8,12 +8,7 @@ type Response struct {
 		Text                string   `json:"text"`
 	} `json:"data"`
 	Includes struct {
-		Users []struct {
-			Username    string `json:"username"`
-			Name        string `json:"name"`
-			Description string `json:"description"`
-			ID          string `json:"id"`
-		} `json:"users"`
+		Users []User `json:"users"`
 	} `json:"includes"`
 	Meta struct {
 		NewestID    string `json:"newest_id"`
@@ -21,4 +16,11 @@ type Response struct {
 		ResultCount int    `json:"result_count"`
 		NextToken   string `json:"next_token"`
 	} `json:"meta"`
+}
+
+type User struct {
+	Username    string `json:"username"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	ID          string `json:"id"`
 }

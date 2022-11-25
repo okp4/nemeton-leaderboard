@@ -7,6 +7,7 @@ import (
 	"net/url"
 	"time"
 
+	"okp4/nemeton-leaderboard/app/event"
 	"okp4/nemeton-leaderboard/app/message"
 	"okp4/nemeton-leaderboard/app/offset"
 
@@ -22,6 +23,7 @@ type SearchActor struct {
 	Hashtag      string
 	TweeterToken string
 	Client       *http.Client
+	EventStore   *actor.PID
 	Store        *offset.Store
 	Context      context.Context
 }
@@ -37,6 +39,7 @@ func NewSearchActor(eventStore *actor.PID, mongoURI, dbName, tweeterToken string
 		Hashtag:      "#NemetonOKP4 -is:retweet",
 		TweeterToken: tweeterToken,
 		Client:       http.DefaultClient,
+		EventStore:   eventStore,
 		Store:        store,
 		Context:      ctx,
 	}, nil
@@ -49,14 +52,14 @@ func (a *SearchActor) Receive(ctx actor.Context) {
 		scheduler.NewTimerScheduler(ctx).SendRepeatedly(0, 10*time.Second, ctx.Self(), &message.SearchTweet{})
 	case *message.SearchTweet:
 		log.Info().Msg("🧙‍ Start looking for tweets")
-		a.searchTweets(a.getSinceID(), "", "")
+		a.searchTweets(ctx, a.getSinceID(), "", "")
 	case *actor.Stopping:
 		log.Info().Msg("🛑 Stop tweeter search")
 	}
 }
 
 // searchTweets.
-func (a *SearchActor) searchTweets(sinceID, nextToken, initialNewestID string) {
+func (a *SearchActor) searchTweets(ctx actor.Context, sinceID, nextToken, initialNewestID string) {
 	tweets, err := a.fetchTweets(sinceID, nextToken)
 	if err != nil {
 		log.Error().Err(err).Msg("❌ Failed fetch tweet from twitter API.")
@@ -68,30 +71,34 @@ func (a *SearchActor) searchTweets(sinceID, nextToken, initialNewestID string) {
 		return
 	}
 
-	a.handleTweets(tweets)
+	a.handleTweets(ctx, tweets)
 
-	if tweets.Meta.NextToken != "" {
+	// nolint:gocritic
+	// could not be converted into switch statement
+	if tweets.Meta.NextToken != "" && initialNewestID != "" {
 		// There is another page, request it.
-		newestID := tweets.Meta.NewestID
-		if initialNewestID != "" {
-			// Keep the initial newest id for save it after pagination
-			newestID = initialNewestID
-		}
-		log.Info().Str("latestTweetId", newestID).Msg("📃 Search tweet on next page")
-		a.searchTweets(sinceID, tweets.Meta.NextToken, newestID)
+		// Keep the initial newest id for save it after pagination
+		log.Info().Str("latestTweetId", initialNewestID).Msg("📃 Search tweet on next page")
+		a.searchTweets(ctx, sinceID, tweets.Meta.NextToken, initialNewestID)
+	} else if tweets.Meta.NextToken != "" {
+		// There is another page, request it.
+		log.Info().Str("latestTweetId", tweets.Meta.NewestID).Msg("📃 Search tweet on next page")
+		a.searchTweets(ctx, sinceID, tweets.Meta.NextToken, tweets.Meta.NewestID)
 	} else {
 		// No new page, save the next sinceId for next scheduled query.
-		if initialNewestID != "" {
-			if err := a.setSinceID(initialNewestID); err != nil {
-				log.Error().Err(err).Msg("❌ Failed save since id value 💾")
-				return
-			}
-		} else {
+		switch initialNewestID {
+		case "":
 			if err := a.setSinceID(tweets.Meta.NewestID); err != nil {
 				log.Error().Err(err).Msg("❌ Failed save since id value 💾")
 				return
 			}
+		default:
+			if err := a.setSinceID(initialNewestID); err != nil {
+				log.Error().Err(err).Msg("❌ Failed save since id value 💾")
+				return
+			}
 		}
+
 		log.Info().Str("latestTweetId", a.getSinceID()).Msg("📃 No new page on tweet search. Looking next time for new tweet.")
 	}
 }
@@ -140,8 +147,30 @@ func (a *SearchActor) fetchTweets(sinceID, nextToken string) (*Response, error) 
 	return &response, nil
 }
 
-func (a *SearchActor) handleTweets(tweets *Response) {
-	// TODO: Parse response to register tweet event
+func (a *SearchActor) handleTweets(ctx actor.Context, tweets *Response) {
+	for _, tweet := range tweets.Data {
+		var author User
+		for _, user := range tweets.Includes.Users {
+			if user.ID == tweet.AuthorID {
+				author = user
+				break
+			}
+		}
+
+		e := NewTweetEvent{
+			ID:       tweet.ID,
+			AuthorID: tweet.AuthorID,
+			Text:     tweet.Text,
+			User:     author,
+		}
+
+		eventData, err := e.Marshall()
+		if err != nil {
+			log.Err(err).Msg("❌ Failed to marshall event to map interface")
+			return
+		}
+		ctx.Send(a.EventStore, &message.PublishEventMessage{Event: event.NewEvent(NewTweetEventType, eventData)})
+	}
 }
 
 func (a *SearchActor) getSinceID() string {
