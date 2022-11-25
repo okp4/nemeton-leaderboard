@@ -16,7 +16,16 @@ import (
 
 // Picture is the resolver for the picture field.
 func (r *identityResolver) Picture(ctx context.Context, obj *model.Identity) (*model.Link, error) {
-	panic(fmt.Errorf("not implemented: Picture - picture"))
+	picture, err := r.keybaseClient.LookupPicture(ctx, obj.Kid)
+	if err != nil {
+		return nil, err
+	}
+
+	var link *model.Link
+	if picture != nil {
+		link = &model.Link{Href: picture}
+	}
+	return link, nil
 }
 
 // Blocks is the resolver for the blocks field.
@@ -123,7 +132,13 @@ func (r *validatorResolver) Rank(ctx context.Context, obj *nemeton.Validator) (i
 
 // Identity is the resolver for the identity field.
 func (r *validatorResolver) Identity(ctx context.Context, obj *nemeton.Validator) (*model.Identity, error) {
-	panic(fmt.Errorf("not implemented: Identity - identity"))
+	if obj.Identity == nil {
+		return nil, nil
+	}
+
+	return &model.Identity{
+		Kid: *obj.Identity,
+	}, nil
 }
 
 // Status is the resolver for the status field.
