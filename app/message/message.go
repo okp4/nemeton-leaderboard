@@ -38,3 +38,6 @@ type GetBlockResponse struct {
 
 // SyncBlock used for ask synchronization to request new block on chain.
 type SyncBlock struct{}
+
+// SearchTweet message to ask actor to launch tweet research.
+type SearchTweet struct{}

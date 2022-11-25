@@ -21,6 +21,7 @@ const (
 	FlagGrpcAddress    = "grpc-address"
 	FlagNoTLS          = "no-tls"
 	FlagTLSSkipVerify  = "tls-skip-verify"
+	FlagTweeterToken   = "tweeter-token"
 )
 
 var (
@@ -30,12 +31,13 @@ var (
 	grpcAddress   string
 	noTLS         bool
 	tlsSkipVerify bool
+	tweeterToken  string
 
 	startCmd = &cobra.Command{
 		Use:   "start",
 		Short: "Start the leaderboard service",
 		Run: func(cmd *cobra.Command, args []string) {
-			app := system.Bootstrap(graphqlAddr, mongoURI, dbName, grpcAddress, getTransportCredentials())
+			app := system.Bootstrap(graphqlAddr, mongoURI, dbName, grpcAddress, tweeterToken, getTransportCredentials())
 
 			kill := make(chan os.Signal, 1)
 			signal.Notify(kill, syscall.SIGINT, syscall.SIGTERM)
@@ -61,6 +63,7 @@ func init() {
 		FlagTLSSkipVerify,
 		false,
 		"Encryption with the GRPC endpoint but skip certificates verification")
+	startCmd.PersistentFlags().StringVar(&tweeterToken, FlagTweeterToken, "", "Set the tweeter bearer token")
 }
 
 func getTransportCredentials() credentials.TransportCredentials {
