@@ -147,6 +147,26 @@ func (s *Store) GetValidatorBy(ctx context.Context, filter bson.M) (*Validator, 
 	return &val, res.Decode(&val)
 }
 
+func (s *Store) GetValidatorRank(ctx context.Context, cursor Cursor) (int, error) {
+	count, err := s.db.Collection(validatorsCollectionName).
+		CountDocuments(
+			ctx,
+			bson.M{
+				"$or": bson.A{
+					bson.M{
+						"points": bson.M{"$gt": cursor.points},
+					},
+					bson.M{
+						"points": cursor.points,
+						"_id":    bson.M{"$lt": cursor.objectID},
+					},
+				},
+			},
+		)
+
+	return int(count) + 1, err
+}
+
 func (s *Store) CountValidators(ctx context.Context) (int64, error) {
 	return s.db.Collection(validatorsCollectionName).CountDocuments(ctx, bson.M{})
 }

@@ -118,7 +118,7 @@ func (r *queryResolver) Validator(ctx context.Context, cursor *nemeton.Cursor, r
 
 // Rank is the resolver for the rank field.
 func (r *validatorResolver) Rank(ctx context.Context, obj *nemeton.Validator) (int, error) {
-	panic(fmt.Errorf("not implemented: Rank - rank"))
+	return r.store.GetValidatorRank(ctx, *obj.Cursor())
 }
 
 // Identity is the resolver for the identity field.
