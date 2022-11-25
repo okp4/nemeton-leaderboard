@@ -68,7 +68,27 @@ func (s *Store) init(ctx context.Context) error {
 		s.phases = append(s.phases, &phase)
 	}
 
+	if err := s.ensureIndexes(ctx); err != nil {
+		return err
+	}
 	return nil
+}
+
+func (s *Store) ensureIndexes(ctx context.Context) error {
+	_, err := s.db.Collection(validatorsCollectionName).
+		Indexes().
+		CreateMany(
+			ctx,
+			[]mongo.IndexModel{
+				{Keys: bson.M{"points": 1}},
+				{Keys: bson.M{"moniker": 1}},
+				{Keys: bson.M{"valoper": 1}, Options: options.Index().SetUnique(true)},
+				{Keys: bson.M{"delegator": 1}, Options: options.Index().SetUnique(true)},
+				{Keys: bson.M{"twitter": 1}, Options: options.Index().SetUnique(true)},
+				{Keys: bson.M{"discord": 1}, Options: options.Index().SetUnique(true)},
+			},
+		)
+	return err
 }
 
 func (s *Store) GetPhase(number int) *Phase {
