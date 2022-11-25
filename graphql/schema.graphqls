@@ -34,6 +34,11 @@ e.g. ``
 """
 scalar URI
 
+directive @goField(
+    forceResolver: Boolean
+    name: String
+) on INPUT_FIELD_DEFINITION | FIELD_DEFINITION
+
 type Query {
     """
     Fetch a specific Phase.
@@ -95,22 +100,22 @@ type Phases {
     """
     Retrieve all the phases.
     """
-    all: [Phase!]!
+    all: [Phase!]! @goField(forceResolver: true)
 
     """
     Retrieve all the ongoing phases, those who hasn't started yet.
     """
-    ongoing: [Phase!]!
+    ongoing: [Phase!]! @goField(forceResolver: true)
 
     """
     Retrieve all the finished phases.
     """
-    finished: [Phase!]!
+    finished: [Phase!]! @goField(forceResolver: true)
 
     """
     Retrieve the current phase.
     """
-    current: Phase
+    current: Phase @goField(forceResolver: true)
 }
 
 """
@@ -160,7 +165,7 @@ type Phase {
     """
     The current block range of the phase. In the case the phase hasn't started its size is 0, for a phase in progress the range will evolve.
     """
-    blocks: BlockRange!
+    blocks: BlockRange! @goField(forceResolver: true)
 }
 
 """

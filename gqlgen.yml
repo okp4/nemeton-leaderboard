@@ -50,6 +50,12 @@ autobind:
 # modelgen, the others will be allowed when binding to fields. Configure them to
 # your liking
 models:
+  Phase:
+    model:
+      - okp4/nemeton-leaderboard/app/nemeton.Phase
+  Task:
+    model:
+      - okp4/nemeton-leaderboard/app/nemeton.Task
   ID:
     model:
       - github.com/99designs/gqlgen/graphql.ID

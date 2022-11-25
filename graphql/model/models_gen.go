@@ -6,14 +6,15 @@ import (
 	"fmt"
 	"io"
 	"strconv"
-	"time"
+
+	"okp4/nemeton-leaderboard/app/nemeton"
 )
 
 // Represents the progress/result of a task assigned to a validator.
 type TaskState interface {
 	IsTaskState()
 	// The task we're talking about.
-	GetTask() *Task
+	GetTask() *nemeton.Task
 	// `true` if the validator  completed this task.
 	GetCompleted() bool
 	// The number of points earned by the validator on this task.
@@ -76,49 +77,27 @@ type PerPhaseTasks struct {
 	// The total number of finished tasks in this phase.
 	FinishedCount int `json:"finishedCount"`
 	// The phase we're talking about.
-	Phase *Phase `json:"phase"`
+	Phase *nemeton.Phase `json:"phase"`
 	// The current status of the phase's tasks for a validator.
 	Tasks []TaskState `json:"tasks"`
-}
-
-// Represents a Phase of the Nemeton Program
-type Phase struct {
-	// Identify the phase, the phases are ordered through their number.
-	Number int `json:"number"`
-	// The name of the phase.
-	Name string `json:"name"`
-	// The description of the phase.
-	Description string `json:"description"`
-	// The date the phase begin.
-	StartDate time.Time `json:"startDate"`
-	// The date the phase end.
-	EndDate time.Time `json:"endDate"`
-	// `true` if the phase is in progress.
-	Started bool `json:"started"`
-	// `true` if the phase is finished.
-	Finished bool `json:"finished"`
-	// The tasks composing the phase the druids will have to perform.
-	Tasks []*Task `json:"tasks"`
-	// The current block range of the phase. In the case the phase hasn't started its size is 0, for a phase in progress the range will evolve.
-	Blocks *BlockRange `json:"blocks"`
 }
 
 // Represents a Phases payload
 type Phases struct {
 	// Retrieve all the phases.
-	All []*Phase `json:"all"`
+	All []*nemeton.Phase `json:"all"`
 	// Retrieve all the ongoing phases, those who hasn't started yet.
-	Ongoing []*Phase `json:"ongoing"`
+	Ongoing []*nemeton.Phase `json:"ongoing"`
 	// Retrieve all the finished phases.
-	Finished []*Phase `json:"finished"`
+	Finished []*nemeton.Phase `json:"finished"`
 	// Retrieve the current phase.
-	Current *Phase `json:"current"`
+	Current *nemeton.Phase `json:"current"`
 }
 
 // Represents the state of a specific task requiring a manual submission from the validator.
 type SubmissionTask struct {
 	// The task we're talking about.
-	Task *Task `json:"task"`
+	Task *nemeton.Task `json:"task"`
 	// `true` if the validator  completed this task.
 	Completed bool `json:"completed"`
 	// The number of points earned by the validator on this task.
@@ -130,35 +109,13 @@ type SubmissionTask struct {
 func (SubmissionTask) IsTaskState() {}
 
 // The task we're talking about.
-func (this SubmissionTask) GetTask() *Task { return this.Task }
+func (this SubmissionTask) GetTask() *nemeton.Task { return this.Task }
 
 // `true` if the validator  completed this task.
 func (this SubmissionTask) GetCompleted() bool { return this.Completed }
 
 // The number of points earned by the validator on this task.
 func (this SubmissionTask) GetEarnedPoints() int { return this.EarnedPoints }
-
-// Represents a phase's task, containing only descriptive elements. It does not expressed any potential progress or result as it is not linked to a druid.
-type Task struct {
-	// The unique identifier of the task.
-	ID string `json:"id"`
-	// The name of the task.
-	Name string `json:"name"`
-	// The description of the task.
-	Description string `json:"description"`
-	// The date the task being.
-	StartDate time.Time `json:"startDate"`
-	// The date the task end.
-	EndDate time.Time `json:"endDate"`
-	// `true` if the task is in progress.
-	Started bool `json:"started"`
-	// `true` if the task is finished.
-	Finished bool `json:"finished"`
-	// Tells whether a task require a manual submission from the druids to be evaluated.
-	WithSubmission bool `json:"withSubmission"`
-	// The points earned if the task is completed. No value means there is no fixed amount of points as rewards, the amount is calculated regarding the performance.
-	Rewards *int `json:"rewards"`
-}
 
 // Contains information relative to the state of the tasks a validator shall perform.
 type Tasks struct {
@@ -173,7 +130,7 @@ type Tasks struct {
 // Represents the state of a specific task of uptime.
 type UptimeTask struct {
 	// The task we're talking about.
-	Task *Task `json:"task"`
+	Task *nemeton.Task `json:"task"`
 	// `true` if the validator  completed this task.
 	Completed bool `json:"completed"`
 	// The number of points earned by the validator on this task.
@@ -191,7 +148,7 @@ type UptimeTask struct {
 func (UptimeTask) IsTaskState() {}
 
 // The task we're talking about.
-func (this UptimeTask) GetTask() *Task { return this.Task }
+func (this UptimeTask) GetTask() *nemeton.Task { return this.Task }
 
 // `true` if the validator  completed this task.
 func (this UptimeTask) GetCompleted() bool { return this.Completed }

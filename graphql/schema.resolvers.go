@@ -7,18 +7,44 @@ import (
 	"context"
 	"fmt"
 
+	"okp4/nemeton-leaderboard/app/nemeton"
 	"okp4/nemeton-leaderboard/graphql/generated"
 	"okp4/nemeton-leaderboard/graphql/model"
 )
 
+// Blocks is the resolver for the blocks field.
+func (r *phaseResolver) Blocks(ctx context.Context, obj *nemeton.Phase) (*model.BlockRange, error) {
+	panic(fmt.Errorf("not implemented: Blocks - blocks"))
+}
+
+// All is the resolver for the all field.
+func (r *phasesResolver) All(ctx context.Context, obj *model.Phases) ([]*nemeton.Phase, error) {
+	return r.store.GetAllPhases(), nil
+}
+
+// Ongoing is the resolver for the ongoing field.
+func (r *phasesResolver) Ongoing(ctx context.Context, obj *model.Phases) ([]*nemeton.Phase, error) {
+	return r.store.GetUnstartedPhases(), nil
+}
+
+// Finished is the resolver for the finished field.
+func (r *phasesResolver) Finished(ctx context.Context, obj *model.Phases) ([]*nemeton.Phase, error) {
+	return r.store.GetFinishedPhases(), nil
+}
+
+// Current is the resolver for the current field.
+func (r *phasesResolver) Current(ctx context.Context, obj *model.Phases) (*nemeton.Phase, error) {
+	return r.store.GetCurrentPhase(), nil
+}
+
 // Phase is the resolver for the phase field.
-func (r *queryResolver) Phase(ctx context.Context, number int) (*model.Phase, error) {
-	panic(fmt.Errorf("not implemented: Phase - phase"))
+func (r *queryResolver) Phase(ctx context.Context, number int) (*nemeton.Phase, error) {
+	return r.store.GetPhase(number), nil
 }
 
 // Phases is the resolver for the phases field.
 func (r *queryResolver) Phases(ctx context.Context) (*model.Phases, error) {
-	panic(fmt.Errorf("not implemented: Phases - phases"))
+	return &model.Phases{}, nil
 }
 
 // Board is the resolver for the board field.
@@ -36,7 +62,17 @@ func (r *queryResolver) Validator(ctx context.Context, cursor *string, rank *int
 	panic(fmt.Errorf("not implemented: Validator - validator"))
 }
 
+// Phase returns generated.PhaseResolver implementation.
+func (r *Resolver) Phase() generated.PhaseResolver { return &phaseResolver{r} }
+
+// Phases returns generated.PhasesResolver implementation.
+func (r *Resolver) Phases() generated.PhasesResolver { return &phasesResolver{r} }
+
 // Query returns generated.QueryResolver implementation.
 func (r *Resolver) Query() generated.QueryResolver { return &queryResolver{r} }
 
-type queryResolver struct{ *Resolver }
+type (
+	phaseResolver  struct{ *Resolver }
+	phasesResolver struct{ *Resolver }
+	queryResolver  struct{ *Resolver }
+)
