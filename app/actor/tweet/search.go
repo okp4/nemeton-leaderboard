@@ -28,7 +28,7 @@ type SearchActor struct {
 	Context      context.Context
 }
 
-func NewSearchActor(eventStore *actor.PID, mongoURI, dbName, tweeterToken string) (*SearchActor, error) {
+func NewSearchActor(eventStore *actor.PID, mongoURI, dbName, tweeterToken, hashtag string) (*SearchActor, error) {
 	ctx := context.Background()
 	store, err := offset.NewStore(ctx, mongoURI, dbName, ownerOffset)
 	if err != nil {
@@ -36,7 +36,7 @@ func NewSearchActor(eventStore *actor.PID, mongoURI, dbName, tweeterToken string
 	}
 
 	return &SearchActor{
-		Hashtag:      "#NemetonOKP4 -is:retweet",
+		Hashtag:      hashtag,
 		TweeterToken: tweeterToken,
 		Client:       http.DefaultClient,
 		EventStore:   eventStore,
@@ -109,7 +109,7 @@ func (a *SearchActor) fetchTweets(sinceID, nextToken string) (*Response, error) 
 		return nil, err
 	}
 	query := u.Query()
-	query.Add("query", a.Hashtag)
+	query.Add("query", fmt.Sprintf("%s -is:retweet", a.Hashtag))
 	query.Add("expansions", "author_id")
 	query.Add("user.fields", "username")
 

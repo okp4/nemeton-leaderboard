@@ -22,22 +22,24 @@ const (
 	FlagNoTLS          = "no-tls"
 	FlagTLSSkipVerify  = "tls-skip-verify"
 	FlagTweeterToken   = "tweeter-token" // nolint:gosec
+	FlagTweeterHashtag = "tweeter-hashtag"
 )
 
 var (
-	graphqlAddr   string
-	mongoURI      string
-	dbName        string
-	grpcAddress   string
-	noTLS         bool
-	tlsSkipVerify bool
-	tweeterToken  string
+	graphqlAddr    string
+	mongoURI       string
+	dbName         string
+	grpcAddress    string
+	noTLS          bool
+	tlsSkipVerify  bool
+	tweeterToken   string
+	tweeterHashtag string
 
 	startCmd = &cobra.Command{
 		Use:   "start",
 		Short: "Start the leaderboard service",
 		Run: func(cmd *cobra.Command, args []string) {
-			app := system.Bootstrap(graphqlAddr, mongoURI, dbName, grpcAddress, tweeterToken, getTransportCredentials())
+			app := system.Bootstrap(graphqlAddr, mongoURI, dbName, grpcAddress, tweeterToken, tweeterHashtag, getTransportCredentials())
 
 			kill := make(chan os.Signal, 1)
 			signal.Notify(kill, syscall.SIGINT, syscall.SIGTERM)
@@ -64,6 +66,10 @@ func init() {
 		false,
 		"Encryption with the GRPC endpoint but skip certificates verification")
 	startCmd.PersistentFlags().StringVar(&tweeterToken, FlagTweeterToken, "", "Set the tweeter bearer token")
+	startCmd.PersistentFlags().StringVar(&tweeterHashtag,
+		FlagTweeterHashtag,
+		"#NemetonOKP4",
+		"Set the tweeter hashtag that will stream all tweet")
 }
 
 func getTransportCredentials() credentials.TransportCredentials {
