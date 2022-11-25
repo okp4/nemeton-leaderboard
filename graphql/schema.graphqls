@@ -1,6 +1,6 @@
 """
 Represents an opaque identifier on a resource allowing cursor based pagination.
-e.g. `Y291Y291bW9uY3Vs`
+e.g. `1jS3rqHqNoGdj6nJ2VN3UvJvqnz`
 """
 scalar Cursor
 
@@ -23,10 +23,10 @@ e.g. `okp4valoper1jse8senm9hcvydhl8v9x47kfe5z82zmwtw8jvj`
 scalar ValoperAddress
 
 """
-Represents a PGP key id.
+Represents a Keybase Key ID.
 e.g. `547DBC6F536D3AD2`
 """
-scalar PGPKeyID
+scalar KID
 
 """
 Represents an [Uniform Resource Identifier](https://fr.wikipedia.org/wiki/Uniform_Resource_Identifier) to permanently identify a resource.
@@ -370,7 +370,7 @@ type Identity {
     """
     The identity PGP key id.
     """
-    pgp: PGPKeyID!
+    kid: KID!
 
     """
     The resolved identity picture, if any.
