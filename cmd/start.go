@@ -21,7 +21,7 @@ const (
 	FlagGrpcAddress    = "grpc-address"
 	FlagNoTLS          = "no-tls"
 	FlagTLSSkipVerify  = "tls-skip-verify"
-	FlagTweeterToken   = "tweeter-token"
+	FlagTweeterToken   = "tweeter-token" // nolint:gosec
 )
 
 var (
