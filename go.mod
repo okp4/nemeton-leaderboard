@@ -9,9 +9,10 @@ require (
 	github.com/rs/zerolog v1.28.0
 	github.com/smartystreets/goconvey v1.7.2
 	github.com/spf13/cobra v1.6.1
+	github.com/tendermint/tendermint v0.34.22
 	github.com/vektah/gqlparser/v2 v2.5.1
 	go.mongodb.org/mongo-driver v1.11.0
-	google.golang.org/grpc v1.50.0
+	google.golang.org/grpc v1.51.0
 	gopkg.in/yaml.v2 v2.4.0
 )
 
@@ -109,7 +110,6 @@ require (
 	github.com/tendermint/btcd v0.1.1 // indirect
 	github.com/tendermint/crypto v0.0.0-20191022145703-50d29ede1e15 // indirect
 	github.com/tendermint/go-amino v0.16.0 // indirect
-	github.com/tendermint/tendermint v0.34.22 // indirect
 	github.com/tendermint/tm-db v0.6.7 // indirect
 	github.com/xdg-go/pbkdf2 v1.0.0 // indirect
 	github.com/xdg-go/scram v1.1.1 // indirect
@@ -130,7 +130,7 @@ require (
 	golang.org/x/sync v0.0.0-20220819030929-7fc1605a5dde // indirect
 	golang.org/x/sys v0.2.0 // indirect
 	golang.org/x/term v0.0.0-20220722155259-a9ba230a4035 // indirect
-	golang.org/x/text v0.3.7 // indirect
+	golang.org/x/text v0.4.0 // indirect
 	google.golang.org/genproto v0.0.0-20220815135757-37a418bb8959 // indirect
 	google.golang.org/protobuf v1.28.1 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
