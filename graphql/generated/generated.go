@@ -64,7 +64,7 @@ type ComplexityRoot struct {
 	}
 
 	Identity struct {
-		PGP     func(childComplexity int) int
+		Kid     func(childComplexity int) int
 		Picture func(childComplexity int) int
 	}
 
@@ -250,12 +250,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.BoardConnection.PageInfo(childComplexity), true
 
-	case "Identity.pgp":
-		if e.complexity.Identity.PGP == nil {
+	case "Identity.kid":
+		if e.complexity.Identity.Kid == nil {
 			break
 		}
 
-		return e.complexity.Identity.PGP(childComplexity), true
+		return e.complexity.Identity.Kid(childComplexity), true
 
 	case "Identity.picture":
 		if e.complexity.Identity.Picture == nil {
@@ -793,7 +793,7 @@ func (ec *executionContext) introspectType(name string) (*introspection.Type, er
 var sources = []*ast.Source{
 	{Name: "../schema.graphqls", Input: `"""
 Represents an opaque identifier on a resource allowing cursor based pagination.
-e.g. ` + "`" + `Y291Y291bW9uY3Vs` + "`" + `
+e.g. ` + "`" + `1jS3rqHqNoGdj6nJ2VN3UvJvqnz` + "`" + `
 """
 scalar Cursor
 
@@ -816,10 +816,10 @@ e.g. ` + "`" + `okp4valoper1jse8senm9hcvydhl8v9x47kfe5z82zmwtw8jvj` + "`" + `
 scalar ValoperAddress
 
 """
-Represents a PGP key id.
+Represents a Keybase Key ID.
 e.g. ` + "`" + `547DBC6F536D3AD2` + "`" + `
 """
-scalar PGPKeyID
+scalar KID
 
 """
 Represents an [Uniform Resource Identifier](https://fr.wikipedia.org/wiki/Uniform_Resource_Identifier) to permanently identify a resource.
@@ -1163,7 +1163,7 @@ type Identity {
     """
     The identity PGP key id.
     """
-    pgp: PGPKeyID!
+    kid: KID!
 
     """
     The resolved identity picture, if any.
@@ -1744,8 +1744,8 @@ func (ec *executionContext) fieldContext_BoardConnection_pageInfo(ctx context.Co
 	return fc, nil
 }
 
-func (ec *executionContext) _Identity_pgp(ctx context.Context, field graphql.CollectedField, obj *model.Identity) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Identity_pgp(ctx, field)
+func (ec *executionContext) _Identity_kid(ctx context.Context, field graphql.CollectedField, obj *model.Identity) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Identity_kid(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -1758,7 +1758,7 @@ func (ec *executionContext) _Identity_pgp(ctx context.Context, field graphql.Col
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.PGP, nil
+		return obj.Kid, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1770,19 +1770,19 @@ func (ec *executionContext) _Identity_pgp(ctx context.Context, field graphql.Col
 		}
 		return graphql.Null
 	}
-	res := resTmp.(uint64)
+	res := resTmp.(string)
 	fc.Result = res
-	return ec.marshalNPGPKeyID2uint64(ctx, field.Selections, res)
+	return ec.marshalNKID2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Identity_pgp(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Identity_kid(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Identity",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type PGPKeyID does not have child fields")
+			return nil, errors.New("field of type KID does not have child fields")
 		},
 	}
 	return fc, nil
@@ -4562,8 +4562,8 @@ func (ec *executionContext) fieldContext_Validator_identity(ctx context.Context,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
-			case "pgp":
-				return ec.fieldContext_Identity_pgp(ctx, field)
+			case "kid":
+				return ec.fieldContext_Identity_kid(ctx, field)
 			case "picture":
 				return ec.fieldContext_Identity_picture(ctx, field)
 			}
@@ -7027,9 +7027,9 @@ func (ec *executionContext) _Identity(ctx context.Context, sel ast.SelectionSet,
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("Identity")
-		case "pgp":
+		case "kid":
 
-			out.Values[i] = ec._Identity_pgp(ctx, field, obj)
+			out.Values[i] = ec._Identity_kid(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)
@@ -8451,13 +8451,13 @@ func (ec *executionContext) marshalNInt2uint64(ctx context.Context, sel ast.Sele
 	return res
 }
 
-func (ec *executionContext) unmarshalNPGPKeyID2uint64(ctx context.Context, v interface{}) (uint64, error) {
-	res, err := graphql.UnmarshalUint64(v)
+func (ec *executionContext) unmarshalNKID2string(ctx context.Context, v interface{}) (string, error) {
+	res, err := scalar.UnmarshalKID(v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNPGPKeyID2uint64(ctx context.Context, sel ast.SelectionSet, v uint64) graphql.Marshaler {
-	res := graphql.MarshalUint64(v)
+func (ec *executionContext) marshalNKID2string(ctx context.Context, sel ast.SelectionSet, v string) graphql.Marshaler {
+	res := scalar.MarshalKID(v)
 	if res == graphql.Null {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")

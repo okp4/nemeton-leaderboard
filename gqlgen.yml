@@ -80,9 +80,9 @@ models:
   ValoperAddress:
     model:
       - okp4/nemeton-leaderboard/graphql/scalar.ValoperAddress
-  PGPKeyID:
+  KID:
     model:
-      - github.com/99designs/gqlgen/graphql.Uint64
+      - okp4/nemeton-leaderboard/graphql/scalar.KID
   URI:
     model:
       - okp4/nemeton-leaderboard/graphql/scalar.URI

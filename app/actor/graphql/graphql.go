@@ -3,6 +3,8 @@ package graphql
 import (
 	"context"
 
+	"okp4/nemeton-leaderboard/app/keybase"
+
 	"okp4/nemeton-leaderboard/app/nemeton"
 	"okp4/nemeton-leaderboard/graphql"
 	"okp4/nemeton-leaderboard/graphql/generated"
@@ -18,7 +20,7 @@ func NewGraphQLServer(ctx context.Context, mongoURI, db string) (*handler.Server
 
 	return handler.NewDefaultServer(
 		generated.NewExecutableSchema(
-			generated.Config{Resolvers: graphql.NewResolver(store)},
+			generated.Config{Resolvers: graphql.NewResolver(store, keybase.NewClient())},
 		),
 	), nil
 }

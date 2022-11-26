@@ -1,6 +1,7 @@
 package graphql
 
 import (
+	"okp4/nemeton-leaderboard/app/keybase"
 	"okp4/nemeton-leaderboard/app/nemeton"
 )
 
@@ -9,11 +10,13 @@ import (
 // It serves as dependency injection for your app, add any dependencies you require here.
 
 type Resolver struct {
-	store *nemeton.Store
+	store         *nemeton.Store
+	keybaseClient *keybase.Client
 }
 
-func NewResolver(store *nemeton.Store) *Resolver {
+func NewResolver(store *nemeton.Store, keybaseClient *keybase.Client) *Resolver {
 	return &Resolver{
-		store: store,
+		store:         store,
+		keybaseClient: keybaseClient,
 	}
 }

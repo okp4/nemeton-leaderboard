@@ -43,7 +43,7 @@ type BoardConnection struct {
 // Represents an identity on https://keybase.io/
 type Identity struct {
 	// The identity PGP key id.
-	PGP uint64 `json:"pgp"`
+	Kid string `json:"kid"`
 	// The resolved identity picture, if any.
 	Picture *Link `json:"picture"`
 }
