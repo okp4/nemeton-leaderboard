@@ -24,3 +24,13 @@ func (e *NewBlockEvent) Marshall() (map[string]interface{}, error) {
 	err = json.Unmarshal(data, &event)
 	return event, err
 }
+
+func Unmarshall(data map[string]interface{}) (*NewBlockEvent, error) {
+	var event *NewBlockEvent
+	d, err := json.Marshal(data)
+	if err != nil {
+		return nil, err
+	}
+	err = json.Unmarshal(d, &event)
+	return event, err
+}
