@@ -20,12 +20,12 @@ import (
 const ownerOffset = "tweet-search"
 
 type SearchActor struct {
-	Hashtag      string
-	TwitterToken string
-	Client       *http.Client
-	EventStore   *actor.PID
-	Store        *offset.Store
-	Context      context.Context
+	hashtag      string
+	twitterToken string
+	client       *http.Client
+	eventStore   *actor.PID
+	store        *offset.Store
+	context      context.Context
 }
 
 func NewSearchActor(eventStore *actor.PID, mongoURI, dbName, twitterToken, hashtag string) (*SearchActor, error) {
@@ -36,12 +36,12 @@ func NewSearchActor(eventStore *actor.PID, mongoURI, dbName, twitterToken, hasht
 	}
 
 	return &SearchActor{
-		Hashtag:      hashtag,
-		TwitterToken: twitterToken,
-		Client:       http.DefaultClient,
-		EventStore:   eventStore,
-		Store:        store,
-		Context:      ctx,
+		hashtag:      hashtag,
+		twitterToken: twitterToken,
+		client:       http.DefaultClient,
+		eventStore:   eventStore,
+		store:        store,
+		context:      ctx,
 	}, nil
 }
 
@@ -109,7 +109,7 @@ func (a *SearchActor) fetchTweets(sinceID, nextToken string) (*Response, error) 
 		return nil, err
 	}
 	query := u.Query()
-	query.Add("query", fmt.Sprintf("%s -is:retweet", a.Hashtag))
+	query.Add("query", fmt.Sprintf("%s -is:retweet", a.hashtag))
 	query.Add("expansions", "author_id")
 	query.Add("user.fields", "username")
 
@@ -122,13 +122,13 @@ func (a *SearchActor) fetchTweets(sinceID, nextToken string) (*Response, error) 
 
 	u.RawQuery = query.Encode()
 
-	request, err := http.NewRequestWithContext(a.Context, http.MethodGet, u.String(), nil)
+	request, err := http.NewRequestWithContext(a.context, http.MethodGet, u.String(), nil)
 	if err != nil {
 		return nil, err
 	}
 
-	request.Header.Add("authorization", fmt.Sprintf("Bearer %s", a.TwitterToken))
-	r, err := a.Client.Do(request)
+	request.Header.Add("authorization", fmt.Sprintf("Bearer %s", a.twitterToken))
+	r, err := a.client.Do(request)
 	if err != nil {
 		return nil, err
 	}
@@ -169,12 +169,12 @@ func (a *SearchActor) handleTweets(ctx actor.Context, tweets *Response) {
 			log.Err(err).Msg("❌ Failed to marshall event to map interface")
 			return
 		}
-		ctx.Send(a.EventStore, &message.PublishEventMessage{Event: event.NewEvent(NewTweetEventType, eventData)})
+		ctx.Send(a.eventStore, &message.PublishEventMessage{Event: event.NewEvent(NewTweetEventType, eventData)})
 	}
 }
 
 func (a *SearchActor) getSinceID() string {
-	value, _ := a.Store.Get(a.Context)
+	value, _ := a.store.Get(a.context)
 	switch sinceID := value.(type) {
 	case string:
 		return sinceID
@@ -184,5 +184,5 @@ func (a *SearchActor) getSinceID() string {
 }
 
 func (a *SearchActor) setSinceID(sinceID string) error {
-	return a.Store.Save(a.Context, sinceID)
+	return a.store.Save(a.context, sinceID)
 }
