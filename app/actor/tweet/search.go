@@ -21,14 +21,14 @@ const ownerOffset = "tweet-search"
 
 type SearchActor struct {
 	Hashtag      string
-	TweeterToken string
+	TwitterToken string
 	Client       *http.Client
 	EventStore   *actor.PID
 	Store        *offset.Store
 	Context      context.Context
 }
 
-func NewSearchActor(eventStore *actor.PID, mongoURI, dbName, tweeterToken, hashtag string) (*SearchActor, error) {
+func NewSearchActor(eventStore *actor.PID, mongoURI, dbName, twitterToken, hashtag string) (*SearchActor, error) {
 	ctx := context.Background()
 	store, err := offset.NewStore(ctx, mongoURI, dbName, ownerOffset)
 	if err != nil {
@@ -37,7 +37,7 @@ func NewSearchActor(eventStore *actor.PID, mongoURI, dbName, tweeterToken, hasht
 
 	return &SearchActor{
 		Hashtag:      hashtag,
-		TweeterToken: tweeterToken,
+		TwitterToken: twitterToken,
 		Client:       http.DefaultClient,
 		EventStore:   eventStore,
 		Store:        store,
@@ -48,13 +48,13 @@ func NewSearchActor(eventStore *actor.PID, mongoURI, dbName, tweeterToken, hasht
 func (a *SearchActor) Receive(ctx actor.Context) {
 	switch ctx.Message().(type) {
 	case *actor.Started:
-		log.Info().Msg("💬 Start tweeter search")
+		log.Info().Msg("💬 Start twitter search")
 		scheduler.NewTimerScheduler(ctx).SendRepeatedly(0, 10*time.Second, ctx.Self(), &message.SearchTweet{})
 	case *message.SearchTweet:
 		log.Info().Msg("🧙‍ Start looking for tweets")
 		a.searchTweets(ctx, a.getSinceID(), "", "")
 	case *actor.Stopping:
-		log.Info().Msg("🛑 Stop tweeter search")
+		log.Info().Msg("🛑 Stop twitter search")
 	}
 }
 
@@ -127,7 +127,7 @@ func (a *SearchActor) fetchTweets(sinceID, nextToken string) (*Response, error) 
 		return nil, err
 	}
 
-	request.Header.Add("authorization", fmt.Sprintf("Bearer %s", a.TweeterToken))
+	request.Header.Add("authorization", fmt.Sprintf("Bearer %s", a.TwitterToken))
 	r, err := a.Client.Do(request)
 	if err != nil {
 		return nil, err

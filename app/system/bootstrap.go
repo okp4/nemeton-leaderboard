@@ -17,10 +17,10 @@ type App struct {
 	init *actor.PID
 }
 
-func Bootstrap(listenAddr, mongoURI, dbName, grpcAddr, tweeterToken, hashtag string, tls credentials.TransportCredentials) *App {
+func Bootstrap(listenAddr, mongoURI, dbName, grpcAddr, twitterToken, hashtag string, tls credentials.TransportCredentials) *App {
 	initProps := actor.PropsFromFunc(func(ctx actor.Context) {
 		if _, ok := ctx.Message().(*actor.Started); ok {
-			boot(ctx, listenAddr, mongoURI, dbName, grpcAddr, tweeterToken, hashtag, tls)
+			boot(ctx, listenAddr, mongoURI, dbName, grpcAddr, twitterToken, hashtag, tls)
 		}
 	})
 
@@ -40,7 +40,7 @@ func (app *App) Stop() error {
 	return app.ctx.StopFuture(app.init).Wait()
 }
 
-func boot(ctx actor.Context, listenAddr, mongoURI, dbName, grpcAddr, tweeterToken, hashtag string,
+func boot(ctx actor.Context, listenAddr, mongoURI, dbName, grpcAddr, twitterToken, hashtag string,
 	tls credentials.TransportCredentials,
 ) {
 	grpcClientProps := actor.PropsFromProducer(func() actor.Actor {
@@ -72,7 +72,7 @@ func boot(ctx actor.Context, listenAddr, mongoURI, dbName, grpcAddr, tweeterToke
 	}
 
 	tweetProps := actor.PropsFromProducer(func() actor.Actor {
-		actor, err := tweet.NewSearchActor(eventStorePID, mongoURI, dbName, tweeterToken, hashtag)
+		actor, err := tweet.NewSearchActor(eventStorePID, mongoURI, dbName, twitterToken, hashtag)
 		if err != nil {
 			log.Panic().Err(err).Msg("❌ Could not start tweet actor")
 		}
