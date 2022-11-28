@@ -89,13 +89,11 @@ func (a *SearchActor) searchTweets(ctx actor.Context, sinceID, nextToken, initia
 		switch initialNewestID {
 		case "":
 			if err := a.setSinceID(tweets.Meta.NewestID); err != nil {
-				log.Error().Err(err).Msg("❌ Failed save since id value 💾")
-				return
+				log.Panic().Err(err).Msg("❌ Failed save since id value 💾")
 			}
 		default:
 			if err := a.setSinceID(initialNewestID); err != nil {
-				log.Error().Err(err).Msg("❌ Failed save since id value 💾")
-				return
+				log.Panic().Err(err).Msg("❌ Failed save since id value 💾")
 			}
 		}
 
