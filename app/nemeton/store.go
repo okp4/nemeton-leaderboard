@@ -3,6 +3,7 @@ package nemeton
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	"okp4/nemeton-leaderboard/app/util"
 
@@ -68,7 +69,27 @@ func (s *Store) init(ctx context.Context) error {
 		s.phases = append(s.phases, &phase)
 	}
 
+	if err := s.ensureIndexes(ctx); err != nil {
+		return err
+	}
 	return nil
+}
+
+func (s *Store) ensureIndexes(ctx context.Context) error {
+	_, err := s.db.Collection(validatorsCollectionName).
+		Indexes().
+		CreateMany(
+			ctx,
+			[]mongo.IndexModel{
+				{Keys: bson.M{"points": 1}},
+				{Keys: bson.M{"moniker": 1}},
+				{Keys: bson.M{"valoper": 1}, Options: options.Index().SetUnique(true)},
+				{Keys: bson.M{"delegator": 1}, Options: options.Index().SetUnique(true)},
+				{Keys: bson.M{"twitter": 1}, Options: options.Index().SetSparse(true).SetUnique(true)},
+				{Keys: bson.M{"discord": 1}, Options: options.Index().SetUnique(true)},
+			},
+		)
+	return err
 }
 
 func (s *Store) GetPhase(number int) *Phase {
@@ -172,24 +193,10 @@ func (s *Store) CountValidators(ctx context.Context) (int64, error) {
 	return s.db.Collection(validatorsCollectionName).CountDocuments(ctx, bson.M{})
 }
 
-func (s *Store) GetBoard(ctx context.Context, limit int, after *Cursor) ([]*Validator, bool, error) {
-	var filter bson.M
-	if after != nil {
-		filter = bson.M{
-			"$or": bson.A{
-				bson.M{
-					"points": bson.M{"$lt": after.points},
-				},
-				bson.M{
-					"points": after.points,
-					"_id":    bson.M{"$gt": after.objectID},
-				},
-			},
-		}
-	}
+func (s *Store) GetBoard(ctx context.Context, search *string, limit int, after *Cursor) ([]*Validator, bool, error) {
 	c, err := s.db.Collection(validatorsCollectionName).Find(
 		ctx,
-		filter,
+		makeBoardFilter(search, after),
 		options.Find().
 			SetSort(
 				bson.D{
@@ -218,4 +225,38 @@ func (s *Store) GetBoard(ctx context.Context, limit int, after *Cursor) ([]*Vali
 	}
 
 	return validators, c.Next(ctx), nil
+}
+
+func makeBoardFilter(search *string, after *Cursor) bson.M {
+	filters := bson.A{}
+	if after != nil {
+		filters = append(filters, bson.M{
+			"$or": bson.A{
+				bson.M{
+					"points": bson.M{"$lt": after.points},
+				},
+				bson.M{
+					"points": after.points,
+					"_id":    bson.M{"$gt": after.objectID},
+				},
+			},
+		})
+	}
+	if search != nil {
+		filters = append(filters, bson.M{
+			"$or": bson.A{
+				bson.M{"moniker": bson.M{"$regex": fmt.Sprintf(".*%s.*", *search), "$options": "i"}},
+				bson.M{"valoper": bson.M{"$regex": fmt.Sprintf(".*%s.*", *search), "$options": "i"}},
+				bson.M{"delegator": bson.M{"$regex": fmt.Sprintf(".*%s.*", *search), "$options": "i"}},
+			},
+		})
+	}
+
+	var filter bson.M
+	if len(filters) > 0 {
+		filter = bson.M{
+			"$and": filters,
+		}
+	}
+	return filter
 }
