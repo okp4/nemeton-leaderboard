@@ -19,8 +19,29 @@ type TaskState interface {
 	// `true` if the validator  completed this task.
 	GetCompleted() bool
 	// The number of points earned by the validator on this task.
-	GetEarnedPoints() int
+	GetEarnedPoints() uint64
 }
+
+// Represents the state of a basic task.
+type BasicTaskState struct {
+	// The task we're talking about.
+	Task *nemeton.Task `json:"task"`
+	// `true` if the validator  completed this task.
+	Completed bool `json:"completed"`
+	// The number of points earned by the validator on this task.
+	EarnedPoints uint64 `json:"earnedPoints"`
+}
+
+func (BasicTaskState) IsTaskState() {}
+
+// The task we're talking about.
+func (this BasicTaskState) GetTask() *nemeton.Task { return this.Task }
+
+// `true` if the validator  completed this task.
+func (this BasicTaskState) GetCompleted() bool { return this.Completed }
+
+// The number of points earned by the validator on this task.
+func (this BasicTaskState) GetEarnedPoints() uint64 { return this.EarnedPoints }
 
 // Represents a blockchain block range.
 type BlockRange struct {
@@ -102,7 +123,7 @@ type SubmissionTask struct {
 	// `true` if the validator  completed this task.
 	Completed bool `json:"completed"`
 	// The number of points earned by the validator on this task.
-	EarnedPoints int `json:"earnedPoints"`
+	EarnedPoints uint64 `json:"earnedPoints"`
 	// `true` if the validator has submitted the content expected for the task.
 	Submitted bool `json:"submitted"`
 }
@@ -116,7 +137,7 @@ func (this SubmissionTask) GetTask() *nemeton.Task { return this.Task }
 func (this SubmissionTask) GetCompleted() bool { return this.Completed }
 
 // The number of points earned by the validator on this task.
-func (this SubmissionTask) GetEarnedPoints() int { return this.EarnedPoints }
+func (this SubmissionTask) GetEarnedPoints() uint64 { return this.EarnedPoints }
 
 // Contains information relative to the state of the tasks a validator shall perform.
 type Tasks struct {
@@ -126,6 +147,8 @@ type Tasks struct {
 	FinishedCount int `json:"finishedCount"`
 	// Details the tasks state a validator is supposed to perform per phase.
 	PerPhase []*PerPhaseTasks `json:"perPhase"`
+	// Details the tasks state a validator is supposed to perform in the specified phase.
+	ForPhase *PerPhaseTasks `json:"forPhase"`
 }
 
 // Represents the state of a specific task of uptime.
@@ -135,7 +158,7 @@ type UptimeTask struct {
 	// `true` if the validator  completed this task.
 	Completed bool `json:"completed"`
 	// The number of points earned by the validator on this task.
-	EarnedPoints int `json:"earnedPoints"`
+	EarnedPoints uint64 `json:"earnedPoints"`
 	// The total number of blocks expected to be signed.
 	BlockCount int `json:"blockCount"`
 	// The number of missed blocks.
@@ -155,7 +178,7 @@ func (this UptimeTask) GetTask() *nemeton.Task { return this.Task }
 func (this UptimeTask) GetCompleted() bool { return this.Completed }
 
 // The number of points earned by the validator on this task.
-func (this UptimeTask) GetEarnedPoints() int { return this.EarnedPoints }
+func (this UptimeTask) GetEarnedPoints() uint64 { return this.EarnedPoints }
 
 // Represents an edge to a validator.
 type ValidatorEdge struct {

@@ -16,7 +16,7 @@ type Task struct {
 	Description string    `bson:"description"`
 	StartDate   time.Time `bson:"startDate"`
 	EndDate     time.Time `bson:"endDate"`
-	Rewards     *int      `bson:"rewards,omitempty"`
+	Rewards     *uint64   `bson:"rewards,omitempty"`
 }
 
 func (t Task) Started() bool {
@@ -29,4 +29,9 @@ func (t Task) Finished() bool {
 
 func (t Task) WithSubmission() bool {
 	return t.Type == taskTypeSubmission
+}
+
+type TaskState struct {
+	Completed    bool   `bson:"completed"`
+	EarnedPoints uint64 `bson:"points"`
 }
