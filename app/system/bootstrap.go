@@ -8,8 +8,6 @@ import (
 	"okp4/nemeton-leaderboard/app/actor/synchronization"
 	"okp4/nemeton-leaderboard/app/actor/tweet"
 
-	"okp4/nemeton-leaderboard/app/message"
-
 	"github.com/asynkron/protoactor-go/actor"
 	"github.com/rs/zerolog/log"
 	"google.golang.org/grpc/credentials"
@@ -97,18 +95,14 @@ func boot(ctx actor.Context, listenAddr, mongoURI, dbName, grpcAddr, twitterToke
 
 func startSubscriber(ctx actor.Context, eventPID *actor.PID, mongoURI, dbName string) {
 	blockSubscriberProps := actor.PropsFromProducer(func() actor.Actor {
-		s, err := subscription.NewBlock(mongoURI, dbName)
+		s, err := subscription.NewBlock(mongoURI, dbName, eventPID)
 		if err != nil {
 			log.Panic().Err(err).Msg("❌ failed instantiate event subscription actor")
 		}
 		return s
 	})
-	blockSubscriberPID, err := ctx.SpawnNamed(blockSubscriberProps, "blockSubscriber")
+	_, err := ctx.SpawnNamed(blockSubscriberProps, "blockSubscriber")
 	if err != nil {
 		log.Panic().Err(err).Str("actor", "graphql").Msg("❌ Could not create actor")
 	}
-	ctx.Send(eventPID, &message.SubscribeEventMessage{
-		PID:  blockSubscriberPID,
-		From: nil,
-	})
 }
