@@ -65,7 +65,7 @@ func (r *queryResolver) Phases(ctx context.Context) (*model.Phases, error) {
 
 // Board is the resolver for the board field.
 func (r *queryResolver) Board(ctx context.Context, search *string, first *int, after *nemeton.Cursor) (*model.BoardConnection, error) {
-	validators, hasNext, err := r.store.GetBoard(ctx, *first, after)
+	validators, hasNext, err := r.store.GetBoard(ctx, search, *first, after)
 	if err != nil {
 		return nil, err
 	}
