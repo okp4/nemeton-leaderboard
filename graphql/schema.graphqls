@@ -357,7 +357,7 @@ type Validator {
     """
     The validator affected tasks, does not reference not tasks who has not started yet.
     """
-    tasks: Tasks @goField(forceResolver: true)
+    tasks: Tasks! @goField(forceResolver: true)
 
     """
     The blocks the validator has not signed.

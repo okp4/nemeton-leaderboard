@@ -15,6 +15,7 @@ require (
 	github.com/tendermint/tendermint v0.34.22
 	github.com/vektah/gqlparser/v2 v2.5.1
 	go.mongodb.org/mongo-driver v1.11.0
+	golang.org/x/net v0.0.0-20220812174116-3211cb980234
 	google.golang.org/grpc v1.50.0
 	gopkg.in/yaml.v2 v2.4.0
 )
@@ -128,7 +129,6 @@ require (
 	go.opentelemetry.io/otel/trace v1.9.0 // indirect
 	golang.org/x/crypto v0.0.0-20220722155217-630584e8d5aa // indirect
 	golang.org/x/exp v0.0.0-20220722155223-a9213eeb770e // indirect
-	golang.org/x/net v0.0.0-20220812174116-3211cb980234 // indirect
 	golang.org/x/sync v0.0.0-20220819030929-7fc1605a5dde // indirect
 	golang.org/x/sys v0.2.0 // indirect
 	golang.org/x/term v0.0.0-20220722155259-a9ba230a4035 // indirect
