@@ -34,6 +34,8 @@ e.g. `https://okp4.network/`
 """
 scalar URI
 
+scalar UInt64
+
 directive @goField(
     forceResolver: Boolean
     name: String
@@ -67,7 +69,7 @@ type Query {
         """
         The slice size the connection shall return.
         """
-        first: Int = 50
+        first: Int = 20
 
         """
         Specify the elements to return after this cursor.
@@ -215,7 +217,7 @@ type Task {
     """
     The points earned if the task is completed. No value means there is no fixed amount of points as rewards, the amount is calculated regarding the performance.
     """
-    rewards: Int
+    rewards: UInt64
 }
 
 """
@@ -350,7 +352,7 @@ type Validator {
     """
     The validator points count.
     """
-    points: Int!
+    points: UInt64!
 
     """
     The validator affected tasks, does not reference not tasks who has not started yet.
@@ -419,7 +421,12 @@ type Tasks {
     """
     Details the tasks state a validator is supposed to perform per phase.
     """
-    perPhase(number: Int): [PerPhaseTasks!]!
+    perPhase: [PerPhaseTasks!]!
+
+    """
+    Details the tasks state a validator is supposed to perform in the specified phase.
+    """
+    forPhase(number: Int!): PerPhaseTasks @goField(forceResolver: true)
 }
 
 """
@@ -464,7 +471,27 @@ interface TaskState {
     """
     The number of points earned by the validator on this task.
     """
-    earnedPoints: Int!
+    earnedPoints: UInt64!
+}
+
+"""
+Represents the state of a basic task.
+"""
+type BasicTaskState implements TaskState {
+    """
+    The task we're talking about.
+    """
+    task: Task!
+
+    """
+    `true` if the validator  completed this task.
+    """
+    completed: Boolean!
+
+    """
+    The number of points earned by the validator on this task.
+    """
+    earnedPoints: UInt64!
 }
 
 """
@@ -484,7 +511,7 @@ type UptimeTask implements TaskState {
     """
     The number of points earned by the validator on this task.
     """
-    earnedPoints: Int!
+    earnedPoints: UInt64!
 
     """
     The total number of blocks expected to be signed.
@@ -524,7 +551,7 @@ type SubmissionTask implements TaskState {
     """
     The number of points earned by the validator on this task.
     """
-    earnedPoints: Int!
+    earnedPoints: UInt64!
 
     """
     `true` if the validator has submitted the content expected for the task.
