@@ -79,15 +79,17 @@ func (a *Actor) receiveNewEvent(e event.Event) {
 	}
 }
 
-func (a Actor) handleNewBlockEvent(data map[string]interface{}) {
+func (a *Actor) handleNewBlockEvent(data map[string]interface{}) {
 	e, err := synchronization.Unmarshall(data)
 	if err != nil {
 		return
 	}
 
-	var valopers []types.ValAddress
+	var valopers []string
 	for _, signature := range e.Signatures {
-		valopers = append(valopers, signature.GetValidatorAddress())
+		var addr types.ValAddress
+		addr = signature.GetValidatorAddress()
+		valopers = append(valopers, addr.String())
 	}
 
 	if err := a.store.UpdateValidatorUptime(a.ctx, valopers, e.Height); err != nil {
