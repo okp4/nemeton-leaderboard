@@ -125,6 +125,11 @@ func (r *queryResolver) Validator(ctx context.Context, cursor *nemeton.Cursor, r
 	return nil, fmt.Errorf("one option must be passed")
 }
 
+// ForPhase is the resolver for the forPhase field.
+func (r *tasksResolver) ForPhase(ctx context.Context, obj *model.Tasks, number int) (*model.PerPhaseTasks, error) {
+	panic(fmt.Errorf("not implemented: ForPhase - forPhase"))
+}
+
 // Rank is the resolver for the rank field.
 func (r *validatorResolver) Rank(ctx context.Context, obj *nemeton.Validator) (int, error) {
 	return r.store.GetValidatorRank(ctx, *obj.Cursor())
@@ -148,7 +153,40 @@ func (r *validatorResolver) Status(ctx context.Context, obj *nemeton.Validator) 
 
 // Tasks is the resolver for the tasks field.
 func (r *validatorResolver) Tasks(ctx context.Context, obj *nemeton.Validator) (*model.Tasks, error) {
-	panic(fmt.Errorf("not implemented: Tasks - tasks"))
+	result := &model.Tasks{
+		CompletedCount: 0,
+		FinishedCount:  0,
+	}
+	for _, phase := range append(r.store.GetFinishedPhases(), r.store.GetCurrentPhase()) {
+		perPhase := &model.PerPhaseTasks{
+			CompletedCount: 0,
+			FinishedCount:  0,
+			Phase:          phase,
+		}
+		for i, task := range phase.Tasks {
+			mappedState := &model.BasicTaskState{
+				Task: &phase.Tasks[i],
+			}
+			if state := obj.Task(phase.Number, task.ID); state != nil {
+				mappedState.Completed = state.Completed
+				mappedState.EarnedPoints = state.EarnedPoints
+			}
+
+			if mappedState.Completed {
+				perPhase.CompletedCount++
+			}
+			if task.Finished() {
+				perPhase.FinishedCount++
+			}
+			perPhase.Tasks = append(perPhase.Tasks, mappedState)
+		}
+
+		result.CompletedCount += perPhase.CompletedCount
+		result.FinishedCount += perPhase.FinishedCount
+		result.PerPhase = append(result.PerPhase, perPhase)
+	}
+
+	return result, nil
 }
 
 // MissedBlocks is the resolver for the missedBlocks field.
@@ -168,6 +206,9 @@ func (r *Resolver) Phases() generated.PhasesResolver { return &phasesResolver{r}
 // Query returns generated.QueryResolver implementation.
 func (r *Resolver) Query() generated.QueryResolver { return &queryResolver{r} }
 
+// Tasks returns generated.TasksResolver implementation.
+func (r *Resolver) Tasks() generated.TasksResolver { return &tasksResolver{r} }
+
 // Validator returns generated.ValidatorResolver implementation.
 func (r *Resolver) Validator() generated.ValidatorResolver { return &validatorResolver{r} }
 
@@ -176,5 +217,6 @@ type (
 	phaseResolver     struct{ *Resolver }
 	phasesResolver    struct{ *Resolver }
 	queryResolver     struct{ *Resolver }
+	tasksResolver     struct{ *Resolver }
 	validatorResolver struct{ *Resolver }
 )

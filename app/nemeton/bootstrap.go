@@ -4,9 +4,9 @@ import "time"
 
 // nolint: funlen,lll
 func bootstrapPhases() []Phase {
-	r100 := 100
-	r200 := 200
-	r500 := 500
+	r100 := uint64(100)
+	r200 := uint64(200)
+	r500 := uint64(500)
 	return []Phase{
 		{
 			Number:      1,

@@ -46,12 +46,19 @@ type ResolverRoot interface {
 	Phase() PhaseResolver
 	Phases() PhasesResolver
 	Query() QueryResolver
+	Tasks() TasksResolver
 	Validator() ValidatorResolver
 }
 
 type DirectiveRoot struct{}
 
 type ComplexityRoot struct {
+	BasicTaskState struct {
+		Completed    func(childComplexity int) int
+		EarnedPoints func(childComplexity int) int
+		Task         func(childComplexity int) int
+	}
+
 	BlockRange struct {
 		Count func(childComplexity int) int
 		From  func(childComplexity int) int
@@ -135,7 +142,8 @@ type ComplexityRoot struct {
 	Tasks struct {
 		CompletedCount func(childComplexity int) int
 		FinishedCount  func(childComplexity int) int
-		PerPhase       func(childComplexity int, number *int) int
+		ForPhase       func(childComplexity int, number int) int
+		PerPhase       func(childComplexity int) int
 	}
 
 	UptimeTask struct {
@@ -189,6 +197,9 @@ type QueryResolver interface {
 	ValidatorCount(ctx context.Context) (int, error)
 	Validator(ctx context.Context, cursor *nemeton.Cursor, rank *int, valoper types.ValAddress, delegator types.AccAddress, discord *string, twitter *string) (*nemeton.Validator, error)
 }
+type TasksResolver interface {
+	ForPhase(ctx context.Context, obj *model.Tasks, number int) (*model.PerPhaseTasks, error)
+}
 type ValidatorResolver interface {
 	Rank(ctx context.Context, obj *nemeton.Validator) (int, error)
 
@@ -214,6 +225,27 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 	ec := executionContext{nil, e}
 	_ = ec
 	switch typeName + "." + field {
+
+	case "BasicTaskState.completed":
+		if e.complexity.BasicTaskState.Completed == nil {
+			break
+		}
+
+		return e.complexity.BasicTaskState.Completed(childComplexity), true
+
+	case "BasicTaskState.earnedPoints":
+		if e.complexity.BasicTaskState.EarnedPoints == nil {
+			break
+		}
+
+		return e.complexity.BasicTaskState.EarnedPoints(childComplexity), true
+
+	case "BasicTaskState.task":
+		if e.complexity.BasicTaskState.Task == nil {
+			break
+		}
+
+		return e.complexity.BasicTaskState.Task(childComplexity), true
 
 	case "BlockRange.count":
 		if e.complexity.BlockRange.Count == nil {
@@ -573,17 +605,24 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Tasks.FinishedCount(childComplexity), true
 
+	case "Tasks.forPhase":
+		if e.complexity.Tasks.ForPhase == nil {
+			break
+		}
+
+		args, err := ec.field_Tasks_forPhase_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Tasks.ForPhase(childComplexity, args["number"].(int)), true
+
 	case "Tasks.perPhase":
 		if e.complexity.Tasks.PerPhase == nil {
 			break
 		}
 
-		args, err := ec.field_Tasks_perPhase_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Tasks.PerPhase(childComplexity, args["number"].(*int)), true
+		return e.complexity.Tasks.PerPhase(childComplexity), true
 
 	case "UptimeTask.blockCount":
 		if e.complexity.UptimeTask.BlockCount == nil {
@@ -827,6 +866,8 @@ e.g. ` + "`" + `https://okp4.network/` + "`" + `
 """
 scalar URI
 
+scalar UInt64
+
 directive @goField(
     forceResolver: Boolean
     name: String
@@ -860,7 +901,7 @@ type Query {
         """
         The slice size the connection shall return.
         """
-        first: Int = 50
+        first: Int = 20
 
         """
         Specify the elements to return after this cursor.
@@ -1008,7 +1049,7 @@ type Task {
     """
     The points earned if the task is completed. No value means there is no fixed amount of points as rewards, the amount is calculated regarding the performance.
     """
-    rewards: Int
+    rewards: UInt64
 }
 
 """
@@ -1143,7 +1184,7 @@ type Validator {
     """
     The validator points count.
     """
-    points: Int!
+    points: UInt64!
 
     """
     The validator affected tasks, does not reference not tasks who has not started yet.
@@ -1212,7 +1253,12 @@ type Tasks {
     """
     Details the tasks state a validator is supposed to perform per phase.
     """
-    perPhase(number: Int): [PerPhaseTasks!]!
+    perPhase: [PerPhaseTasks!]!
+
+    """
+    Details the tasks state a validator is supposed to perform in the specified phase.
+    """
+    forPhase(number: Int!): PerPhaseTasks @goField(forceResolver: true)
 }
 
 """
@@ -1257,7 +1303,27 @@ interface TaskState {
     """
     The number of points earned by the validator on this task.
     """
-    earnedPoints: Int!
+    earnedPoints: UInt64!
+}
+
+"""
+Represents the state of a basic task.
+"""
+type BasicTaskState implements TaskState {
+    """
+    The task we're talking about.
+    """
+    task: Task!
+
+    """
+    ` + "`" + `true` + "`" + ` if the validator  completed this task.
+    """
+    completed: Boolean!
+
+    """
+    The number of points earned by the validator on this task.
+    """
+    earnedPoints: UInt64!
 }
 
 """
@@ -1277,7 +1343,7 @@ type UptimeTask implements TaskState {
     """
     The number of points earned by the validator on this task.
     """
-    earnedPoints: Int!
+    earnedPoints: UInt64!
 
     """
     The total number of blocks expected to be signed.
@@ -1317,7 +1383,7 @@ type SubmissionTask implements TaskState {
     """
     The number of points earned by the validator on this task.
     """
-    earnedPoints: Int!
+    earnedPoints: UInt64!
 
     """
     ` + "`" + `true` + "`" + ` if the validator has submitted the content expected for the task.
@@ -1455,13 +1521,13 @@ func (ec *executionContext) field_Query_validator_args(ctx context.Context, rawA
 	return args, nil
 }
 
-func (ec *executionContext) field_Tasks_perPhase_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+func (ec *executionContext) field_Tasks_forPhase_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 *int
+	var arg0 int
 	if tmp, ok := rawArgs["number"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("number"))
-		arg0, err = ec.unmarshalOInt2ᚖint(ctx, tmp)
+		arg0, err = ec.unmarshalNInt2int(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -1507,6 +1573,158 @@ func (ec *executionContext) field___Type_fields_args(ctx context.Context, rawArg
 // endregion ************************** directives.gotpl **************************
 
 // region    **************************** field.gotpl *****************************
+
+func (ec *executionContext) _BasicTaskState_task(ctx context.Context, field graphql.CollectedField, obj *model.BasicTaskState) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_BasicTaskState_task(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Task, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*nemeton.Task)
+	fc.Result = res
+	return ec.marshalNTask2ᚖokp4ᚋnemetonᚑleaderboardᚋappᚋnemetonᚐTask(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_BasicTaskState_task(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BasicTaskState",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Task_id(ctx, field)
+			case "name":
+				return ec.fieldContext_Task_name(ctx, field)
+			case "description":
+				return ec.fieldContext_Task_description(ctx, field)
+			case "startDate":
+				return ec.fieldContext_Task_startDate(ctx, field)
+			case "endDate":
+				return ec.fieldContext_Task_endDate(ctx, field)
+			case "started":
+				return ec.fieldContext_Task_started(ctx, field)
+			case "finished":
+				return ec.fieldContext_Task_finished(ctx, field)
+			case "withSubmission":
+				return ec.fieldContext_Task_withSubmission(ctx, field)
+			case "rewards":
+				return ec.fieldContext_Task_rewards(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Task", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _BasicTaskState_completed(ctx context.Context, field graphql.CollectedField, obj *model.BasicTaskState) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_BasicTaskState_completed(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Completed, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_BasicTaskState_completed(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BasicTaskState",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _BasicTaskState_earnedPoints(ctx context.Context, field graphql.CollectedField, obj *model.BasicTaskState) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_BasicTaskState_earnedPoints(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.EarnedPoints, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(uint64)
+	fc.Result = res
+	return ec.marshalNUInt642uint64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_BasicTaskState_earnedPoints(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BasicTaskState",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type UInt64 does not have child fields")
+		},
+	}
+	return fc, nil
+}
 
 func (ec *executionContext) _BlockRange_from(ctx context.Context, field graphql.CollectedField, obj *model.BlockRange) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_BlockRange_from(ctx, field)
@@ -3494,9 +3712,9 @@ func (ec *executionContext) _SubmissionTask_earnedPoints(ctx context.Context, fi
 		}
 		return graphql.Null
 	}
-	res := resTmp.(int)
+	res := resTmp.(uint64)
 	fc.Result = res
-	return ec.marshalNInt2int(ctx, field.Selections, res)
+	return ec.marshalNUInt642uint64(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_SubmissionTask_earnedPoints(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -3506,7 +3724,7 @@ func (ec *executionContext) fieldContext_SubmissionTask_earnedPoints(ctx context
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Int does not have child fields")
+			return nil, errors.New("field of type UInt64 does not have child fields")
 		},
 	}
 	return fc, nil
@@ -3931,9 +4149,9 @@ func (ec *executionContext) _Task_rewards(ctx context.Context, field graphql.Col
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(*int)
+	res := resTmp.(*uint64)
 	fc.Result = res
-	return ec.marshalOInt2ᚖint(ctx, field.Selections, res)
+	return ec.marshalOUInt642ᚖuint64(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Task_rewards(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -3943,7 +4161,7 @@ func (ec *executionContext) fieldContext_Task_rewards(ctx context.Context, field
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Int does not have child fields")
+			return nil, errors.New("field of type UInt64 does not have child fields")
 		},
 	}
 	return fc, nil
@@ -4088,6 +4306,57 @@ func (ec *executionContext) fieldContext_Tasks_perPhase(ctx context.Context, fie
 			return nil, fmt.Errorf("no field named %q was found under type PerPhaseTasks", field.Name)
 		},
 	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Tasks_forPhase(ctx context.Context, field graphql.CollectedField, obj *model.Tasks) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Tasks_forPhase(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Tasks().ForPhase(rctx, obj, fc.Args["number"].(int))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.PerPhaseTasks)
+	fc.Result = res
+	return ec.marshalOPerPhaseTasks2ᚖokp4ᚋnemetonᚑleaderboardᚋgraphqlᚋmodelᚐPerPhaseTasks(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Tasks_forPhase(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Tasks",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "completedCount":
+				return ec.fieldContext_PerPhaseTasks_completedCount(ctx, field)
+			case "finishedCount":
+				return ec.fieldContext_PerPhaseTasks_finishedCount(ctx, field)
+			case "phase":
+				return ec.fieldContext_PerPhaseTasks_phase(ctx, field)
+			case "tasks":
+				return ec.fieldContext_PerPhaseTasks_tasks(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type PerPhaseTasks", field.Name)
+		},
+	}
 	defer func() {
 		if r := recover(); r != nil {
 			err = ec.Recover(ctx, r)
@@ -4095,7 +4364,7 @@ func (ec *executionContext) fieldContext_Tasks_perPhase(ctx context.Context, fie
 		}
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Tasks_perPhase_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+	if fc.Args, err = ec.field_Tasks_forPhase_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return
 	}
@@ -4236,9 +4505,9 @@ func (ec *executionContext) _UptimeTask_earnedPoints(ctx context.Context, field 
 		}
 		return graphql.Null
 	}
-	res := resTmp.(int)
+	res := resTmp.(uint64)
 	fc.Result = res
-	return ec.marshalNInt2int(ctx, field.Selections, res)
+	return ec.marshalNUInt642uint64(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_UptimeTask_earnedPoints(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -4248,7 +4517,7 @@ func (ec *executionContext) fieldContext_UptimeTask_earnedPoints(ctx context.Con
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Int does not have child fields")
+			return nil, errors.New("field of type UInt64 does not have child fields")
 		},
 	}
 	return fc, nil
@@ -4903,7 +5172,7 @@ func (ec *executionContext) _Validator_points(ctx context.Context, field graphql
 	}
 	res := resTmp.(uint64)
 	fc.Result = res
-	return ec.marshalNInt2uint64(ctx, field.Selections, res)
+	return ec.marshalNUInt642uint64(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Validator_points(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -4913,7 +5182,7 @@ func (ec *executionContext) fieldContext_Validator_points(ctx context.Context, f
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Int does not have child fields")
+			return nil, errors.New("field of type UInt64 does not have child fields")
 		},
 	}
 	return fc, nil
@@ -4961,6 +5230,8 @@ func (ec *executionContext) fieldContext_Validator_tasks(ctx context.Context, fi
 				return ec.fieldContext_Tasks_finishedCount(ctx, field)
 			case "perPhase":
 				return ec.fieldContext_Tasks_perPhase(ctx, field)
+			case "forPhase":
+				return ec.fieldContext_Tasks_forPhase(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Tasks", field.Name)
 		},
@@ -6917,6 +7188,13 @@ func (ec *executionContext) _TaskState(ctx context.Context, sel ast.SelectionSet
 	switch obj := (obj).(type) {
 	case nil:
 		return graphql.Null
+	case model.BasicTaskState:
+		return ec._BasicTaskState(ctx, sel, &obj)
+	case *model.BasicTaskState:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._BasicTaskState(ctx, sel, obj)
 	case model.UptimeTask:
 		return ec._UptimeTask(ctx, sel, &obj)
 	case *model.UptimeTask:
@@ -6939,6 +7217,48 @@ func (ec *executionContext) _TaskState(ctx context.Context, sel ast.SelectionSet
 // endregion ************************** interface.gotpl ***************************
 
 // region    **************************** object.gotpl ****************************
+
+var basicTaskStateImplementors = []string{"BasicTaskState", "TaskState"}
+
+func (ec *executionContext) _BasicTaskState(ctx context.Context, sel ast.SelectionSet, obj *model.BasicTaskState) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, basicTaskStateImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("BasicTaskState")
+		case "task":
+
+			out.Values[i] = ec._BasicTaskState_task(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "completed":
+
+			out.Values[i] = ec._BasicTaskState_completed(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "earnedPoints":
+
+			out.Values[i] = ec._BasicTaskState_earnedPoints(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
 
 var blockRangeImplementors = []string{"BlockRange"}
 
@@ -7667,22 +7987,38 @@ func (ec *executionContext) _Tasks(ctx context.Context, sel ast.SelectionSet, ob
 			out.Values[i] = ec._Tasks_completedCount(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "finishedCount":
 
 			out.Values[i] = ec._Tasks_finishedCount(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "perPhase":
 
 			out.Values[i] = ec._Tasks_perPhase(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
+		case "forPhase":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Tasks_forPhase(ctx, field, obj)
+				return res
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+			})
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -8436,21 +8772,6 @@ func (ec *executionContext) marshalNInt2int(ctx context.Context, sel ast.Selecti
 	return res
 }
 
-func (ec *executionContext) unmarshalNInt2uint64(ctx context.Context, v interface{}) (uint64, error) {
-	res, err := graphql.UnmarshalUint64(v)
-	return res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) marshalNInt2uint64(ctx context.Context, sel ast.SelectionSet, v uint64) graphql.Marshaler {
-	res := graphql.MarshalUint64(v)
-	if res == graphql.Null {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
-		}
-	}
-	return res
-}
-
 func (ec *executionContext) unmarshalNKID2string(ctx context.Context, v interface{}) (string, error) {
 	res, err := scalar.UnmarshalKID(v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -8732,6 +9053,21 @@ func (ec *executionContext) unmarshalNTime2timeᚐTime(ctx context.Context, v in
 
 func (ec *executionContext) marshalNTime2timeᚐTime(ctx context.Context, sel ast.SelectionSet, v time.Time) graphql.Marshaler {
 	res := graphql.MarshalTime(v)
+	if res == graphql.Null {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+	}
+	return res
+}
+
+func (ec *executionContext) unmarshalNUInt642uint64(ctx context.Context, v interface{}) (uint64, error) {
+	res, err := graphql.UnmarshalUint64(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNUInt642uint64(ctx context.Context, sel ast.SelectionSet, v uint64) graphql.Marshaler {
+	res := graphql.MarshalUint64(v)
 	if res == graphql.Null {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -9197,6 +9533,13 @@ func (ec *executionContext) marshalOLink2ᚖokp4ᚋnemetonᚑleaderboardᚋgraph
 	return ec._Link(ctx, sel, v)
 }
 
+func (ec *executionContext) marshalOPerPhaseTasks2ᚖokp4ᚋnemetonᚑleaderboardᚋgraphqlᚋmodelᚐPerPhaseTasks(ctx context.Context, sel ast.SelectionSet, v *model.PerPhaseTasks) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._PerPhaseTasks(ctx, sel, v)
+}
+
 func (ec *executionContext) marshalOPhase2ᚖokp4ᚋnemetonᚑleaderboardᚋappᚋnemetonᚐPhase(ctx context.Context, sel ast.SelectionSet, v *nemeton.Phase) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
@@ -9225,6 +9568,22 @@ func (ec *executionContext) marshalOTasks2ᚖokp4ᚋnemetonᚑleaderboardᚋgrap
 		return graphql.Null
 	}
 	return ec._Tasks(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalOUInt642ᚖuint64(ctx context.Context, v interface{}) (*uint64, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := graphql.UnmarshalUint64(v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOUInt642ᚖuint64(ctx context.Context, sel ast.SelectionSet, v *uint64) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	res := graphql.MarshalUint64(*v)
+	return res
 }
 
 func (ec *executionContext) unmarshalOURI2ᚖnetᚋurlᚐURL(ctx context.Context, v interface{}) (*url.URL, error) {
