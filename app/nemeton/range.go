@@ -1,8 +1,0 @@
-package nemeton
-
-type BlockRange struct {
-	// The block height the range begin, inclusive.
-	From int `bson:"from"`
-	// The block height the range end, inclusive.
-	To int `bson:"to"`
-}

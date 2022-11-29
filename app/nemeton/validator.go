@@ -8,19 +8,18 @@ import (
 )
 
 type Validator struct {
-	ID           primitive.ObjectID           `bson:"_id,omitempty"`
-	Moniker      string                       `bson:"moniker"`
-	Identity     *string                      `bson:"identity,omitempty"`
-	Valoper      types.ValAddress             `bson:"valoper"`
-	Delegator    types.AccAddress             `bson:"delegator"`
-	Twitter      *string                      `bson:"twitter,omitempty"`
-	Website      *url.URL                     `bson:"website,omitempty"`
-	Discord      string                       `bson:"discord"`
-	Country      string                       `bson:"country"`
-	Status       string                       `bson:"status"`
-	Points       uint64                       `bson:"points"`
-	Tasks        map[int]map[string]TaskState `bson:"tasks"`
-	MissedBlocks []BlockRange                 `bson:"missedBlocks"`
+	ID        primitive.ObjectID           `bson:"_id,omitempty"`
+	Moniker   string                       `bson:"moniker"`
+	Identity  *string                      `bson:"identity,omitempty"`
+	Valoper   types.ValAddress             `bson:"valoper"`
+	Delegator types.AccAddress             `bson:"delegator"`
+	Twitter   *string                      `bson:"twitter,omitempty"`
+	Website   *url.URL                     `bson:"website,omitempty"`
+	Discord   string                       `bson:"discord"`
+	Country   string                       `bson:"country"`
+	Status    string                       `bson:"status"`
+	Points    uint64                       `bson:"points"`
+	Tasks     map[int]map[string]TaskState `bson:"tasks"`
 }
 
 func (v *Validator) Cursor() *Cursor {
