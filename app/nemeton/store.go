@@ -260,3 +260,41 @@ func makeBoardFilter(search *string, after *Cursor) bson.M {
 	}
 	return filter
 }
+
+func (s *Store) UpdateValidatorUptime(ctx context.Context, validatorsUp []types.ValAddress, height int64) error {
+	model := []mongo.WriteModel{
+		mongo.NewUpdateManyModel().
+			SetFilter(
+				bson.M{
+					"$and": bson.A{
+						bson.M{"valoper": bson.M{"$nin": bson.A{validatorsUp}}},
+						bson.M{"missedBlocks.to": bson.M{"$eq": height}},
+					},
+				}).
+			SetUpdate(
+				bson.M{"$inc": bson.M{"missedBlocks.$[down].to": 1}},
+			).
+			SetArrayFilters(options.ArrayFilters{
+				Filters: bson.A{bson.M{"down.to": bson.M{"$eq": height}}},
+			}),
+		mongo.NewUpdateManyModel().
+			SetFilter(
+				bson.M{
+					"$and": bson.A{
+						bson.M{"valoper": bson.M{"$nin": bson.A{validatorsUp}}},
+						bson.M{"$or": bson.A{
+							bson.M{"missedBlocks": bson.M{"$size": 0}},
+							bson.M{"missedBlocks.to": bson.M{"$not": bson.M{"$gte": height}}},
+						}},
+					},
+				}).
+			SetUpdate(
+				bson.M{
+					"$push": bson.M{"missedBlocks": bson.M{"from": height, "to": height + 1}},
+				},
+			),
+	}
+	opts := options.BulkWrite().SetOrdered(true)
+	_, err := s.db.Collection(validatorsCollectionName).BulkWrite(ctx, model, opts)
+	return err
+}

@@ -63,7 +63,7 @@ func boot(ctx actor.Context, listenAddr, mongoURI, dbName, grpcAddr, twitterToke
 		log.Panic().Err(err).Str("actor", "event-store").Msg("❌ Could not create actor")
 	}
 
-	startSubscriber(ctx, eventStorePID)
+	startSubscriber(ctx, eventStorePID, mongoURI, dbName)
 
 	blockSync := actor.PropsFromProducer(func() actor.Actor {
 		sync, err := synchronization.NewActor(grpcClientProps, eventStorePID, mongoURI, dbName)
@@ -95,9 +95,13 @@ func boot(ctx actor.Context, listenAddr, mongoURI, dbName, grpcAddr, twitterToke
 	}
 }
 
-func startSubscriber(ctx actor.Context, eventPID *actor.PID) {
+func startSubscriber(ctx actor.Context, eventPID *actor.PID, mongoURI, dbName string) {
 	blockSubscriberProps := actor.PropsFromProducer(func() actor.Actor {
-		return subscription.NewBlock()
+		s, err := subscription.NewBlock(mongoURI, dbName)
+		if err != nil {
+			log.Panic().Err(err).Msg("❌ failed instantiate event subscription actor")
+		}
+		return s
 	})
 	blockSubscriberPID, err := ctx.SpawnNamed(blockSubscriberProps, "blockSubscriber")
 	if err != nil {
