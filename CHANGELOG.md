@@ -1,5 +1,12 @@
 # ØKP4 🧙 Nemeton Leaderboard 🏆
 
+## [1.0.1](https://github.com/okp4/nemeton-leaderboard/compare/v1.0.0...v1.0.1) (2022-11-30)
+
+
+### Bug Fixes
+
+* **sidh:** delay launch at 11am ([e3dbfc0](https://github.com/okp4/nemeton-leaderboard/commit/e3dbfc01b39f14cad5726679c05e213332b6847c))
+
 ## 1.0.0 (2022-11-30)
 
 
