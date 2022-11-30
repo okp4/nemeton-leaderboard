@@ -40,7 +40,7 @@ func (a *StoreActor) Receive(ctx actor.Context) {
 func (a *StoreActor) handleStart() {
 	store, err := event.NewStore(context.Background(), a.mongoURI, a.dbName)
 	if err != nil {
-		log.Fatal().Err(err).Str("uri", a.mongoURI).Str("db", a.dbName).Msg("❌ Couldn't create event store")
+		log.Fatal().Err(err).Str("db", a.dbName).Msg("❌ Couldn't create event store")
 	}
 	a.store = store
 	log.Info().Msg("🚌 Event store started")

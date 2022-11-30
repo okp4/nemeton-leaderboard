@@ -35,7 +35,7 @@ func (a *Actor) Receive(ctx actor.Context) {
 func (a *Actor) handleStart() {
 	graphqlServer, err := NewGraphQLServer(context.Background(), a.mongoURI, a.dbName)
 	if err != nil {
-		log.Fatal().Err(err).Str("uri", a.mongoURI).Str("db", a.dbName).Msg("❌ Couldn't create graphql server")
+		log.Fatal().Err(err).Str("db", a.dbName).Msg("❌ Couldn't create graphql server")
 	}
 	a.srv = makeHTTPServer(
 		a.addr,
