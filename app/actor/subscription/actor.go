@@ -24,7 +24,7 @@ type Actor struct {
 	offsetStore *offset.Store
 }
 
-func NewBlock(mongoURI, dbName string, eventPID *actor.PID) (*Actor, error) {
+func NewSubscriber(mongoURI, dbName string, eventPID *actor.PID) (*Actor, error) {
 	ctx := context.Background()
 	store, err := nemeton.NewStore(ctx, mongoURI, dbName)
 	if err != nil {
@@ -56,7 +56,7 @@ func (a *Actor) Receive(ctx actor.Context) {
 			from = nil
 		}
 
-		log.Info().Msg("🕵️ Start looking for NewBlock event")
+		log.Info().Msg("🕵️ Start looking for new event")
 		ctx.Send(a.eventPID, &message.SubscribeEventMessage{
 			PID:  ctx.Self(),
 			From: from,
@@ -64,7 +64,7 @@ func (a *Actor) Receive(ctx actor.Context) {
 	case *message.NewEventMessage:
 		a.receiveNewEvent(e.Event)
 	case *actor.Stopping:
-		log.Info().Msg("Stop looking new block event")
+		log.Info().Msg("✋ Stop looking new event")
 	}
 }
 
@@ -82,8 +82,11 @@ func (a *Actor) receiveNewEvent(e event.Event) {
 }
 
 func (a *Actor) handleNewBlockEvent(data map[string]interface{}) {
+	log.Info().Interface("event", data).Msg("Handle NewBlock event")
+
 	e, err := synchronization.Unmarshall(data)
 	if err != nil {
+		log.Panic().Err(err).Msg("❌ Failed unmarshall event to NewBlockEvent")
 		return
 	}
 
@@ -96,6 +99,4 @@ func (a *Actor) handleNewBlockEvent(data map[string]interface{}) {
 	if err := a.store.UpdateValidatorUptime(a.ctx, consensusAddr, e.Height); err != nil {
 		log.Panic().Err(err).Msg("🤕 Failed update validator uptime.")
 	}
-
-	log.Info().Interface("event", data).Msg("Handle NewBlock event")
 }

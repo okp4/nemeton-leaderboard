@@ -94,15 +94,15 @@ func boot(ctx actor.Context, listenAddr, mongoURI, dbName, grpcAddr, twitterToke
 }
 
 func startSubscriber(ctx actor.Context, eventPID *actor.PID, mongoURI, dbName string) {
-	blockSubscriberProps := actor.PropsFromProducer(func() actor.Actor {
-		s, err := subscription.NewBlock(mongoURI, dbName, eventPID)
+	subscriberProps := actor.PropsFromProducer(func() actor.Actor {
+		s, err := subscription.NewSubscriber(mongoURI, dbName, eventPID)
 		if err != nil {
-			log.Panic().Err(err).Msg("❌ failed instantiate event subscription actor")
+			log.Panic().Err(err).Msg("❌ failed instantiate event subscriber actor")
 		}
 		return s
 	})
-	_, err := ctx.SpawnNamed(blockSubscriberProps, "blockSubscriber")
+	_, err := ctx.SpawnNamed(subscriberProps, "subscriber")
 	if err != nil {
-		log.Panic().Err(err).Str("actor", "graphql").Msg("❌ Could not create actor")
+		log.Panic().Err(err).Str("actor", "subscriber").Msg("❌ Could not create actor")
 	}
 }
