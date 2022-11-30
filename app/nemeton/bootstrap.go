@@ -12,7 +12,7 @@ func bootstrapPhases() []Phase {
 			Number:      1,
 			Name:        "Sidh",
 			Description: "This first phase is pretty basic, it is dedicated to setting up Druids' validator environment, participating in the genesis, and getting familiar with the OKP4 testnet.",
-			StartDate:   time.Date(2022, time.December, 1, 0, 0, 0, 0, time.UTC),
+			StartDate:   time.Date(2022, time.December, 1, 11, 0, 0, 0, time.UTC),
 			EndDate:     time.Date(2023, time.January, 1, 23, 59, 59, 0, time.UTC),
 			Tasks: []Task{
 				{
@@ -39,7 +39,7 @@ You will receive the points once the OKP4 team has integrated your gentx in the 
 
 How to submit
 Send the issue number in a private message to Anik#9282 on Discord.`,
-					StartDate: time.Date(2022, time.December, 1, 0, 0, 0, 0, time.UTC),
+					StartDate: time.Date(2022, time.December, 1, 11, 0, 0, 0, time.UTC),
 					EndDate:   time.Date(2022, time.December, 12, 0, 0, 0, 0, time.UTC),
 					Rewards:   &r1000,
 				},
