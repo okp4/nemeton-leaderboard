@@ -13,6 +13,7 @@ type Validator struct {
 	Identity  *string                      `bson:"identity,omitempty"`
 	Valoper   types.ValAddress             `bson:"valoper"`
 	Delegator types.AccAddress             `bson:"delegator"`
+	ConsAddr  types.ConsAddress            `bson:"consAddr"`
 	Twitter   *string                      `bson:"twitter,omitempty"`
 	Website   *url.URL                     `bson:"website,omitempty"`
 	Discord   string                       `bson:"discord"`

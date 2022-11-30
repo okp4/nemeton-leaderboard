@@ -52,6 +52,8 @@ func (a *Actor) Receive(ctx actor.Context) {
 		switch v := value.(type) {
 		case primitive.ObjectID:
 			from = &v
+		default:
+			from = nil
 		}
 
 		log.Info().Msg("🕵️ Start looking for NewBlock event")
@@ -85,14 +87,13 @@ func (a *Actor) handleNewBlockEvent(data map[string]interface{}) {
 		return
 	}
 
-	var valopers []string
-	for _, signature := range e.Signatures {
-		var addr types.ValAddress
-		addr = signature.GetValidatorAddress()
-		valopers = append(valopers, addr.String())
+	consensusAddr := make([]string, len(e.Signatures))
+	for i, signature := range e.Signatures {
+		var addr types.ConsAddress = signature.GetValidatorAddress()
+		consensusAddr[i] = addr.String()
 	}
 
-	if err := a.store.UpdateValidatorUptime(a.ctx, valopers, e.Height); err != nil {
+	if err := a.store.UpdateValidatorUptime(a.ctx, consensusAddr, e.Height); err != nil {
 		log.Panic().Err(err).Msg("🤕 Failed update validator uptime.")
 	}
 
