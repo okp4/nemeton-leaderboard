@@ -1,6 +1,6 @@
 # 🧙 Nemeton Leaderboard 🏆
 
-[![nemeton github bannner](./etc/nemeton-banner.jpg)](https://nemeton.okp4.network)
+[![nemeton github bannner](./etc/nemeton-banner.jpg)](Nemeton)
 
 [![version](https://img.shields.io/github/v/release/okp4/nemeton-leaderboard?style=for-the-badge&logo=github)](https://github.com/okp4/nemeton-leaderboard/releases)
 [![lint](https://img.shields.io/github/workflow/status/okp4/nemeton-leaderboard/Lint?label=lint&style=for-the-badge&logo=github)](https://github.com/okp4/nemeton-leaderboard/actions/workflows/lint.yml)
@@ -11,11 +11,11 @@
 [![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-2.1-4baaaa.svg?style=for-the-badge)](https://github.com/okp4/.github/blob/main/CODE_OF_CONDUCT.md)
 [![License](https://img.shields.io/badge/License-BSD_3--Clause-blue.svg?style=for-the-badge)](https://opensource.org/licenses/BSD-3-Clause)
 
-> 🧙 Leaderboard service repository for the [Nemeton program][https://nemeton.okp4.network] - the [OKP4](https://okp4.network/) incentivized testnet program.
+> 🧙 Leaderboard service repository for the [Nemeton program][Nemeton] - the [OKP4](OKP4) incentivized testnet program.
 
 ## Purpose
 
-Here you'll find the source code of the leaderboard service for the [OKP4 Nemeton program][https://nemeton.okp4.network] - the [OKP4] incentivized testnet program that has started on November 2, 2022.
+Here you'll find the source code of the leaderboard service for the [OKP4 Nemeton program](Nemeton) - the [OKP4](OKP4) incentivized testnet program that has started on November 2, 2022.
 
 The service is in charge to count the points of each druids and expose them to the [web interface](https://github.com/okp4/nemeton-web).
 
@@ -29,3 +29,6 @@ The service is in charge to count the points of each druids and expose them to t
 ```sh
 make build
 ```
+
+[Nemeton]: https://nemeton.okp4.network
+[OKP4]: https://okp4.network
