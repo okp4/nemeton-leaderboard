@@ -20,15 +20,15 @@ import (
 const ownerOffset = "tweet-search"
 
 type SearchActor struct {
-	hashtag      string
-	twitterToken string
-	client       *http.Client
-	eventStore   *actor.PID
-	store        *offset.Store
-	context      context.Context
+	twitterAccount string
+	twitterToken   string
+	client         *http.Client
+	eventStore     *actor.PID
+	store          *offset.Store
+	context        context.Context
 }
 
-func NewSearchActor(eventStore *actor.PID, mongoURI, dbName, twitterToken, hashtag string) (*SearchActor, error) {
+func NewSearchActor(eventStore *actor.PID, mongoURI, dbName, twitterToken, twitterAccount string) (*SearchActor, error) {
 	ctx := context.Background()
 	store, err := offset.NewStore(ctx, mongoURI, dbName, ownerOffset)
 	if err != nil {
@@ -36,12 +36,12 @@ func NewSearchActor(eventStore *actor.PID, mongoURI, dbName, twitterToken, hasht
 	}
 
 	return &SearchActor{
-		hashtag:      hashtag,
-		twitterToken: twitterToken,
-		client:       http.DefaultClient,
-		eventStore:   eventStore,
-		store:        store,
-		context:      ctx,
+		twitterAccount: twitterAccount,
+		twitterToken:   twitterToken,
+		client:         http.DefaultClient,
+		eventStore:     eventStore,
+		store:          store,
+		context:        ctx,
 	}, nil
 }
 
@@ -107,7 +107,7 @@ func (a *SearchActor) fetchTweets(sinceID, nextToken string) (*Response, error) 
 		return nil, err
 	}
 	query := u.Query()
-	query.Add("query", fmt.Sprintf("%s -is:retweet", a.hashtag))
+	query.Add("query", fmt.Sprintf("%s -is:retweet", a.twitterAccount))
 	query.Add("expansions", "author_id")
 	query.Add("user.fields", "username")
 
