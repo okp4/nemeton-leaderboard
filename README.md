@@ -1,6 +1,6 @@
 # 🧙 Nemeton Leaderboard 🏆
 
-[![nemeton github bannner](./etc/image/nemeton-banner.jpg)](https://nemeton.okp4.network)
+[![nemeton github bannner](./etc/nemeton-banner.jpg)](https://nemeton.okp4.network)
 
 [![version](https://img.shields.io/github/v/release/okp4/nemeton-leaderboard?style=for-the-badge&logo=github)](https://github.com/okp4/nemeton-leaderboard/releases)
 [![lint](https://img.shields.io/github/workflow/status/okp4/nemeton-leaderboard/Lint?label=lint&style=for-the-badge&logo=github)](https://github.com/okp4/nemeton-leaderboard/actions/workflows/lint.yml)
