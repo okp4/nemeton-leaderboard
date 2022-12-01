@@ -17,7 +17,9 @@ type App struct {
 	init *actor.PID
 }
 
-func Bootstrap(listenAddr, mongoURI, dbName, grpcAddr, twitterToken, twitterAccount string, tls credentials.TransportCredentials) *App {
+func Bootstrap(listenAddr, mongoURI, dbName, grpcAddr, twitterToken, twitterAccount string,
+	tls credentials.TransportCredentials,
+) *App {
 	initProps := actor.PropsFromFunc(func(ctx actor.Context) {
 		if _, ok := ctx.Message().(*actor.Started); ok {
 			boot(ctx, listenAddr, mongoURI, dbName, grpcAddr, twitterToken, twitterAccount, tls)
