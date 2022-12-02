@@ -18,6 +18,8 @@ const (
 	validatorsCollectionName = "validators"
 )
 
+var omitMissedBlocks = bson.M{"missedBlocks": 0}
+
 type Store struct {
 	db     *mongo.Database
 	phases []*Phase
@@ -157,7 +159,8 @@ func (s *Store) GetValidatorByTwitter(ctx context.Context, twitter string) (*Val
 }
 
 func (s *Store) GetValidatorBy(ctx context.Context, filter bson.M) (*Validator, error) {
-	res := s.db.Collection(validatorsCollectionName).FindOne(ctx, filter)
+	res := s.db.Collection(validatorsCollectionName).
+		FindOne(ctx, filter, options.FindOne().SetProjection(omitMissedBlocks))
 	if err := res.Err(); err != nil {
 		if errors.Is(err, mongo.ErrNoDocuments) {
 			return nil, nil
@@ -205,6 +208,7 @@ func (s *Store) GetBoard(ctx context.Context, search *string, limit int, after *
 				},
 			).
 			SetLimit(int64(limit+1)),
+		options.Find().SetProjection(omitMissedBlocks),
 	)
 	if err != nil {
 		return nil, false, err
