@@ -6,7 +6,6 @@ const GenTXSubmittedEventType = "gentx-submitted"
 
 type GenTXSubmittedEvent struct {
 	Twitter *string                `json:"twitter,omitempty"`
-	Website *string                `json:"website,omitempty"`
 	Discord string                 `json:"discord"`
 	Country string                 `json:"country"`
 	GenTX   map[string]interface{} `json:"gentx"`

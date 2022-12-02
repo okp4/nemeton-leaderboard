@@ -6,7 +6,6 @@ package graphql
 import (
 	"context"
 	"fmt"
-	"net/url"
 
 	"okp4/nemeton-leaderboard/app/event"
 	"okp4/nemeton-leaderboard/app/message"
@@ -32,16 +31,9 @@ func (r *identityResolver) Picture(ctx context.Context, obj *model.Identity) (*m
 }
 
 // SubmitValidatorGenTx is the resolver for the submitValidatorGenTX field.
-func (r *mutationResolver) SubmitValidatorGenTx(ctx context.Context, twitter *string, website *url.URL, discord string, country string, gentx map[string]interface{}) (*string, error) {
-	var websiteStr *string
-	if website != nil {
-		str := website.String()
-		websiteStr = &str
-	}
-
+func (r *mutationResolver) SubmitValidatorGenTx(ctx context.Context, twitter *string, discord string, country string, gentx map[string]interface{}) (*string, error) {
 	evt := GenTXSubmittedEvent{
 		Twitter: twitter,
-		Website: websiteStr,
 		Discord: discord,
 		Country: country,
 		GenTX:   gentx,

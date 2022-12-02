@@ -83,7 +83,7 @@ type ComplexityRoot struct {
 	}
 
 	Mutation struct {
-		SubmitValidatorGenTx func(childComplexity int, twitter *string, website *url.URL, discord string, country string, gentx map[string]interface{}) int
+		SubmitValidatorGenTx func(childComplexity int, twitter *string, discord string, country string, gentx map[string]interface{}) int
 	}
 
 	PageInfo struct {
@@ -189,7 +189,7 @@ type IdentityResolver interface {
 	Picture(ctx context.Context, obj *model.Identity) (*model.Link, error)
 }
 type MutationResolver interface {
-	SubmitValidatorGenTx(ctx context.Context, twitter *string, website *url.URL, discord string, country string, gentx map[string]interface{}) (*string, error)
+	SubmitValidatorGenTx(ctx context.Context, twitter *string, discord string, country string, gentx map[string]interface{}) (*string, error)
 }
 type PhaseResolver interface {
 	Blocks(ctx context.Context, obj *nemeton.Phase) (*model.BlockRange, error)
@@ -323,7 +323,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.SubmitValidatorGenTx(childComplexity, args["twitter"].(*string), args["website"].(*url.URL), args["discord"].(string), args["country"].(string), args["gentx"].(map[string]interface{})), true
+		return e.complexity.Mutation.SubmitValidatorGenTx(childComplexity, args["twitter"].(*string), args["discord"].(string), args["country"].(string), args["gentx"].(map[string]interface{})), true
 
 	case "PageInfo.count":
 		if e.complexity.PageInfo.Count == nil {
@@ -995,11 +995,6 @@ type Mutation {
         twitter: String
 
         """
-        The validator website.
-        """
-        website: URI
-
-        """
         The validator discord account.
         """
         discord: String!
@@ -1499,42 +1494,33 @@ func (ec *executionContext) field_Mutation_submitValidatorGenTX_args(ctx context
 		}
 	}
 	args["twitter"] = arg0
-	var arg1 *url.URL
-	if tmp, ok := rawArgs["website"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("website"))
-		arg1, err = ec.unmarshalOURI2ᚖnetᚋurlᚐURL(ctx, tmp)
+	var arg1 string
+	if tmp, ok := rawArgs["discord"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("discord"))
+		arg1, err = ec.unmarshalNString2string(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["website"] = arg1
+	args["discord"] = arg1
 	var arg2 string
-	if tmp, ok := rawArgs["discord"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("discord"))
+	if tmp, ok := rawArgs["country"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("country"))
 		arg2, err = ec.unmarshalNString2string(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["discord"] = arg2
-	var arg3 string
-	if tmp, ok := rawArgs["country"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("country"))
-		arg3, err = ec.unmarshalNString2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["country"] = arg3
-	var arg4 map[string]interface{}
+	args["country"] = arg2
+	var arg3 map[string]interface{}
 	if tmp, ok := rawArgs["gentx"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("gentx"))
-		arg4, err = ec.unmarshalNJSON2map(ctx, tmp)
+		arg3, err = ec.unmarshalNJSON2map(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["gentx"] = arg4
+	args["gentx"] = arg3
 	return args, nil
 }
 
@@ -2250,7 +2236,7 @@ func (ec *executionContext) _Mutation_submitValidatorGenTX(ctx context.Context, 
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		directive0 := func(rctx context.Context) (interface{}, error) {
 			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Mutation().SubmitValidatorGenTx(rctx, fc.Args["twitter"].(*string), fc.Args["website"].(*url.URL), fc.Args["discord"].(string), fc.Args["country"].(string), fc.Args["gentx"].(map[string]interface{}))
+			return ec.resolvers.Mutation().SubmitValidatorGenTx(rctx, fc.Args["twitter"].(*string), fc.Args["discord"].(string), fc.Args["country"].(string), fc.Args["gentx"].(map[string]interface{}))
 		}
 		directive1 := func(ctx context.Context) (interface{}, error) {
 			if ec.directives.Auth == nil {
