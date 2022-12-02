@@ -18,6 +18,8 @@ const (
 	validatorsCollectionName = "validators"
 )
 
+var omitMissedBlocks = bson.M{"missedBlocks": 0}
+
 type Store struct {
 	db     *mongo.Database
 	phases []*Phase
@@ -157,7 +159,8 @@ func (s *Store) GetValidatorByTwitter(ctx context.Context, twitter string) (*Val
 }
 
 func (s *Store) GetValidatorBy(ctx context.Context, filter bson.M) (*Validator, error) {
-	res := s.db.Collection(validatorsCollectionName).FindOne(ctx, filter)
+	res := s.db.Collection(validatorsCollectionName).
+		FindOne(ctx, filter, options.FindOne().SetProjection(omitMissedBlocks))
 	if err := res.Err(); err != nil {
 		if errors.Is(err, mongo.ErrNoDocuments) {
 			return nil, nil
@@ -205,6 +208,7 @@ func (s *Store) GetBoard(ctx context.Context, search *string, limit int, after *
 				},
 			).
 			SetLimit(int64(limit+1)),
+		options.Find().SetProjection(omitMissedBlocks),
 	)
 	if err != nil {
 		return nil, false, err
@@ -259,4 +263,42 @@ func makeBoardFilter(search *string, after *Cursor) bson.M {
 		}
 	}
 	return filter
+}
+
+func (s *Store) UpdateValidatorUptime(ctx context.Context, consensusAddrs []string, height int64) error {
+	model := []mongo.WriteModel{
+		mongo.NewUpdateManyModel().
+			SetFilter(
+				bson.M{
+					"$and": bson.A{
+						bson.M{"valcons": bson.M{"$nin": consensusAddrs}},
+						bson.M{"missedBlocks.to": bson.M{"$eq": height}},
+					},
+				}).
+			SetUpdate(
+				bson.M{"$inc": bson.M{"missedBlocks.$[down].to": 1}},
+			).
+			SetArrayFilters(options.ArrayFilters{
+				Filters: bson.A{bson.M{"down.to": bson.M{"$eq": height}}},
+			}),
+		mongo.NewUpdateManyModel().
+			SetFilter(
+				bson.M{
+					"$and": bson.A{
+						bson.M{"valcons": bson.M{"$nin": consensusAddrs}},
+						bson.M{"$or": bson.A{
+							bson.M{"missedBlocks": bson.M{"$size": 0}},
+							bson.M{"missedBlocks.to": bson.M{"$not": bson.M{"$gte": height}}},
+						}},
+					},
+				}).
+			SetUpdate(
+				bson.M{
+					"$push": bson.M{"missedBlocks": bson.M{"from": height, "to": height + 1}},
+				},
+			),
+	}
+	opts := options.BulkWrite().SetOrdered(true)
+	_, err := s.db.Collection(validatorsCollectionName).BulkWrite(ctx, model, opts)
+	return err
 }

@@ -4,6 +4,7 @@ import (
 	"okp4/nemeton-leaderboard/app/actor/cosmos"
 	"okp4/nemeton-leaderboard/app/actor/event"
 	"okp4/nemeton-leaderboard/app/actor/graphql"
+	"okp4/nemeton-leaderboard/app/actor/subscription"
 	"okp4/nemeton-leaderboard/app/actor/synchronization"
 	"okp4/nemeton-leaderboard/app/actor/tweet"
 
@@ -60,6 +61,8 @@ func boot(ctx actor.Context, listenAddr, mongoURI, dbName, grpcAddr, twitterToke
 		log.Panic().Err(err).Str("actor", "event-store").Msg("❌ Could not create actor")
 	}
 
+	startSubscriber(ctx, eventStorePID, mongoURI, dbName)
+
 	blockSync := actor.PropsFromProducer(func() actor.Actor {
 		sync, err := synchronization.NewActor(grpcClientProps, eventStorePID, mongoURI, dbName)
 		if err != nil {
@@ -87,5 +90,19 @@ func boot(ctx actor.Context, listenAddr, mongoURI, dbName, grpcAddr, twitterToke
 	})
 	if _, err := ctx.SpawnNamed(graphqlProps, "graphql"); err != nil {
 		log.Panic().Err(err).Str("actor", "graphql").Msg("❌ Could not create actor")
+	}
+}
+
+func startSubscriber(ctx actor.Context, eventPID *actor.PID, mongoURI, dbName string) {
+	subscriberProps := actor.PropsFromProducer(func() actor.Actor {
+		s, err := subscription.NewSubscriber(mongoURI, dbName, eventPID)
+		if err != nil {
+			log.Panic().Err(err).Msg("❌ failed instantiate event subscriber actor")
+		}
+		return s
+	})
+	_, err := ctx.SpawnNamed(subscriberProps, "subscriber")
+	if err != nil {
+		log.Panic().Err(err).Str("actor", "subscriber").Msg("❌ Could not create actor")
 	}
 }
