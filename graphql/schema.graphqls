@@ -34,7 +34,20 @@ e.g. `https://okp4.network/`
 """
 scalar URI
 
+"""
+Represents an 8 bytes unsigned integer.
+"""
 scalar UInt64
+
+"""
+Represents a void return type, carrying no value.
+"""
+scalar Void
+
+"""
+Represents a Javascript Object Notation format.
+"""
+scalar JSON
 
 directive @goField(
     forceResolver: Boolean
@@ -93,6 +106,40 @@ type Query {
         discord: String
         twitter: String
     ): Validator
+}
+
+type Mutation {
+    """
+    Emit a `GenTXSubmittedEvent` in the system carrying information related to a druid participating to the Nemeton program, this contain the combination of technical validator information & application information.
+
+    Through the event handling logic, the validator will be added to the board and the corresponding task completed with points attribution if still in progress.
+    """
+    submitValidatorGenTX(
+        """
+        The validator twitter account.
+        """
+        twitter: String
+
+        """
+        The validator website.
+        """
+        website: URI
+
+        """
+        The validator discord account.
+        """
+        discord: String!
+
+        """
+        The validator country.
+        """
+        country: String!
+
+        """
+        The gentx carrying the `MsgCreateValidator` related to this validator.
+        """
+        gentx: JSON!
+    ): Void
 }
 
 """
