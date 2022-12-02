@@ -7,6 +7,7 @@ import (
 	"okp4/nemeton-leaderboard/graphql"
 
 	"okp4/nemeton-leaderboard/app/actor/synchronization"
+	"okp4/nemeton-leaderboard/app/actor/tweet"
 	"okp4/nemeton-leaderboard/app/event"
 	"okp4/nemeton-leaderboard/app/message"
 	"okp4/nemeton-leaderboard/app/nemeton"
@@ -84,6 +85,8 @@ func (a *Actor) receiveNewEvent(e event.Event) {
 		a.handleNewBlockEvent(e.Data)
 	case graphql.GenTXSubmittedEventType:
 		a.handleGenTXSubmittedEvent(e.Date, e.Data)
+	case tweet.NewTweetEventType:
+		a.handleNewTweetEvent(e.Data)
 	default:
 		log.Warn().Msg("⚠️ No event handler for this event.")
 	}
@@ -122,5 +125,22 @@ func (a *Actor) handleGenTXSubmittedEvent(when time.Time, data map[string]interf
 
 	if err := a.store.CreateValidator(context.Background(), when, e.Discord, e.Country, e.Twitter, e.GenTX); err != nil {
 		log.Err(err).Interface("data", data).Msg("🤕 Couldn't create validator")
+	}
+}
+
+func (a *Actor) handleNewTweetEvent(data map[string]interface{}) {
+	log.Info().Interface("event", data).Msg("Handle NewTweet event")
+
+	_, err := tweet.Unmarshall(data)
+	if err != nil {
+		log.Panic().Err(err).Msg("❌ Failed unmarshall event to NewTweetEvent")
+		return
+	}
+
+	for _, task := range a.store.GetCurrentPhase().Tasks {
+		if task.Type == nemeton.TaskTypeTweetNemeton &&
+			task.InProgress() {
+			// Query validators
+		}
 	}
 }

@@ -24,3 +24,13 @@ func (e *NewTweetEvent) Marshall() (map[string]interface{}, error) {
 	err = json.Unmarshal(data, &event)
 	return event, err
 }
+
+func Unmarshall(data map[string]interface{}) (*NewTweetEvent, error) {
+	var event *NewTweetEvent
+	d, err := json.Marshal(data)
+	if err != nil {
+		return nil, err
+	}
+	err = json.Unmarshal(d, &event)
+	return event, err
+}

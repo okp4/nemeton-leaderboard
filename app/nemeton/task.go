@@ -7,7 +7,7 @@ const (
 	taskTypeGentx        = "gentx"
 	taskTypeSubmission   = "submission"
 	taskTypeUptime       = "uptime"
-	taskTypeTweetNemeton = "tweet-nemeton"
+	TaskTypeTweetNemeton = "tweet-nemeton"
 )
 
 type Task struct {
