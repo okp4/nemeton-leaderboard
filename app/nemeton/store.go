@@ -89,6 +89,7 @@ func (s *Store) ensureIndexes(ctx context.Context) error {
 				{Keys: bson.M{"moniker": 1}},
 				{Keys: bson.M{"valoper": 1}, Options: options.Index().SetUnique(true)},
 				{Keys: bson.M{"delegator": 1}, Options: options.Index().SetUnique(true)},
+				{Keys: bson.M{"valcons": 1}, Options: options.Index().SetUnique(true)},
 				{Keys: bson.M{"twitter": 1}, Options: options.Index().SetSparse(true).SetUnique(true)},
 				{Keys: bson.M{"discord": 1}, Options: options.Index().SetUnique(true)},
 			},
