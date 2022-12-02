@@ -314,11 +314,20 @@ func (s *Store) CreateValidator(ctx context.Context, discord, country string, tw
 		}
 	}
 
+	var identity *string
+	if len(msgCreateVal.Description.Identity) > 0 {
+		identity = &msgCreateVal.Description.Identity
+	}
+	var details *string
+	if len(msgCreateVal.Description.Details) > 0 {
+		details = &msgCreateVal.Description.Details
+	}
+
 	_, err = s.db.Collection(validatorsCollectionName).
 		InsertOne(ctx, &Validator{
 			Moniker:   msgCreateVal.Description.Moniker,
-			Identity:  &msgCreateVal.Description.Identity,
-			Details:   &msgCreateVal.Description.Details,
+			Identity:  identity,
+			Details:   details,
 			Valoper:   valoper,
 			Delegator: delegator,
 			Valcons:   types.GetConsAddress(pubkey),
