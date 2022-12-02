@@ -18,7 +18,12 @@ type Resolver struct {
 	eventStore    *actor.PID
 }
 
-func NewResolver(ctx actor.Context, store *nemeton.Store, keybaseClient *keybase.Client, eventStore *actor.PID) *Resolver {
+func NewResolver(
+	ctx actor.Context,
+	store *nemeton.Store,
+	keybaseClient *keybase.Client,
+	eventStore *actor.PID,
+) *Resolver {
 	return &Resolver{
 		actorCTX:      ctx,
 		store:         store,

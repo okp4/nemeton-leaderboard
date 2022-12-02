@@ -34,12 +34,27 @@ var (
 	tlsSkipVerify  bool
 	twitterToken   string
 	twitterAccount string
+	accessToken    string
 
 	startCmd = &cobra.Command{
 		Use:   "start",
 		Short: "Start the leaderboard service",
 		Run: func(cmd *cobra.Command, args []string) {
-			app := system.Bootstrap(graphqlAddr, mongoURI, dbName, grpcAddress, twitterToken, twitterAccount, getTransportCredentials())
+			var accessTokenOpt *string
+			if len(accessToken) > 0 {
+				accessTokenOpt = &accessToken
+			}
+
+			app := system.Bootstrap(
+				graphqlAddr,
+				mongoURI,
+				dbName,
+				grpcAddress,
+				twitterToken,
+				twitterAccount,
+				getTransportCredentials(),
+				accessTokenOpt,
+			)
 
 			kill := make(chan os.Signal, 1)
 			signal.Notify(kill, syscall.SIGINT, syscall.SIGTERM)
@@ -70,6 +85,11 @@ func init() {
 		FlagTwitterAccount,
 		"@OKP4_Protocol",
 		"Set the twitter account that should be mentioned on tweet to be accepted for twitter task")
+	startCmd.PersistentFlags().StringVar(
+		&accessToken,
+		"access-token",
+		"",
+		"The required access token for authenticated operations, an empty value = no auth")
 }
 
 func getTransportCredentials() credentials.TransportCredentials {

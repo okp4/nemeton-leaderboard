@@ -49,6 +49,11 @@ Represents a Javascript Object Notation format.
 """
 scalar JSON
 
+"""
+Authorization needed to perform operation.
+"""
+directive @auth on FIELD_DEFINITION
+
 directive @goField(
     forceResolver: Boolean
     name: String
@@ -139,7 +144,7 @@ type Mutation {
         The gentx carrying the `MsgCreateValidator` related to this validator.
         """
         gentx: JSON!
-    ): Void
+    ): Void @auth
 }
 
 """

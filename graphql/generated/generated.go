@@ -51,7 +51,9 @@ type ResolverRoot interface {
 	Validator() ValidatorResolver
 }
 
-type DirectiveRoot struct{}
+type DirectiveRoot struct {
+	Auth func(ctx context.Context, obj interface{}, next graphql.Resolver) (res interface{}, err error)
+}
 
 type ComplexityRoot struct {
 	BasicTaskState struct {
@@ -916,6 +918,11 @@ Represents a Javascript Object Notation format.
 """
 scalar JSON
 
+"""
+Authorization needed to perform operation.
+"""
+directive @auth on FIELD_DEFINITION
+
 directive @goField(
     forceResolver: Boolean
     name: String
@@ -1006,7 +1013,7 @@ type Mutation {
         The gentx carrying the ` + "`" + `MsgCreateValidator` + "`" + ` related to this validator.
         """
         gentx: JSON!
-    ): Void
+    ): Void @auth
 }
 
 """
@@ -2241,8 +2248,28 @@ func (ec *executionContext) _Mutation_submitValidatorGenTX(ctx context.Context, 
 		}
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().SubmitValidatorGenTx(rctx, fc.Args["twitter"].(*string), fc.Args["website"].(*url.URL), fc.Args["discord"].(string), fc.Args["country"].(string), fc.Args["gentx"].(map[string]interface{}))
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().SubmitValidatorGenTx(rctx, fc.Args["twitter"].(*string), fc.Args["website"].(*url.URL), fc.Args["discord"].(string), fc.Args["country"].(string), fc.Args["gentx"].(map[string]interface{}))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			if ec.directives.Auth == nil {
+				return nil, errors.New("directive auth is not implemented")
+			}
+			return ec.directives.Auth(ctx, nil, directive0)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*string); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *string`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)

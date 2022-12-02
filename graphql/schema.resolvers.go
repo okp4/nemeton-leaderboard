@@ -10,7 +10,6 @@ import (
 
 	"okp4/nemeton-leaderboard/app/event"
 	"okp4/nemeton-leaderboard/app/message"
-
 	"okp4/nemeton-leaderboard/app/nemeton"
 	"okp4/nemeton-leaderboard/graphql/generated"
 	"okp4/nemeton-leaderboard/graphql/model"
