@@ -362,6 +362,11 @@ type Validator {
     identity: Identity @goField(forceResolver: true)
 
     """
+    The validator details.
+    """
+    details: String
+
+    """
     The validator node valoper address.
     """
     valoper: ValoperAddress!

@@ -166,6 +166,7 @@ type ComplexityRoot struct {
 	Validator struct {
 		Country      func(childComplexity int) int
 		Delegator    func(childComplexity int) int
+		Details      func(childComplexity int) int
 		Discord      func(childComplexity int) int
 		Identity     func(childComplexity int) int
 		MissedBlocks func(childComplexity int) int
@@ -709,6 +710,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Validator.Delegator(childComplexity), true
 
+	case "Validator.details":
+		if e.complexity.Validator.Details == nil {
+			break
+		}
+
+		return e.complexity.Validator.Details(childComplexity), true
+
 	case "Validator.discord":
 		if e.complexity.Validator.Discord == nil {
 			break
@@ -1229,6 +1237,11 @@ type Validator {
     The validator identity on https://keybase.io/, can be used to retrieve its picture.
     """
     identity: Identity @goField(forceResolver: true)
+
+    """
+    The validator details.
+    """
+    details: String
 
     """
     The validator node valoper address.
@@ -3609,6 +3622,8 @@ func (ec *executionContext) fieldContext_Query_validator(ctx context.Context, fi
 				return ec.fieldContext_Validator_moniker(ctx, field)
 			case "identity":
 				return ec.fieldContext_Validator_identity(ctx, field)
+			case "details":
+				return ec.fieldContext_Validator_details(ctx, field)
 			case "valoper":
 				return ec.fieldContext_Validator_valoper(ctx, field)
 			case "delegator":
@@ -5040,6 +5055,47 @@ func (ec *executionContext) fieldContext_Validator_identity(ctx context.Context,
 	return fc, nil
 }
 
+func (ec *executionContext) _Validator_details(ctx context.Context, field graphql.CollectedField, obj *nemeton.Validator) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Validator_details(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Details, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Validator_details(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Validator",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Validator_valoper(ctx context.Context, field graphql.CollectedField, obj *nemeton.Validator) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Validator_valoper(ctx, field)
 	if err != nil {
@@ -5581,6 +5637,8 @@ func (ec *executionContext) fieldContext_ValidatorEdge_node(ctx context.Context,
 				return ec.fieldContext_Validator_moniker(ctx, field)
 			case "identity":
 				return ec.fieldContext_Validator_identity(ctx, field)
+			case "details":
+				return ec.fieldContext_Validator_details(ctx, field)
 			case "valoper":
 				return ec.fieldContext_Validator_valoper(ctx, field)
 			case "delegator":
@@ -8389,6 +8447,10 @@ func (ec *executionContext) _Validator(ctx context.Context, sel ast.SelectionSet
 			out.Concurrently(i, func() graphql.Marshaler {
 				return innerFunc(ctx)
 			})
+		case "details":
+
+			out.Values[i] = ec._Validator_details(ctx, field, obj)
+
 		case "valoper":
 
 			out.Values[i] = ec._Validator_valoper(ctx, field, obj)

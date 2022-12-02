@@ -11,6 +11,7 @@ type Validator struct {
 	ID        primitive.ObjectID           `bson:"_id,omitempty"`
 	Moniker   string                       `bson:"moniker"`
 	Identity  *string                      `bson:"identity,omitempty"`
+	Details   *string                      `bson:"details,omitempty"`
 	Valoper   types.ValAddress             `bson:"valoper"`
 	Delegator types.AccAddress             `bson:"delegator"`
 	Valcons   types.ConsAddress            `bson:"valcons"`

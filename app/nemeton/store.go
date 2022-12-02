@@ -318,6 +318,7 @@ func (s *Store) CreateValidator(ctx context.Context, discord, country string, tw
 		InsertOne(ctx, &Validator{
 			Moniker:   msgCreateVal.Description.Moniker,
 			Identity:  &msgCreateVal.Description.Identity,
+			Details:   &msgCreateVal.Description.Details,
 			Valoper:   valoper,
 			Delegator: delegator,
 			Valcons:   types.GetConsAddress(pubkey),
