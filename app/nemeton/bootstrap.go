@@ -17,7 +17,7 @@ func bootstrapPhases() []Phase {
 			Tasks: []Task{
 				{
 					ID:   "0",
-					Type: taskTypeBasic,
+					Type: taskTypeGentx,
 					Name: "Submit your gentx",
 					Description: `When?
 From Dec 1st to Dec 12th.

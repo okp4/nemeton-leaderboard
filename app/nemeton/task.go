@@ -4,6 +4,7 @@ import "time"
 
 const (
 	taskTypeBasic        = "basic"
+	taskTypeGentx        = "gentx"
 	taskTypeSubmission   = "submission"
 	taskTypeUptime       = "uptime"
 	taskTypeTweetNemeton = "tweet-nemeton"
@@ -25,6 +26,10 @@ func (t Task) Started() bool {
 
 func (t Task) Finished() bool {
 	return time.Now().After(t.EndDate)
+}
+
+func (t Task) InProgress() bool {
+	return t.Started() && !t.Finished()
 }
 
 func (t Task) WithSubmission() bool {
