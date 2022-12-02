@@ -3,6 +3,8 @@ package subscription
 import (
 	"context"
 
+	"okp4/nemeton-leaderboard/graphql"
+
 	"okp4/nemeton-leaderboard/app/actor/synchronization"
 	"okp4/nemeton-leaderboard/app/event"
 	"okp4/nemeton-leaderboard/app/message"
@@ -73,6 +75,8 @@ func (a *Actor) receiveNewEvent(e event.Event) {
 	switch e.Type {
 	case synchronization.NewBlockEventType:
 		a.handleNewBlockEvent(e.Data)
+	case graphql.GenTXSubmittedEventType:
+		a.handleGenTXSubmittedEvent(e.Data)
 	default:
 		log.Warn().Msg("⚠️ No event handler for this event.")
 	}
@@ -90,13 +94,26 @@ func (a *Actor) handleNewBlockEvent(data map[string]interface{}) {
 		return
 	}
 
-	consensusAddr := make([]string, len(e.Signatures))
+	consensusAddr := make([]types.ConsAddress, len(e.Signatures))
 	for i, signature := range e.Signatures {
-		var addr types.ConsAddress = signature.GetValidatorAddress()
-		consensusAddr[i] = addr.String()
+		consensusAddr[i] = signature.GetValidatorAddress()
 	}
 
 	if err := a.store.UpdateValidatorUptime(a.ctx, consensusAddr, e.Height); err != nil {
 		log.Panic().Err(err).Msg("🤕 Failed update validator uptime.")
+	}
+}
+
+func (a *Actor) handleGenTXSubmittedEvent(data map[string]interface{}) {
+	log.Info().Interface("event", data).Msg("Handle GenTXSubmitted event")
+
+	e, err := graphql.Unmarshall(data)
+	if err != nil {
+		log.Panic().Err(err).Msg("❌ Failed unmarshall event to NewBlockEvent")
+		return
+	}
+
+	if err := a.store.CreateValidator(context.Background(), e.Discord, e.Country, e.Twitter, e.GenTX); err != nil {
+		log.Err(err).Interface("data", data).Msg("🤕 Couldn't create validator")
 	}
 }

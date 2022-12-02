@@ -4,9 +4,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/url"
 
 	"okp4/nemeton-leaderboard/app/util"
 
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/types"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -143,11 +145,11 @@ func (s *Store) GetValidatorByCursor(ctx context.Context, c Cursor) (*Validator,
 }
 
 func (s *Store) GetValidatorByValoper(ctx context.Context, addr types.ValAddress) (*Validator, error) {
-	return s.GetValidatorBy(ctx, bson.M{"valoper": addr.String()})
+	return s.GetValidatorBy(ctx, bson.M{"valoper": addr})
 }
 
 func (s *Store) GetValidatorByDelegator(ctx context.Context, addr types.AccAddress) (*Validator, error) {
-	return s.GetValidatorBy(ctx, bson.M{"delegator": addr.String()})
+	return s.GetValidatorBy(ctx, bson.M{"delegator": addr})
 }
 
 func (s *Store) GetValidatorByDiscord(ctx context.Context, discord string) (*Validator, error) {
@@ -265,7 +267,72 @@ func makeBoardFilter(search *string, after *Cursor) bson.M {
 	return filter
 }
 
-func (s *Store) UpdateValidatorUptime(ctx context.Context, consensusAddrs []string, height int64) error {
+func (s *Store) CreateValidator(ctx context.Context, discord, country string, twitter *string, genTX map[string]interface{}) error {
+	msgCreateVal, err := ParseGenTX(genTX)
+	if err != nil {
+		return err
+	}
+
+	valoper, err := types.ValAddressFromBech32(msgCreateVal.ValidatorAddress)
+	if err != nil {
+		return err
+	}
+	delegator, err := types.AccAddressFromBech32(msgCreateVal.DelegatorAddress)
+	if err != nil {
+		return err
+	}
+
+	var website *url.URL
+	if len(msgCreateVal.Description.Website) > 0 {
+		website, err = url.Parse(msgCreateVal.Description.Website)
+		if err != nil {
+			return err
+		}
+	}
+
+	pubkey, ok := msgCreateVal.Pubkey.GetCachedValue().(cryptotypes.PubKey)
+	if !ok {
+		return fmt.Errorf("couldn't parse public key")
+	}
+
+	points := uint64(0)
+	var tasks map[int]map[string]TaskState
+	if p := s.GetCurrentPhase(); p != nil {
+		for _, task := range p.Tasks {
+			if task.Type == taskTypeGentx && task.InProgress() {
+				points = *task.Rewards
+				tasks = map[int]map[string]TaskState{
+					p.Number: {
+						task.ID: {
+							Completed:    true,
+							EarnedPoints: *task.Rewards,
+						},
+					},
+				}
+				break
+			}
+		}
+	}
+
+	_, err = s.db.Collection(validatorsCollectionName).
+		InsertOne(ctx, &Validator{
+			Moniker:   msgCreateVal.Description.Moniker,
+			Identity:  &msgCreateVal.Description.Identity,
+			Valoper:   valoper,
+			Delegator: delegator,
+			Valcons:   types.GetConsAddress(pubkey),
+			Twitter:   twitter,
+			Website:   website,
+			Discord:   discord,
+			Country:   country,
+			Status:    "inactive",
+			Points:    points,
+			Tasks:     tasks,
+		})
+	return err
+}
+
+func (s *Store) UpdateValidatorUptime(ctx context.Context, consensusAddrs []types.ConsAddress, height int64) error {
 	model := []mongo.WriteModel{
 		mongo.NewUpdateManyModel().
 			SetFilter(
