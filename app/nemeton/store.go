@@ -254,7 +254,6 @@ func makeBoardFilter(search *string, after *Cursor) bson.M {
 			"$or": bson.A{
 				bson.M{"moniker": bson.M{"$regex": fmt.Sprintf(".*%s.*", *search), "$options": "i"}},
 				bson.M{"valoper": bson.M{"$regex": fmt.Sprintf(".*%s.*", *search), "$options": "i"}},
-				bson.M{"delegator": bson.M{"$regex": fmt.Sprintf(".*%s.*", *search), "$options": "i"}},
 			},
 		})
 	}
