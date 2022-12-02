@@ -10,9 +10,10 @@ import (
 	"okp4/nemeton-leaderboard/graphql/generated"
 
 	"github.com/99designs/gqlgen/graphql/handler"
+	"github.com/asynkron/protoactor-go/actor"
 )
 
-func NewGraphQLServer(ctx context.Context, mongoURI, db string) (*handler.Server, error) {
+func NewGraphQLServer(ctx context.Context, actorCTX actor.Context, mongoURI, db string, eventStore *actor.PID) (*handler.Server, error) {
 	store, err := nemeton.NewStore(ctx, mongoURI, db)
 	if err != nil {
 		return nil, err
@@ -20,7 +21,7 @@ func NewGraphQLServer(ctx context.Context, mongoURI, db string) (*handler.Server
 
 	return handler.NewDefaultServer(
 		generated.NewExecutableSchema(
-			generated.Config{Resolvers: graphql.NewResolver(store, keybase.NewClient())},
+			generated.Config{Resolvers: graphql.NewResolver(actorCTX, store, keybase.NewClient(), eventStore)},
 		),
 	), nil
 }

@@ -6,6 +6,11 @@ package graphql
 import (
 	"context"
 	"fmt"
+	"net/url"
+
+	"okp4/nemeton-leaderboard/app/event"
+	"okp4/nemeton-leaderboard/app/message"
+
 	"okp4/nemeton-leaderboard/app/nemeton"
 	"okp4/nemeton-leaderboard/graphql/generated"
 	"okp4/nemeton-leaderboard/graphql/model"
@@ -25,6 +30,38 @@ func (r *identityResolver) Picture(ctx context.Context, obj *model.Identity) (*m
 		link = &model.Link{Href: picture}
 	}
 	return link, nil
+}
+
+// SubmitValidatorGenTx is the resolver for the submitValidatorGenTX field.
+func (r *mutationResolver) SubmitValidatorGenTx(ctx context.Context, twitter *string, website *url.URL, discord string, country string, gentx map[string]interface{}) (*string, error) {
+	var websiteStr *string
+	if website != nil {
+		str := website.String()
+		websiteStr = &str
+	}
+
+	evt := GenTXSubmittedEvent{
+		Twitter: twitter,
+		Website: websiteStr,
+		Discord: discord,
+		Country: country,
+		GenTX:   gentx,
+	}
+	rawEvt, err := evt.Marshall()
+	if err != nil {
+		return nil, err
+	}
+
+	r.actorCTX.Send(
+		r.eventStore,
+		&message.PublishEventMessage{
+			Event: event.NewEvent(
+				GenTXSubmittedEventType,
+				rawEvt,
+			),
+		},
+	)
+	return nil, nil
 }
 
 // Blocks is the resolver for the blocks field.
@@ -196,6 +233,9 @@ func (r *validatorResolver) MissedBlocks(ctx context.Context, obj *nemeton.Valid
 // Identity returns generated.IdentityResolver implementation.
 func (r *Resolver) Identity() generated.IdentityResolver { return &identityResolver{r} }
 
+// Mutation returns generated.MutationResolver implementation.
+func (r *Resolver) Mutation() generated.MutationResolver { return &mutationResolver{r} }
+
 // Phase returns generated.PhaseResolver implementation.
 func (r *Resolver) Phase() generated.PhaseResolver { return &phaseResolver{r} }
 
@@ -211,9 +251,12 @@ func (r *Resolver) Tasks() generated.TasksResolver { return &tasksResolver{r} }
 // Validator returns generated.ValidatorResolver implementation.
 func (r *Resolver) Validator() generated.ValidatorResolver { return &validatorResolver{r} }
 
-type identityResolver struct{ *Resolver }
-type phaseResolver struct{ *Resolver }
-type phasesResolver struct{ *Resolver }
-type queryResolver struct{ *Resolver }
-type tasksResolver struct{ *Resolver }
-type validatorResolver struct{ *Resolver }
+type (
+	identityResolver  struct{ *Resolver }
+	mutationResolver  struct{ *Resolver }
+	phaseResolver     struct{ *Resolver }
+	phasesResolver    struct{ *Resolver }
+	queryResolver     struct{ *Resolver }
+	tasksResolver     struct{ *Resolver }
+	validatorResolver struct{ *Resolver }
+)
