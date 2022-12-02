@@ -96,6 +96,8 @@ type PageInfo struct {
 type PerPhaseTasks struct {
 	// The total number of tasks the validator completed in this phase.
 	CompletedCount int `json:"completedCount"`
+	// The total number of started tasks the validator is supposed to perform.
+	StartedCount int `json:"startedCount"`
 	// The total number of finished tasks in this phase.
 	FinishedCount int `json:"finishedCount"`
 	// The phase we're talking about.
@@ -143,6 +145,8 @@ func (this SubmissionTask) GetEarnedPoints() uint64 { return this.EarnedPoints }
 type Tasks struct {
 	// The total number of tasks the validator completed.
 	CompletedCount int `json:"completedCount"`
+	// The total number of started tasks the validator is supposed to perform.
+	StartedCount int `json:"startedCount"`
 	// The total number of finished tasks the validator was supposed to perform.
 	FinishedCount int `json:"finishedCount"`
 	// Details the tasks state a validator is supposed to perform per phase.

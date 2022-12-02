@@ -97,6 +97,7 @@ type ComplexityRoot struct {
 		CompletedCount func(childComplexity int) int
 		FinishedCount  func(childComplexity int) int
 		Phase          func(childComplexity int) int
+		StartedCount   func(childComplexity int) int
 		Tasks          func(childComplexity int) int
 	}
 
@@ -151,6 +152,7 @@ type ComplexityRoot struct {
 		FinishedCount  func(childComplexity int) int
 		ForPhase       func(childComplexity int, number int) int
 		PerPhase       func(childComplexity int) int
+		StartedCount   func(childComplexity int) int
 	}
 
 	UptimeTask struct {
@@ -374,6 +376,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.PerPhaseTasks.Phase(childComplexity), true
+
+	case "PerPhaseTasks.startedCount":
+		if e.complexity.PerPhaseTasks.StartedCount == nil {
+			break
+		}
+
+		return e.complexity.PerPhaseTasks.StartedCount(childComplexity), true
 
 	case "PerPhaseTasks.tasks":
 		if e.complexity.PerPhaseTasks.Tasks == nil {
@@ -646,6 +655,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Tasks.PerPhase(childComplexity), true
+
+	case "Tasks.startedCount":
+		if e.complexity.Tasks.StartedCount == nil {
+			break
+		}
+
+		return e.complexity.Tasks.StartedCount(childComplexity), true
 
 	case "UptimeTask.blockCount":
 		if e.complexity.UptimeTask.BlockCount == nil {
@@ -1343,6 +1359,11 @@ type Tasks {
     completedCount: Int!
 
     """
+    The total number of started tasks the validator is supposed to perform.
+    """
+    startedCount: Int!
+
+    """
     The total number of finished tasks the validator was supposed to perform.
     """
     finishedCount: Int!
@@ -1366,6 +1387,11 @@ type PerPhaseTasks {
     The total number of tasks the validator completed in this phase.
     """
     completedCount: Int!
+
+    """
+    The total number of started tasks the validator is supposed to perform.
+    """
+    startedCount: Int!
 
     """
     The total number of finished tasks in this phase.
@@ -2508,6 +2534,50 @@ func (ec *executionContext) _PerPhaseTasks_completedCount(ctx context.Context, f
 }
 
 func (ec *executionContext) fieldContext_PerPhaseTasks_completedCount(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PerPhaseTasks",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PerPhaseTasks_startedCount(ctx context.Context, field graphql.CollectedField, obj *model.PerPhaseTasks) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_PerPhaseTasks_startedCount(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.StartedCount, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_PerPhaseTasks_startedCount(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "PerPhaseTasks",
 		Field:      field,
@@ -4424,6 +4494,50 @@ func (ec *executionContext) fieldContext_Tasks_completedCount(ctx context.Contex
 	return fc, nil
 }
 
+func (ec *executionContext) _Tasks_startedCount(ctx context.Context, field graphql.CollectedField, obj *model.Tasks) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Tasks_startedCount(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.StartedCount, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Tasks_startedCount(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Tasks",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Tasks_finishedCount(ctx context.Context, field graphql.CollectedField, obj *model.Tasks) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Tasks_finishedCount(ctx, field)
 	if err != nil {
@@ -4509,6 +4623,8 @@ func (ec *executionContext) fieldContext_Tasks_perPhase(ctx context.Context, fie
 			switch field.Name {
 			case "completedCount":
 				return ec.fieldContext_PerPhaseTasks_completedCount(ctx, field)
+			case "startedCount":
+				return ec.fieldContext_PerPhaseTasks_startedCount(ctx, field)
 			case "finishedCount":
 				return ec.fieldContext_PerPhaseTasks_finishedCount(ctx, field)
 			case "phase":
@@ -4560,6 +4676,8 @@ func (ec *executionContext) fieldContext_Tasks_forPhase(ctx context.Context, fie
 			switch field.Name {
 			case "completedCount":
 				return ec.fieldContext_PerPhaseTasks_completedCount(ctx, field)
+			case "startedCount":
+				return ec.fieldContext_PerPhaseTasks_startedCount(ctx, field)
 			case "finishedCount":
 				return ec.fieldContext_PerPhaseTasks_finishedCount(ctx, field)
 			case "phase":
@@ -5483,6 +5601,8 @@ func (ec *executionContext) fieldContext_Validator_tasks(ctx context.Context, fi
 			switch field.Name {
 			case "completedCount":
 				return ec.fieldContext_Tasks_completedCount(ctx, field)
+			case "startedCount":
+				return ec.fieldContext_Tasks_startedCount(ctx, field)
 			case "finishedCount":
 				return ec.fieldContext_Tasks_finishedCount(ctx, field)
 			case "perPhase":
@@ -7764,6 +7884,13 @@ func (ec *executionContext) _PerPhaseTasks(ctx context.Context, sel ast.Selectio
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
+		case "startedCount":
+
+			out.Values[i] = ec._PerPhaseTasks_startedCount(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		case "finishedCount":
 
 			out.Values[i] = ec._PerPhaseTasks_finishedCount(ctx, field, obj)
@@ -8280,6 +8407,13 @@ func (ec *executionContext) _Tasks(ctx context.Context, sel ast.SelectionSet, ob
 		case "completedCount":
 
 			out.Values[i] = ec._Tasks_completedCount(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "startedCount":
+
+			out.Values[i] = ec._Tasks_startedCount(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)

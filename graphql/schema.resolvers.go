@@ -182,11 +182,13 @@ func (r *validatorResolver) Status(ctx context.Context, obj *nemeton.Validator) 
 func (r *validatorResolver) Tasks(ctx context.Context, obj *nemeton.Validator) (*model.Tasks, error) {
 	result := &model.Tasks{
 		CompletedCount: 0,
+		StartedCount:   0,
 		FinishedCount:  0,
 	}
 	for _, phase := range append(r.store.GetFinishedPhases(), r.store.GetCurrentPhase()) {
 		perPhase := &model.PerPhaseTasks{
 			CompletedCount: 0,
+			StartedCount:   0,
 			FinishedCount:  0,
 			Phase:          phase,
 		}
@@ -202,6 +204,9 @@ func (r *validatorResolver) Tasks(ctx context.Context, obj *nemeton.Validator) (
 			if mappedState.Completed {
 				perPhase.CompletedCount++
 			}
+			if task.Started() {
+				perPhase.StartedCount++
+			}
 			if task.Finished() {
 				perPhase.FinishedCount++
 			}
@@ -209,6 +214,7 @@ func (r *validatorResolver) Tasks(ctx context.Context, obj *nemeton.Validator) (
 		}
 
 		result.CompletedCount += perPhase.CompletedCount
+		result.StartedCount += perPhase.StartedCount
 		result.FinishedCount += perPhase.FinishedCount
 		result.PerPhase = append(result.PerPhase, perPhase)
 	}
