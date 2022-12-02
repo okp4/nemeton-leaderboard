@@ -267,7 +267,7 @@ func (s *Store) UpdateValidatorUptime(ctx context.Context, consensusAddrs []stri
 			SetFilter(
 				bson.M{
 					"$and": bson.A{
-						bson.M{"consAddr": bson.M{"$nin": consensusAddrs}},
+						bson.M{"valcons": bson.M{"$nin": consensusAddrs}},
 						bson.M{"missedBlocks.to": bson.M{"$eq": height}},
 					},
 				}).
@@ -281,7 +281,7 @@ func (s *Store) UpdateValidatorUptime(ctx context.Context, consensusAddrs []stri
 			SetFilter(
 				bson.M{
 					"$and": bson.A{
-						bson.M{"consAddr": bson.M{"$nin": consensusAddrs}},
+						bson.M{"valcons": bson.M{"$nin": consensusAddrs}},
 						bson.M{"$or": bson.A{
 							bson.M{"missedBlocks": bson.M{"$size": 0}},
 							bson.M{"missedBlocks.to": bson.M{"$not": bson.M{"$gte": height}}},
