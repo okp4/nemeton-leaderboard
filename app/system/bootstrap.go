@@ -88,7 +88,7 @@ func boot(ctx actor.Context, listenAddr, mongoURI, dbName, grpcAddr, twitterToke
 	}
 
 	graphqlProps := actor.PropsFromProducer(func() actor.Actor {
-		return graphql.NewActor(listenAddr, mongoURI, dbName)
+		return graphql.NewActor(listenAddr, mongoURI, dbName, eventStorePID)
 	})
 	if _, err := ctx.SpawnNamed(graphqlProps, "graphql"); err != nil {
 		log.Panic().Err(err).Str("actor", "graphql").Msg("❌ Could not create actor")
