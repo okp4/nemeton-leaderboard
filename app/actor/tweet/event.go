@@ -8,11 +8,11 @@ import (
 const NewTweetEventType = "new-tweet"
 
 type NewTweetEvent struct {
-	ID       string    `json:"id"`
-	AuthorID string    `json:"author_id"`
-	Time     time.Time `json:"time"`
-	Text     string    `json:"text"`
-	User     User      `json:"user"`
+	ID        string    `json:"id"`
+	AuthorID  string    `json:"author_id"`
+	CreatedAt time.Time `json:"created_at"`
+	Text      string    `json:"text"`
+	User      User      `json:"user"`
 }
 
 func (e *NewTweetEvent) Marshall() (map[string]interface{}, error) {

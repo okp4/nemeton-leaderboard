@@ -139,6 +139,15 @@ func (a *Actor) handleNewTweetEvent(data map[string]interface{}) {
 	phase := a.store.GetCurrentPhase()
 	for _, task := range phase.Tasks {
 		if task.Type == nemeton.TaskTypeTweetNemeton && task.InProgress() {
+
+			if !e.CreatedAt.After(task.StartDate) || !e.CreatedAt.Before(task.EndDate) {
+				log.Warn().Time("startDate", task.StartDate).
+					Time("endDate", task.EndDate).
+					Time("tweetDate", e.CreatedAt).
+					Msg("🐦 Tweet has been posted before or after the task time.")
+				continue
+			}
+
 			err := a.store.CompleteTweetTask(a.ctx, e.User.Username, phase, &task)
 			if err != nil {
 				log.Panic().Err(err).Msg("❌ Could not complete tweet task")
