@@ -131,16 +131,19 @@ func (a *Actor) handleGenTXSubmittedEvent(when time.Time, data map[string]interf
 func (a *Actor) handleNewTweetEvent(data map[string]interface{}) {
 	log.Info().Interface("event", data).Msg("Handle NewTweet event")
 
-	_, err := tweet.Unmarshall(data)
+	e, err := tweet.Unmarshall(data)
 	if err != nil {
 		log.Panic().Err(err).Msg("❌ Failed unmarshall event to NewTweetEvent")
 		return
 	}
-
-	for _, task := range a.store.GetCurrentPhase().Tasks {
-		if task.Type == nemeton.TaskTypeTweetNemeton &&
-			task.InProgress() {
-			// Query validators
+	phase := a.store.GetCurrentPhase()
+	for _, task := range phase.Tasks {
+		if task.Type == nemeton.TaskTypeTweetNemeton && task.InProgress() {
+			err := a.store.CompleteTweetTask(a.ctx, e.User.Username, phase, &task)
+			if err != nil {
+				log.Panic().Err(err).Msg("❌ Could not complete tweet task")
+			}
+			return // We consider that there is only one tweet task by phase
 		}
 	}
 }

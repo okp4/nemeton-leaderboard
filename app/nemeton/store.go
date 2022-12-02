@@ -357,3 +357,34 @@ func (s *Store) UpdateValidatorUptime(ctx context.Context, consensusAddrs []type
 	_, err := s.db.Collection(validatorsCollectionName).BulkWrite(ctx, model, opts)
 	return err
 }
+
+func (s *Store) CompleteTweetTask(ctx context.Context, username string, phase *Phase, task *Task) error {
+	filter := bson.M{"twitter": username}
+	return s.completeTask(ctx, filter, phase, task)
+}
+
+func (s *Store) completeTask(ctx context.Context, filter bson.M, phase *Phase, task *Task) error {
+	if !phase.InProgress() || !task.InProgress() {
+		return errors.New("could not complete task since task or phase is not in progress")
+	}
+
+	c, err := s.db.Collection(validatorsCollectionName).UpdateOne(ctx, filter, bson.M{
+		"$set": bson.M{
+			fmt.Sprintf("tasks.%d.%s.completed", phase.Number, task.ID): true,
+			fmt.Sprintf("tasks.%d.%s.points", phase.Number, task.ID):    task.Rewards,
+		},
+	})
+	if err != nil {
+		return err
+	}
+
+	if c.ModifiedCount == 1 {
+		_, err = s.db.Collection(validatorsCollectionName).UpdateOne(ctx, filter, bson.M{
+			"$inc": bson.M{
+				"points": task.Rewards,
+			},
+		})
+	}
+
+	return err
+}
