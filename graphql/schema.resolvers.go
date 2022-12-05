@@ -6,6 +6,9 @@ package graphql
 import (
 	"context"
 	"fmt"
+
+	"okp4/nemeton-leaderboard/app/event"
+	"okp4/nemeton-leaderboard/app/message"
 	"okp4/nemeton-leaderboard/app/nemeton"
 	"okp4/nemeton-leaderboard/graphql/generated"
 	"okp4/nemeton-leaderboard/graphql/model"
@@ -25,6 +28,31 @@ func (r *identityResolver) Picture(ctx context.Context, obj *model.Identity) (*m
 		link = &model.Link{Href: picture}
 	}
 	return link, nil
+}
+
+// SubmitValidatorGenTx is the resolver for the submitValidatorGenTX field.
+func (r *mutationResolver) SubmitValidatorGenTx(ctx context.Context, twitter *string, discord string, country string, gentx map[string]interface{}) (*string, error) {
+	evt := GenTXSubmittedEvent{
+		Twitter: twitter,
+		Discord: discord,
+		Country: country,
+		GenTX:   gentx,
+	}
+	rawEvt, err := evt.Marshall()
+	if err != nil {
+		return nil, err
+	}
+
+	r.actorCTX.Send(
+		r.eventStore,
+		&message.PublishEventMessage{
+			Event: event.NewEvent(
+				GenTXSubmittedEventType,
+				rawEvt,
+			),
+		},
+	)
+	return nil, nil
 }
 
 // Blocks is the resolver for the blocks field.
@@ -154,11 +182,13 @@ func (r *validatorResolver) Status(ctx context.Context, obj *nemeton.Validator) 
 func (r *validatorResolver) Tasks(ctx context.Context, obj *nemeton.Validator) (*model.Tasks, error) {
 	result := &model.Tasks{
 		CompletedCount: 0,
+		StartedCount:   0,
 		FinishedCount:  0,
 	}
 	for _, phase := range append(r.store.GetFinishedPhases(), r.store.GetCurrentPhase()) {
 		perPhase := &model.PerPhaseTasks{
 			CompletedCount: 0,
+			StartedCount:   0,
 			FinishedCount:  0,
 			Phase:          phase,
 		}
@@ -174,6 +204,9 @@ func (r *validatorResolver) Tasks(ctx context.Context, obj *nemeton.Validator) (
 			if mappedState.Completed {
 				perPhase.CompletedCount++
 			}
+			if task.Started() {
+				perPhase.StartedCount++
+			}
 			if task.Finished() {
 				perPhase.FinishedCount++
 			}
@@ -181,6 +214,7 @@ func (r *validatorResolver) Tasks(ctx context.Context, obj *nemeton.Validator) (
 		}
 
 		result.CompletedCount += perPhase.CompletedCount
+		result.StartedCount += perPhase.StartedCount
 		result.FinishedCount += perPhase.FinishedCount
 		result.PerPhase = append(result.PerPhase, perPhase)
 	}
@@ -195,6 +229,9 @@ func (r *validatorResolver) MissedBlocks(ctx context.Context, obj *nemeton.Valid
 
 // Identity returns generated.IdentityResolver implementation.
 func (r *Resolver) Identity() generated.IdentityResolver { return &identityResolver{r} }
+
+// Mutation returns generated.MutationResolver implementation.
+func (r *Resolver) Mutation() generated.MutationResolver { return &mutationResolver{r} }
 
 // Phase returns generated.PhaseResolver implementation.
 func (r *Resolver) Phase() generated.PhaseResolver { return &phaseResolver{r} }
@@ -211,9 +248,12 @@ func (r *Resolver) Tasks() generated.TasksResolver { return &tasksResolver{r} }
 // Validator returns generated.ValidatorResolver implementation.
 func (r *Resolver) Validator() generated.ValidatorResolver { return &validatorResolver{r} }
 
-type identityResolver struct{ *Resolver }
-type phaseResolver struct{ *Resolver }
-type phasesResolver struct{ *Resolver }
-type queryResolver struct{ *Resolver }
-type tasksResolver struct{ *Resolver }
-type validatorResolver struct{ *Resolver }
+type (
+	identityResolver  struct{ *Resolver }
+	mutationResolver  struct{ *Resolver }
+	phaseResolver     struct{ *Resolver }
+	phasesResolver    struct{ *Resolver }
+	queryResolver     struct{ *Resolver }
+	tasksResolver     struct{ *Resolver }
+	validatorResolver struct{ *Resolver }
+)

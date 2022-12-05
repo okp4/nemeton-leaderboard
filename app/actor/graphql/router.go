@@ -10,7 +10,7 @@ import (
 func makeRouter(graphqlServer *handler.Server) *http.ServeMux {
 	router := http.NewServeMux()
 	router.Handle("/graphiql", playground.Handler("GraphiQL", "/graphql"))
-	router.Handle("/graphql", graphqlServer)
+	router.Handle("/graphql", NewBearerMiddleware(graphqlServer))
 
 	return router
 }

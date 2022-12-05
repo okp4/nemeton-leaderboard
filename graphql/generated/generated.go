@@ -8,13 +8,14 @@ import (
 	"errors"
 	"fmt"
 	"net/url"
-	"okp4/nemeton-leaderboard/app/nemeton"
-	"okp4/nemeton-leaderboard/graphql/model"
-	"okp4/nemeton-leaderboard/graphql/scalar"
 	"strconv"
 	"sync"
 	"sync/atomic"
 	"time"
+
+	"okp4/nemeton-leaderboard/app/nemeton"
+	"okp4/nemeton-leaderboard/graphql/model"
+	"okp4/nemeton-leaderboard/graphql/scalar"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/99designs/gqlgen/graphql/introspection"
@@ -42,6 +43,7 @@ type Config struct {
 
 type ResolverRoot interface {
 	Identity() IdentityResolver
+	Mutation() MutationResolver
 	Phase() PhaseResolver
 	Phases() PhasesResolver
 	Query() QueryResolver
@@ -50,6 +52,7 @@ type ResolverRoot interface {
 }
 
 type DirectiveRoot struct {
+	Auth func(ctx context.Context, obj interface{}, next graphql.Resolver) (res interface{}, err error)
 }
 
 type ComplexityRoot struct {
@@ -79,6 +82,10 @@ type ComplexityRoot struct {
 		Href func(childComplexity int) int
 	}
 
+	Mutation struct {
+		SubmitValidatorGenTx func(childComplexity int, twitter *string, discord string, country string, gentx map[string]interface{}) int
+	}
+
 	PageInfo struct {
 		Count       func(childComplexity int) int
 		EndCursor   func(childComplexity int) int
@@ -90,6 +97,7 @@ type ComplexityRoot struct {
 		CompletedCount func(childComplexity int) int
 		FinishedCount  func(childComplexity int) int
 		Phase          func(childComplexity int) int
+		StartedCount   func(childComplexity int) int
 		Tasks          func(childComplexity int) int
 	}
 
@@ -144,6 +152,7 @@ type ComplexityRoot struct {
 		FinishedCount  func(childComplexity int) int
 		ForPhase       func(childComplexity int, number int) int
 		PerPhase       func(childComplexity int) int
+		StartedCount   func(childComplexity int) int
 	}
 
 	UptimeTask struct {
@@ -159,6 +168,7 @@ type ComplexityRoot struct {
 	Validator struct {
 		Country      func(childComplexity int) int
 		Delegator    func(childComplexity int) int
+		Details      func(childComplexity int) int
 		Discord      func(childComplexity int) int
 		Identity     func(childComplexity int) int
 		MissedBlocks func(childComplexity int) int
@@ -180,6 +190,9 @@ type ComplexityRoot struct {
 
 type IdentityResolver interface {
 	Picture(ctx context.Context, obj *model.Identity) (*model.Link, error)
+}
+type MutationResolver interface {
+	SubmitValidatorGenTx(ctx context.Context, twitter *string, discord string, country string, gentx map[string]interface{}) (*string, error)
 }
 type PhaseResolver interface {
 	Blocks(ctx context.Context, obj *nemeton.Phase) (*model.BlockRange, error)
@@ -303,6 +316,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Link.Href(childComplexity), true
 
+	case "Mutation.submitValidatorGenTX":
+		if e.complexity.Mutation.SubmitValidatorGenTx == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_submitValidatorGenTX_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.SubmitValidatorGenTx(childComplexity, args["twitter"].(*string), args["discord"].(string), args["country"].(string), args["gentx"].(map[string]interface{})), true
+
 	case "PageInfo.count":
 		if e.complexity.PageInfo.Count == nil {
 			break
@@ -351,6 +376,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.PerPhaseTasks.Phase(childComplexity), true
+
+	case "PerPhaseTasks.startedCount":
+		if e.complexity.PerPhaseTasks.StartedCount == nil {
+			break
+		}
+
+		return e.complexity.PerPhaseTasks.StartedCount(childComplexity), true
 
 	case "PerPhaseTasks.tasks":
 		if e.complexity.PerPhaseTasks.Tasks == nil {
@@ -624,6 +656,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Tasks.PerPhase(childComplexity), true
 
+	case "Tasks.startedCount":
+		if e.complexity.Tasks.StartedCount == nil {
+			break
+		}
+
+		return e.complexity.Tasks.StartedCount(childComplexity), true
+
 	case "UptimeTask.blockCount":
 		if e.complexity.UptimeTask.BlockCount == nil {
 			break
@@ -686,6 +725,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Validator.Delegator(childComplexity), true
+
+	case "Validator.details":
+		if e.complexity.Validator.Details == nil {
+			break
+		}
+
+		return e.complexity.Validator.Details(childComplexity), true
 
 	case "Validator.discord":
 		if e.complexity.Validator.Discord == nil {
@@ -804,6 +850,21 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 				Data: buf.Bytes(),
 			}
 		}
+	case ast.Mutation:
+		return func(ctx context.Context) *graphql.Response {
+			if !first {
+				return nil
+			}
+			first = false
+			ctx = graphql.WithUnmarshalerMap(ctx, inputUnmarshalMap)
+			data := ec._Mutation(ctx, rc.Operation.SelectionSet)
+			var buf bytes.Buffer
+			data.MarshalGQL(&buf)
+
+			return &graphql.Response{
+				Data: buf.Bytes(),
+			}
+		}
 
 	default:
 		return graphql.OneShot(graphql.ErrorResponse(ctx, "unsupported GraphQL operation"))
@@ -866,7 +927,25 @@ e.g. ` + "`" + `https://okp4.network/` + "`" + `
 """
 scalar URI
 
+"""
+Represents an 8 bytes unsigned integer.
+"""
 scalar UInt64
+
+"""
+Represents a void return type, carrying no value.
+"""
+scalar Void
+
+"""
+Represents a Javascript Object Notation format.
+"""
+scalar JSON
+
+"""
+Authorization needed to perform operation.
+"""
+directive @auth on FIELD_DEFINITION
 
 directive @goField(
     forceResolver: Boolean
@@ -925,6 +1004,35 @@ type Query {
         discord: String
         twitter: String
     ): Validator
+}
+
+type Mutation {
+    """
+    Emit a ` + "`" + `GenTXSubmittedEvent` + "`" + ` in the system carrying information related to a druid participating to the Nemeton program, this contain the combination of technical validator information & application information.
+
+    Through the event handling logic, the validator will be added to the board and the corresponding task completed with points attribution if still in progress.
+    """
+    submitValidatorGenTX(
+        """
+        The validator twitter account.
+        """
+        twitter: String
+
+        """
+        The validator discord account.
+        """
+        discord: String!
+
+        """
+        The validator country.
+        """
+        country: String!
+
+        """
+        The gentx carrying the ` + "`" + `MsgCreateValidator` + "`" + ` related to this validator.
+        """
+        gentx: JSON!
+    ): Void @auth
 }
 
 """
@@ -1147,6 +1255,11 @@ type Validator {
     identity: Identity @goField(forceResolver: true)
 
     """
+    The validator details.
+    """
+    details: String
+
+    """
     The validator node valoper address.
     """
     valoper: ValoperAddress!
@@ -1246,6 +1359,11 @@ type Tasks {
     completedCount: Int!
 
     """
+    The total number of started tasks the validator is supposed to perform.
+    """
+    startedCount: Int!
+
+    """
     The total number of finished tasks the validator was supposed to perform.
     """
     finishedCount: Int!
@@ -1269,6 +1387,11 @@ type PerPhaseTasks {
     The total number of tasks the validator completed in this phase.
     """
     completedCount: Int!
+
+    """
+    The total number of started tasks the validator is supposed to perform.
+    """
+    startedCount: Int!
 
     """
     The total number of finished tasks in this phase.
@@ -1397,6 +1520,48 @@ var parsedSchema = gqlparser.MustLoadSchema(sources...)
 // endregion ************************** generated!.gotpl **************************
 
 // region    ***************************** args.gotpl *****************************
+
+func (ec *executionContext) field_Mutation_submitValidatorGenTX_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 *string
+	if tmp, ok := rawArgs["twitter"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("twitter"))
+		arg0, err = ec.unmarshalOString2ᚖstring(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["twitter"] = arg0
+	var arg1 string
+	if tmp, ok := rawArgs["discord"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("discord"))
+		arg1, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["discord"] = arg1
+	var arg2 string
+	if tmp, ok := rawArgs["country"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("country"))
+		arg2, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["country"] = arg2
+	var arg3 map[string]interface{}
+	if tmp, ok := rawArgs["gentx"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("gentx"))
+		arg3, err = ec.unmarshalNJSON2map(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["gentx"] = arg3
+	return args, nil
+}
 
 func (ec *executionContext) field_Query___type_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
@@ -2095,6 +2260,78 @@ func (ec *executionContext) fieldContext_Link_href(ctx context.Context, field gr
 	return fc, nil
 }
 
+func (ec *executionContext) _Mutation_submitValidatorGenTX(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_submitValidatorGenTX(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().SubmitValidatorGenTx(rctx, fc.Args["twitter"].(*string), fc.Args["discord"].(string), fc.Args["country"].(string), fc.Args["gentx"].(map[string]interface{}))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			if ec.directives.Auth == nil {
+				return nil, errors.New("directive auth is not implemented")
+			}
+			return ec.directives.Auth(ctx, nil, directive0)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*string); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *string`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOVoid2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_submitValidatorGenTX(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Void does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_submitValidatorGenTX_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _PageInfo_startCursor(ctx context.Context, field graphql.CollectedField, obj *model.PageInfo) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_PageInfo_startCursor(ctx, field)
 	if err != nil {
@@ -2297,6 +2534,50 @@ func (ec *executionContext) _PerPhaseTasks_completedCount(ctx context.Context, f
 }
 
 func (ec *executionContext) fieldContext_PerPhaseTasks_completedCount(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PerPhaseTasks",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PerPhaseTasks_startedCount(ctx context.Context, field graphql.CollectedField, obj *model.PerPhaseTasks) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_PerPhaseTasks_startedCount(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.StartedCount, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_PerPhaseTasks_startedCount(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "PerPhaseTasks",
 		Field:      field,
@@ -3411,6 +3692,8 @@ func (ec *executionContext) fieldContext_Query_validator(ctx context.Context, fi
 				return ec.fieldContext_Validator_moniker(ctx, field)
 			case "identity":
 				return ec.fieldContext_Validator_identity(ctx, field)
+			case "details":
+				return ec.fieldContext_Validator_details(ctx, field)
 			case "valoper":
 				return ec.fieldContext_Validator_valoper(ctx, field)
 			case "delegator":
@@ -4211,6 +4494,50 @@ func (ec *executionContext) fieldContext_Tasks_completedCount(ctx context.Contex
 	return fc, nil
 }
 
+func (ec *executionContext) _Tasks_startedCount(ctx context.Context, field graphql.CollectedField, obj *model.Tasks) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Tasks_startedCount(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.StartedCount, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Tasks_startedCount(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Tasks",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Tasks_finishedCount(ctx context.Context, field graphql.CollectedField, obj *model.Tasks) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Tasks_finishedCount(ctx, field)
 	if err != nil {
@@ -4296,6 +4623,8 @@ func (ec *executionContext) fieldContext_Tasks_perPhase(ctx context.Context, fie
 			switch field.Name {
 			case "completedCount":
 				return ec.fieldContext_PerPhaseTasks_completedCount(ctx, field)
+			case "startedCount":
+				return ec.fieldContext_PerPhaseTasks_startedCount(ctx, field)
 			case "finishedCount":
 				return ec.fieldContext_PerPhaseTasks_finishedCount(ctx, field)
 			case "phase":
@@ -4347,6 +4676,8 @@ func (ec *executionContext) fieldContext_Tasks_forPhase(ctx context.Context, fie
 			switch field.Name {
 			case "completedCount":
 				return ec.fieldContext_PerPhaseTasks_completedCount(ctx, field)
+			case "startedCount":
+				return ec.fieldContext_PerPhaseTasks_startedCount(ctx, field)
 			case "finishedCount":
 				return ec.fieldContext_PerPhaseTasks_finishedCount(ctx, field)
 			case "phase":
@@ -4842,6 +5173,47 @@ func (ec *executionContext) fieldContext_Validator_identity(ctx context.Context,
 	return fc, nil
 }
 
+func (ec *executionContext) _Validator_details(ctx context.Context, field graphql.CollectedField, obj *nemeton.Validator) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Validator_details(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Details, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Validator_details(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Validator",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Validator_valoper(ctx context.Context, field graphql.CollectedField, obj *nemeton.Validator) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Validator_valoper(ctx, field)
 	if err != nil {
@@ -5229,6 +5601,8 @@ func (ec *executionContext) fieldContext_Validator_tasks(ctx context.Context, fi
 			switch field.Name {
 			case "completedCount":
 				return ec.fieldContext_Tasks_completedCount(ctx, field)
+			case "startedCount":
+				return ec.fieldContext_Tasks_startedCount(ctx, field)
 			case "finishedCount":
 				return ec.fieldContext_Tasks_finishedCount(ctx, field)
 			case "perPhase":
@@ -5383,6 +5757,8 @@ func (ec *executionContext) fieldContext_ValidatorEdge_node(ctx context.Context,
 				return ec.fieldContext_Validator_moniker(ctx, field)
 			case "identity":
 				return ec.fieldContext_Validator_identity(ctx, field)
+			case "details":
+				return ec.fieldContext_Validator_details(ctx, field)
 			case "valoper":
 				return ec.fieldContext_Validator_valoper(ctx, field)
 			case "delegator":
@@ -7372,7 +7748,6 @@ func (ec *executionContext) _Identity(ctx context.Context, sel ast.SelectionSet,
 
 			out.Concurrently(i, func() graphql.Marshaler {
 				return innerFunc(ctx)
-
 			})
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
@@ -7402,6 +7777,42 @@ func (ec *executionContext) _Link(ctx context.Context, sel ast.SelectionSet, obj
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var mutationImplementors = []string{"Mutation"}
+
+func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, mutationImplementors)
+	ctx = graphql.WithFieldContext(ctx, &graphql.FieldContext{
+		Object: "Mutation",
+	})
+
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		innerCtx := graphql.WithRootFieldContext(ctx, &graphql.RootFieldContext{
+			Object: field.Name,
+			Field:  field,
+		})
+
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("Mutation")
+		case "submitValidatorGenTX":
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_submitValidatorGenTX(ctx, field)
+			})
+
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -7469,6 +7880,13 @@ func (ec *executionContext) _PerPhaseTasks(ctx context.Context, sel ast.Selectio
 		case "completedCount":
 
 			out.Values[i] = ec._PerPhaseTasks_completedCount(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "startedCount":
+
+			out.Values[i] = ec._PerPhaseTasks_startedCount(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
 				invalids++
@@ -7589,7 +8007,6 @@ func (ec *executionContext) _Phase(ctx context.Context, sel ast.SelectionSet, ob
 
 			out.Concurrently(i, func() graphql.Marshaler {
 				return innerFunc(ctx)
-
 			})
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
@@ -7630,7 +8047,6 @@ func (ec *executionContext) _Phases(ctx context.Context, sel ast.SelectionSet, o
 
 			out.Concurrently(i, func() graphql.Marshaler {
 				return innerFunc(ctx)
-
 			})
 		case "ongoing":
 			field := field
@@ -7650,7 +8066,6 @@ func (ec *executionContext) _Phases(ctx context.Context, sel ast.SelectionSet, o
 
 			out.Concurrently(i, func() graphql.Marshaler {
 				return innerFunc(ctx)
-
 			})
 		case "finished":
 			field := field
@@ -7670,7 +8085,6 @@ func (ec *executionContext) _Phases(ctx context.Context, sel ast.SelectionSet, o
 
 			out.Concurrently(i, func() graphql.Marshaler {
 				return innerFunc(ctx)
-
 			})
 		case "current":
 			field := field
@@ -7687,7 +8101,6 @@ func (ec *executionContext) _Phases(ctx context.Context, sel ast.SelectionSet, o
 
 			out.Concurrently(i, func() graphql.Marshaler {
 				return innerFunc(ctx)
-
 			})
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
@@ -7998,6 +8411,13 @@ func (ec *executionContext) _Tasks(ctx context.Context, sel ast.SelectionSet, ob
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)
 			}
+		case "startedCount":
+
+			out.Values[i] = ec._Tasks_startedCount(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
 		case "finishedCount":
 
 			out.Values[i] = ec._Tasks_finishedCount(ctx, field, obj)
@@ -8027,7 +8447,6 @@ func (ec *executionContext) _Tasks(ctx context.Context, sel ast.SelectionSet, ob
 
 			out.Concurrently(i, func() graphql.Marshaler {
 				return innerFunc(ctx)
-
 			})
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
@@ -8138,7 +8557,6 @@ func (ec *executionContext) _Validator(ctx context.Context, sel ast.SelectionSet
 
 			out.Concurrently(i, func() graphql.Marshaler {
 				return innerFunc(ctx)
-
 			})
 		case "moniker":
 
@@ -8162,8 +8580,11 @@ func (ec *executionContext) _Validator(ctx context.Context, sel ast.SelectionSet
 
 			out.Concurrently(i, func() graphql.Marshaler {
 				return innerFunc(ctx)
-
 			})
+		case "details":
+
+			out.Values[i] = ec._Validator_details(ctx, field, obj)
+
 		case "valoper":
 
 			out.Values[i] = ec._Validator_valoper(ctx, field, obj)
@@ -8218,7 +8639,6 @@ func (ec *executionContext) _Validator(ctx context.Context, sel ast.SelectionSet
 
 			out.Concurrently(i, func() graphql.Marshaler {
 				return innerFunc(ctx)
-
 			})
 		case "points":
 
@@ -8245,7 +8665,6 @@ func (ec *executionContext) _Validator(ctx context.Context, sel ast.SelectionSet
 
 			out.Concurrently(i, func() graphql.Marshaler {
 				return innerFunc(ctx)
-
 			})
 		case "missedBlocks":
 			field := field
@@ -8265,7 +8684,6 @@ func (ec *executionContext) _Validator(ctx context.Context, sel ast.SelectionSet
 
 			out.Concurrently(i, func() graphql.Marshaler {
 				return innerFunc(ctx)
-
 			})
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
@@ -8782,6 +9200,27 @@ func (ec *executionContext) unmarshalNInt2int(ctx context.Context, v interface{}
 
 func (ec *executionContext) marshalNInt2int(ctx context.Context, sel ast.SelectionSet, v int) graphql.Marshaler {
 	res := graphql.MarshalInt(v)
+	if res == graphql.Null {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+	}
+	return res
+}
+
+func (ec *executionContext) unmarshalNJSON2map(ctx context.Context, v interface{}) (map[string]interface{}, error) {
+	res, err := scalar.UnmarshalJSON(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNJSON2map(ctx context.Context, sel ast.SelectionSet, v map[string]interface{}) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	res := scalar.MarshalJSON(v)
 	if res == graphql.Null {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -9647,6 +10086,22 @@ func (ec *executionContext) marshalOValoperAddress2githubᚗcomᚋcosmosᚋcosmo
 		return graphql.Null
 	}
 	res := scalar.MarshalValoperAddress(v)
+	return res
+}
+
+func (ec *executionContext) unmarshalOVoid2ᚖstring(ctx context.Context, v interface{}) (*string, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := graphql.UnmarshalString(v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOVoid2ᚖstring(ctx context.Context, sel ast.SelectionSet, v *string) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	res := graphql.MarshalString(*v)
 	return res
 }
 

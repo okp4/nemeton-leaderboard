@@ -87,6 +87,7 @@ func (s *Store) ensureIndexes(ctx context.Context) error {
 				{Keys: bson.M{"moniker": 1}},
 				{Keys: bson.M{"valoper": 1}, Options: options.Index().SetUnique(true)},
 				{Keys: bson.M{"delegator": 1}, Options: options.Index().SetUnique(true)},
+				{Keys: bson.M{"valcons": 1}, Options: options.Index().SetUnique(true)},
 				{Keys: bson.M{"twitter": 1}, Options: options.Index().SetSparse(true).SetUnique(true)},
 				{Keys: bson.M{"discord": 1}, Options: options.Index().SetUnique(true)},
 			},
@@ -143,11 +144,11 @@ func (s *Store) GetValidatorByCursor(ctx context.Context, c Cursor) (*Validator,
 }
 
 func (s *Store) GetValidatorByValoper(ctx context.Context, addr types.ValAddress) (*Validator, error) {
-	return s.GetValidatorBy(ctx, bson.M{"valoper": addr.String()})
+	return s.GetValidatorBy(ctx, bson.M{"valoper": addr})
 }
 
 func (s *Store) GetValidatorByDelegator(ctx context.Context, addr types.AccAddress) (*Validator, error) {
-	return s.GetValidatorBy(ctx, bson.M{"delegator": addr.String()})
+	return s.GetValidatorBy(ctx, bson.M{"delegator": addr})
 }
 
 func (s *Store) GetValidatorByDiscord(ctx context.Context, discord string) (*Validator, error) {
@@ -251,7 +252,6 @@ func makeBoardFilter(search *string, after *Cursor) bson.M {
 			"$or": bson.A{
 				bson.M{"moniker": bson.M{"$regex": fmt.Sprintf(".*%s.*", *search), "$options": "i"}},
 				bson.M{"valoper": bson.M{"$regex": fmt.Sprintf(".*%s.*", *search), "$options": "i"}},
-				bson.M{"delegator": bson.M{"$regex": fmt.Sprintf(".*%s.*", *search), "$options": "i"}},
 			},
 		})
 	}
@@ -265,7 +265,44 @@ func makeBoardFilter(search *string, after *Cursor) bson.M {
 	return filter
 }
 
-func (s *Store) UpdateValidatorUptime(ctx context.Context, consensusAddrs []string, height int64) error {
+func (s *Store) CreateValidator(ctx context.Context, discord, country string, twitter *string, genTX map[string]interface{}) error {
+	msgCreateVal, err := ParseGenTX(genTX)
+	if err != nil {
+		return err
+	}
+
+	validator, err := MakeValidator(msgCreateVal, discord, country, twitter)
+	if err != nil {
+		return err
+	}
+
+	points := uint64(0)
+	var tasks map[int]map[string]TaskState
+	if p := s.GetCurrentPhase(); p != nil {
+		for _, task := range p.Tasks {
+			if task.Type == taskTypeGentx && task.InProgress() {
+				points = *task.Rewards
+				tasks = map[int]map[string]TaskState{
+					p.Number: {
+						task.ID: {
+							Completed:    true,
+							EarnedPoints: *task.Rewards,
+						},
+					},
+				}
+				break
+			}
+		}
+	}
+
+	validator.Points = points
+	validator.Tasks = tasks
+
+	_, err = s.db.Collection(validatorsCollectionName).InsertOne(ctx, validator)
+	return err
+}
+
+func (s *Store) UpdateValidatorUptime(ctx context.Context, consensusAddrs []types.ConsAddress, height int64) error {
 	model := []mongo.WriteModel{
 		mongo.NewUpdateManyModel().
 			SetFilter(

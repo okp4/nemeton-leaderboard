@@ -9,31 +9,35 @@ import (
 )
 
 type Actor struct {
-	addr     string
-	mongoURI string
-	dbName   string
-	srv      *server
+	addr       string
+	mongoURI   string
+	dbName     string
+	eventStore *actor.PID
+	bearer     *string
+	srv        *server
 }
 
-func NewActor(httpAddr, mongoURI, dbName string) *Actor {
+func NewActor(httpAddr, mongoURI, dbName string, eventStore *actor.PID, bearer *string) *Actor {
 	return &Actor{
-		addr:     httpAddr,
-		mongoURI: mongoURI,
-		dbName:   dbName,
+		addr:       httpAddr,
+		mongoURI:   mongoURI,
+		dbName:     dbName,
+		eventStore: eventStore,
+		bearer:     bearer,
 	}
 }
 
 func (a *Actor) Receive(ctx actor.Context) {
 	switch ctx.Message().(type) {
 	case *actor.Started:
-		a.handleStart()
+		a.handleStart(ctx)
 	case *actor.Stopping:
 		a.handleStop()
 	}
 }
 
-func (a *Actor) handleStart() {
-	graphqlServer, err := NewGraphQLServer(context.Background(), a.mongoURI, a.dbName)
+func (a *Actor) handleStart(ctx actor.Context) {
+	graphqlServer, err := NewGraphQLServer(context.Background(), ctx, a.mongoURI, a.dbName, a.eventStore, a.bearer)
 	if err != nil {
 		log.Fatal().Err(err).Str("db", a.dbName).Msg("❌ Couldn't create graphql server")
 	}

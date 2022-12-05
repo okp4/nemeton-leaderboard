@@ -91,3 +91,6 @@ models:
   Cursor:
     model:
       - okp4/nemeton-leaderboard/graphql/scalar.Cursor
+  JSON:
+    model:
+      - okp4/nemeton-leaderboard/graphql/scalar.JSON

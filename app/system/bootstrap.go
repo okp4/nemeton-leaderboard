@@ -18,12 +18,14 @@ type App struct {
 	init *actor.PID
 }
 
-func Bootstrap(listenAddr, mongoURI, dbName, grpcAddr, twitterToken, twitterAccount string,
+func Bootstrap(
+	listenAddr, mongoURI, dbName, grpcAddr, twitterToken, twitterAccount string,
 	tls credentials.TransportCredentials,
+	accessToken *string,
 ) *App {
 	initProps := actor.PropsFromFunc(func(ctx actor.Context) {
 		if _, ok := ctx.Message().(*actor.Started); ok {
-			boot(ctx, listenAddr, mongoURI, dbName, grpcAddr, twitterToken, twitterAccount, tls)
+			boot(ctx, listenAddr, mongoURI, dbName, grpcAddr, twitterToken, twitterAccount, tls, accessToken)
 		}
 	})
 
@@ -45,6 +47,7 @@ func (app *App) Stop() error {
 
 func boot(ctx actor.Context, listenAddr, mongoURI, dbName, grpcAddr, twitterToken, twitterAccount string,
 	tls credentials.TransportCredentials,
+	accessToken *string,
 ) {
 	grpcClientProps := actor.PropsFromProducer(func() actor.Actor {
 		grpcClient, err := cosmos.NewGrpcClient(grpcAddr, tls)
@@ -88,7 +91,7 @@ func boot(ctx actor.Context, listenAddr, mongoURI, dbName, grpcAddr, twitterToke
 	}
 
 	graphqlProps := actor.PropsFromProducer(func() actor.Actor {
-		return graphql.NewActor(listenAddr, mongoURI, dbName)
+		return graphql.NewActor(listenAddr, mongoURI, dbName, eventStorePID, accessToken)
 	})
 	if _, err := ctx.SpawnNamed(graphqlProps, "graphql"); err != nil {
 		log.Panic().Err(err).Str("actor", "graphql").Msg("❌ Could not create actor")

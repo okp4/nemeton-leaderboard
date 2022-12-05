@@ -34,7 +34,25 @@ e.g. `https://okp4.network/`
 """
 scalar URI
 
+"""
+Represents an 8 bytes unsigned integer.
+"""
 scalar UInt64
+
+"""
+Represents a void return type, carrying no value.
+"""
+scalar Void
+
+"""
+Represents a Javascript Object Notation format.
+"""
+scalar JSON
+
+"""
+Authorization needed to perform operation.
+"""
+directive @auth on FIELD_DEFINITION
 
 directive @goField(
     forceResolver: Boolean
@@ -93,6 +111,35 @@ type Query {
         discord: String
         twitter: String
     ): Validator
+}
+
+type Mutation {
+    """
+    Emit a `GenTXSubmittedEvent` in the system carrying information related to a druid participating to the Nemeton program, this contain the combination of technical validator information & application information.
+
+    Through the event handling logic, the validator will be added to the board and the corresponding task completed with points attribution if still in progress.
+    """
+    submitValidatorGenTX(
+        """
+        The validator twitter account.
+        """
+        twitter: String
+
+        """
+        The validator discord account.
+        """
+        discord: String!
+
+        """
+        The validator country.
+        """
+        country: String!
+
+        """
+        The gentx carrying the `MsgCreateValidator` related to this validator.
+        """
+        gentx: JSON!
+    ): Void @auth
 }
 
 """
@@ -315,6 +362,11 @@ type Validator {
     identity: Identity @goField(forceResolver: true)
 
     """
+    The validator details.
+    """
+    details: String
+
+    """
     The validator node valoper address.
     """
     valoper: ValoperAddress!
@@ -414,6 +466,11 @@ type Tasks {
     completedCount: Int!
 
     """
+    The total number of started tasks the validator is supposed to perform.
+    """
+    startedCount: Int!
+
+    """
     The total number of finished tasks the validator was supposed to perform.
     """
     finishedCount: Int!
@@ -437,6 +494,11 @@ type PerPhaseTasks {
     The total number of tasks the validator completed in this phase.
     """
     completedCount: Int!
+
+    """
+    The total number of started tasks the validator is supposed to perform.
+    """
+    startedCount: Int!
 
     """
     The total number of finished tasks in this phase.
