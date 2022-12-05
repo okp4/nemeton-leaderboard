@@ -22,7 +22,7 @@ const (
 	FlagNoTLS          = "no-tls"
 	FlagTLSSkipVerify  = "tls-skip-verify"
 	FlagTwitterToken   = "twitter-token" // nolint:gosec
-	FlagTwitterHashtag = "twitter-hashtag"
+	FlagTwitterAccount = "twitter-account"
 )
 
 var (
@@ -33,13 +33,13 @@ var (
 	noTLS          bool
 	tlsSkipVerify  bool
 	twitterToken   string
-	twitterHashtag string
+	twitterAccount string
 
 	startCmd = &cobra.Command{
 		Use:   "start",
 		Short: "Start the leaderboard service",
 		Run: func(cmd *cobra.Command, args []string) {
-			app := system.Bootstrap(graphqlAddr, mongoURI, dbName, grpcAddress, twitterToken, twitterHashtag, getTransportCredentials())
+			app := system.Bootstrap(graphqlAddr, mongoURI, dbName, grpcAddress, twitterToken, twitterAccount, getTransportCredentials())
 
 			kill := make(chan os.Signal, 1)
 			signal.Notify(kill, syscall.SIGINT, syscall.SIGTERM)
@@ -66,10 +66,10 @@ func init() {
 		false,
 		"Encryption with the GRPC endpoint but skip certificates verification")
 	startCmd.PersistentFlags().StringVar(&twitterToken, FlagTwitterToken, "", "Set the twitter bearer token")
-	startCmd.PersistentFlags().StringVar(&twitterHashtag,
-		FlagTwitterHashtag,
-		"#NemetonOKP4",
-		"Set the twitter hashtag that will stream all tweet")
+	startCmd.PersistentFlags().StringVar(&twitterAccount,
+		FlagTwitterAccount,
+		"@OKP4_Protocol",
+		"Set the twitter account that should be mentioned on tweet to be accepted for twitter task")
 }
 
 func getTransportCredentials() credentials.TransportCredentials {
