@@ -11,6 +11,10 @@ import (
 //
 // It serves as dependency injection for your app, add any dependencies you require here.
 
+type ContextKey int32
+
+const CTXBearerKey = ContextKey(0)
+
 type Resolver struct {
 	actorCTX      actor.Context
 	store         *nemeton.Store

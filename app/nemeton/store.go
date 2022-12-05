@@ -4,11 +4,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"net/url"
 
 	"okp4/nemeton-leaderboard/app/util"
 
-	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/types"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -273,26 +271,9 @@ func (s *Store) CreateValidator(ctx context.Context, discord, country string, tw
 		return err
 	}
 
-	valoper, err := types.ValAddressFromBech32(msgCreateVal.ValidatorAddress)
+	validator, err := MakeValidator(msgCreateVal, discord, country, twitter)
 	if err != nil {
 		return err
-	}
-	delegator, err := types.AccAddressFromBech32(msgCreateVal.DelegatorAddress)
-	if err != nil {
-		return err
-	}
-
-	var website *url.URL
-	if len(msgCreateVal.Description.Website) > 0 {
-		website, err = url.Parse(msgCreateVal.Description.Website)
-		if err != nil {
-			return err
-		}
-	}
-
-	pubkey, ok := msgCreateVal.Pubkey.GetCachedValue().(cryptotypes.PubKey)
-	if !ok {
-		return fmt.Errorf("couldn't parse public key")
 	}
 
 	points := uint64(0)
@@ -314,31 +295,10 @@ func (s *Store) CreateValidator(ctx context.Context, discord, country string, tw
 		}
 	}
 
-	var identity *string
-	if len(msgCreateVal.Description.Identity) > 0 {
-		identity = &msgCreateVal.Description.Identity
-	}
-	var details *string
-	if len(msgCreateVal.Description.Details) > 0 {
-		details = &msgCreateVal.Description.Details
-	}
+	validator.Points = points
+	validator.Tasks = tasks
 
-	_, err = s.db.Collection(validatorsCollectionName).
-		InsertOne(ctx, &Validator{
-			Moniker:   msgCreateVal.Description.Moniker,
-			Identity:  identity,
-			Details:   details,
-			Valoper:   valoper,
-			Delegator: delegator,
-			Valcons:   types.GetConsAddress(pubkey),
-			Twitter:   twitter,
-			Website:   website,
-			Discord:   discord,
-			Country:   country,
-			Status:    "inactive",
-			Points:    points,
-			Tasks:     tasks,
-		})
+	_, err = s.db.Collection(validatorsCollectionName).InsertOne(ctx, validator)
 	return err
 }
 

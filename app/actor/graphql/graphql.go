@@ -17,8 +17,6 @@ import (
 
 var ErrUnauthorized = fmt.Errorf("unauthorized")
 
-const bearerCTXKey = "bearer"
-
 func NewGraphQLServer(
 	ctx context.Context,
 	actorCTX actor.Context,
@@ -57,7 +55,7 @@ func Authorize(ctx context.Context, expectedBearer *string) error {
 }
 
 func GetBearerFrom(ctx context.Context) *string {
-	if bearer, ok := ctx.Value(bearerCTXKey).(string); ok {
+	if bearer, ok := ctx.Value(graphql.CTXBearerKey).(string); ok {
 		return &bearer
 	}
 	return nil
