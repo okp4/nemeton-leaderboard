@@ -1,5 +1,40 @@
 # ØKP4 🧙 Nemeton Leaderboard 🏆
 
+## [1.1.0](https://github.com/okp4/nemeton-leaderboard/compare/v1.0.1...v1.1.0) (2022-12-05)
+
+
+### Features
+
+* **auth:** add middleware to extract bearer in ctx ([1271293](https://github.com/okp4/nemeton-leaderboard/commit/127129355d0423a1d48bc2990b3361790e1830b1))
+* **auth:** introduce [@auth](https://github.com/auth) directive on submit gentx ([dec14b9](https://github.com/okp4/nemeton-leaderboard/commit/dec14b97a68399fd3101487a4f60d9c3159c7f63))
+* **gentx:** implements gentx parsing to extract val ([e6e983d](https://github.com/okp4/nemeton-leaderboard/commit/e6e983d28f1a6af3ad252326b7946a246388e7f0))
+* **gentx:** implements gentx submit mutation evt sending ([889e215](https://github.com/okp4/nemeton-leaderboard/commit/889e215f2974b63ac99fe9b147be5d459a2dac7e))
+* **gentx:** implements gentx submitted event handling ([40f4d8e](https://github.com/okp4/nemeton-leaderboard/commit/40f4d8e9d5af6b0df1835cc65804c575816d4767))
+* **graphql:** add mutation for gentx submission ([7c43217](https://github.com/okp4/nemeton-leaderboard/commit/7c43217d98e689ae970783255c5a33b73b371911))
+* **graphql:** add started task count on validator ([ded2156](https://github.com/okp4/nemeton-leaderboard/commit/ded215660a6265392df0fb64e3d159a26d3bf8cc))
+* **graphql:** add validator details fields ([65c97e0](https://github.com/okp4/nemeton-leaderboard/commit/65c97e0f2270bba483504921dec6d4b75c922bcf))
+* **graphql:** implements json scalar ([9fc03d1](https://github.com/okp4/nemeton-leaderboard/commit/9fc03d1729dce506ebb2c2e5fcb405dcf55e2303))
+* **mongo:** add bson codec for cosmos addr ([7cec838](https://github.com/okp4/nemeton-leaderboard/commit/7cec83831d978faa7eab86f7b6a1e19d8b881c63))
+* **store:** add valcons index ([66939e9](https://github.com/okp4/nemeton-leaderboard/commit/66939e9ed4a2028289b1263b6a0fe1daf563792b))
+* **store:** remove delegator filter in search ([2701c1e](https://github.com/okp4/nemeton-leaderboard/commit/2701c1e6e2d330a4307c38c27606074208de95c1))
+* **subscription:** handle only NewBlockEvent ([fb5a0f0](https://github.com/okp4/nemeton-leaderboard/commit/fb5a0f0ad2ac3a5963f8211a33a589ed790e9aef))
+* **subscription:** remove unnecessary block range struct from validator ([d284b53](https://github.com/okp4/nemeton-leaderboard/commit/d284b53bf6c031cf3c72cb8a3d1bae5be6cdee5a))
+* **subscription:** save current event handler state ([924c1e2](https://github.com/okp4/nemeton-leaderboard/commit/924c1e2a74444f9e1c3588eb9259e14d0fdbaed9))
+* **subscription:** subscribe to event new block ([7e6818c](https://github.com/okp4/nemeton-leaderboard/commit/7e6818cbb2088e93c312634ef1aa2d4a44856ff3))
+* **subscription:** update uptime on nemeton store ([0266a9b](https://github.com/okp4/nemeton-leaderboard/commit/0266a9b2c8baeffd6894e72462c4dade5a7d1dd7))
+* **tasks:** add gentx task type ([8871620](https://github.com/okp4/nemeton-leaderboard/commit/8871620d4e6d4b451274bc661122cc06f8245ad6))
+
+
+### Bug Fixes
+
+* **gentx:** handle nullity on msg fields ([323dbd7](https://github.com/okp4/nemeton-leaderboard/commit/323dbd7f97044a1bd3a06cfbf403b3819a09b538))
+* **gentx:** remove website from mutation inputs ([ed0d254](https://github.com/okp4/nemeton-leaderboard/commit/ed0d254a8488fbde7967b57657a8cc7c8537ce67))
+* **store:** avoid always fetching validators missedBlocks ([e5053e9](https://github.com/okp4/nemeton-leaderboard/commit/e5053e95ae2c9942ab04e1b7e0e6f68b526edc80))
+* **subscription:** fix quering valoper address ([1d7d889](https://github.com/okp4/nemeton-leaderboard/commit/1d7d8891aadb5938b54761c9ccfde247904a5a08))
+* **subscription:** match validator by cons addr instead of valoper ([5353e70](https://github.com/okp4/nemeton-leaderboard/commit/5353e703f296d8cc04f35570595d1fe895ae0314))
+* **tweet:** make linter happy ([5252b98](https://github.com/okp4/nemeton-leaderboard/commit/5252b980a5a113c3c4f53cd60014a27d446909c2))
+* **tweet:** use twitter account instead of hashtag for search tweet ([54928b2](https://github.com/okp4/nemeton-leaderboard/commit/54928b2088b1cb47a60ce531d1cbfa364c434a58))
+
 ## [1.0.1](https://github.com/okp4/nemeton-leaderboard/compare/v1.0.0...v1.0.1) (2022-11-30)
 
 
