@@ -112,6 +112,10 @@ func (a *Actor) handleNewBlockEvent(data map[string]interface{}) {
 	if err := a.store.UpdateValidatorUptime(a.ctx, consensusAddr, e.Height); err != nil {
 		log.Panic().Err(err).Msg("🤕 Failed update validator uptime.")
 	}
+
+	if err := a.store.UpdatePhaseBlocks(a.ctx, e.Time, e.Height); err != nil {
+		log.Panic().Err(err).Msg("🤕 Failed update phase block range.")
+	}
 }
 
 func (a *Actor) handleGenTXSubmittedEvent(when time.Time, data map[string]interface{}) {
