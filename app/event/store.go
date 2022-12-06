@@ -26,6 +26,10 @@ func NewStore(ctx context.Context, mongoURI, dbName string) (*Store, error) {
 	}, nil
 }
 
+func (s *Store) Close(ctx context.Context) error {
+	return s.db.Client().Disconnect(ctx)
+}
+
 func (s *Store) Store(ctx context.Context, evt Event) error {
 	_, err := s.db.Collection(collectionName).InsertOne(ctx, evt)
 	return err

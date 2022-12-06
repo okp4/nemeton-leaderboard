@@ -29,6 +29,10 @@ func NewStore(ctx context.Context, mongoURI, dbName, owner string) (*Store, erro
 	}, nil
 }
 
+func (s *Store) Close(ctx context.Context) error {
+	return s.db.Client().Disconnect(ctx)
+}
+
 func (s *Store) Save(ctx context.Context, offset interface{}) error {
 	_, err := s.db.Collection(collectionName).
 		UpdateOne(

@@ -65,8 +65,14 @@ func (a *Actor) Receive(ctx actor.Context) {
 		})
 	case *message.NewEventMessage:
 		a.receiveNewEvent(e.Event)
-	case *actor.Stopping:
+	case *actor.Restarting, *actor.Stopping:
 		log.Info().Msg("✋ Stop looking new event")
+		if err := a.offsetStore.Close(context.Background()); err != nil {
+			log.Err(err).Msg("❌ Couldn't properly close offset store")
+		}
+		if err := a.store.Close(context.Background()); err != nil {
+			log.Err(err).Msg("❌ Couldn't properly close offset store")
+		}
 	}
 }
 

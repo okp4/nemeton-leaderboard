@@ -53,8 +53,11 @@ func (a *SearchActor) Receive(ctx actor.Context) {
 	case *message.SearchTweet:
 		log.Info().Msg("🧙‍ Start looking for tweets")
 		a.searchTweets(ctx, a.getSinceID(), "", "")
-	case *actor.Stopping:
+	case *actor.Restarting, *actor.Stopping:
 		log.Info().Msg("🛑 Stop twitter search")
+		if err := a.store.Close(context.Background()); err != nil {
+			log.Err(err).Msg("❌ Couldn't properly close offset store")
+		}
 	}
 }
 

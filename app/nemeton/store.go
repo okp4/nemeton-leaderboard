@@ -42,6 +42,10 @@ func NewStore(ctx context.Context, mongoURI, dbName string) (*Store, error) {
 	return store, nil
 }
 
+func (s *Store) Close(ctx context.Context) error {
+	return s.db.Client().Disconnect(ctx)
+}
+
 func (s *Store) init(ctx context.Context) error {
 	phases := s.db.Collection(phasesCollectionName)
 	count, err := phases.CountDocuments(ctx, bson.M{})

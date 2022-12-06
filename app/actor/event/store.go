@@ -28,8 +28,8 @@ func (a *StoreActor) Receive(ctx actor.Context) {
 	switch msg := ctx.Message().(type) {
 	case *actor.Started:
 		a.handleStart()
-	case *actor.Stopping:
-		log.Info().Msg("\U0001F9EF Stopping Event store...")
+	case *actor.Restarting, *actor.Stopping:
+		a.handleStop()
 	case *message.PublishEventMessage:
 		a.handlePublishEvent(msg)
 	case *message.SubscribeEventMessage:
@@ -44,6 +44,13 @@ func (a *StoreActor) handleStart() {
 	}
 	a.store = store
 	log.Info().Msg("🚌 Event store started")
+}
+
+func (a *StoreActor) handleStop() {
+	log.Info().Msg("\U0001F9EF Stopping Event store...")
+	if err := a.store.Close(context.Background()); err != nil {
+		log.Err(err).Msg("❌ Couldn't properly close event store")
+	}
 }
 
 func (a *StoreActor) handlePublishEvent(msg *message.PublishEventMessage) {

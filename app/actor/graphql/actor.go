@@ -31,7 +31,7 @@ func (a *Actor) Receive(ctx actor.Context) {
 	switch ctx.Message().(type) {
 	case *actor.Started:
 		a.handleStart(ctx)
-	case *actor.Stopping:
+	case *actor.Restarting, *actor.Stopping:
 		a.handleStop()
 	}
 }

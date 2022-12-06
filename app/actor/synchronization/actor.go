@@ -67,8 +67,11 @@ func (a *Actor) Receive(ctx actor.Context) {
 		scheduler.NewTimerScheduler(ctx).SendRepeatedly(0, 5*time.Second, ctx.Self(), &message.SyncBlock{})
 	case *message.SyncBlock:
 		a.syncBlock(ctx)
-	case *actor.Stopping:
+	case *actor.Restarting, *actor.Stopping:
 		log.Info().Msg("🛑 Stop block syncing")
+		if err := a.offsetStore.Close(context.Background()); err != nil {
+			log.Err(err).Msg("❌ Couldn't properly close offset store")
+		}
 	}
 }
 
