@@ -57,7 +57,11 @@ func (r *mutationResolver) SubmitValidatorGenTx(ctx context.Context, twitter *st
 
 // Blocks is the resolver for the blocks field.
 func (r *phaseResolver) Blocks(ctx context.Context, obj *nemeton.Phase) (*model.BlockRange, error) {
-	panic(fmt.Errorf("not implemented: Blocks - blocks"))
+	return &model.BlockRange{
+		From:  obj.Blocks.From,
+		To:    obj.Blocks.To,
+		Count: obj.Blocks.To - obj.Blocks.From,
+	}, nil
 }
 
 // All is the resolver for the all field.

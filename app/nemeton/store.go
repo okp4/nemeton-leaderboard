@@ -9,7 +9,6 @@ import (
 	"okp4/nemeton-leaderboard/app/util"
 
 	"github.com/cosmos/cosmos-sdk/types"
-	"github.com/rs/zerolog/log"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -390,7 +389,7 @@ func (s *Store) completeTask(ctx context.Context, when time.Time, filter bson.M,
 }
 
 func (s *Store) UpdatePhaseBlocks(ctx context.Context, blockTime time.Time, height int64) error {
-	r, err := s.db.Collection(phasesCollectionName).UpdateOne(ctx, bson.M{
+	_, err := s.db.Collection(phasesCollectionName).UpdateOne(ctx, bson.M{
 		"startDate": bson.M{"$lte": blockTime},
 		"endDate":   bson.M{"$gt": blockTime},
 	}, bson.A{
@@ -407,6 +406,5 @@ func (s *Store) UpdatePhaseBlocks(ctx context.Context, blockTime time.Time, heig
 		},
 		bson.M{"$set": bson.M{"blocks.to": height}},
 	})
-	log.Info().Interface("r", r)
 	return err
 }
