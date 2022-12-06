@@ -1,5 +1,12 @@
 # ØKP4 🧙 Nemeton Leaderboard 🏆
 
+## [1.1.1](https://github.com/okp4/nemeton-leaderboard/compare/v1.1.0...v1.1.1) (2022-12-06)
+
+
+### Bug Fixes
+
+* **mongo:** avoid client connection leak ([692be49](https://github.com/okp4/nemeton-leaderboard/commit/692be49cb7459cb7b15ba57396228068275ee668))
+
 ## [1.1.0](https://github.com/okp4/nemeton-leaderboard/compare/v1.0.1...v1.1.0) (2022-12-05)
 
 
