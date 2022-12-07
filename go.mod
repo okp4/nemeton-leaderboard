@@ -5,7 +5,7 @@ go 1.19
 require (
 	github.com/99designs/gqlgen v0.17.21
 	github.com/asynkron/protoactor-go v0.0.0-20221002142108-880b460fcd1f
-	github.com/cosmos/btcutil v1.0.4
+	github.com/cosmos/btcutil v1.0.5
 	github.com/cosmos/cosmos-sdk v0.46.4
 	github.com/go-resty/resty/v2 v2.7.0
 	github.com/patrickmn/go-cache v2.1.0+incompatible
