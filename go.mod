@@ -15,7 +15,7 @@ require (
 	github.com/spf13/cobra v1.6.1
 	github.com/tendermint/tendermint v0.34.22
 	github.com/vektah/gqlparser/v2 v2.5.1
-	go.mongodb.org/mongo-driver v1.11.0
+	go.mongodb.org/mongo-driver v1.11.1
 	golang.org/x/net v0.0.0-20220812174116-3211cb980234
 	google.golang.org/grpc v1.50.0
 	gopkg.in/yaml.v2 v2.4.0
