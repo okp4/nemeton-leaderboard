@@ -86,7 +86,7 @@ func (a *Actor) receiveNewEvent(e event.Event) {
 	case graphql.GenTXSubmittedEventType:
 		a.handleGenTXSubmittedEvent(e.Date, e.Data)
 	case tweet.NewTweetEventType:
-		a.handleNewTweetEvent(e.Data)
+		a.handleNewTweetEvent(e.Date, e.Data)
 	default:
 		log.Warn().Msg("⚠️ No event handler for this event.")
 	}
@@ -128,7 +128,7 @@ func (a *Actor) handleGenTXSubmittedEvent(when time.Time, data map[string]interf
 	}
 }
 
-func (a *Actor) handleNewTweetEvent(data map[string]interface{}) {
+func (a *Actor) handleNewTweetEvent(when time.Time, data map[string]interface{}) {
 	log.Info().Interface("event", data).Msg("Handle NewTweet event")
 
 	e, err := tweet.Unmarshall(data)
@@ -136,9 +136,9 @@ func (a *Actor) handleNewTweetEvent(data map[string]interface{}) {
 		log.Panic().Err(err).Msg("❌ Failed unmarshall event to NewTweetEvent")
 		return
 	}
-	phase := a.store.GetCurrentPhase()
+	phase := a.store.GetCurrentPhaseAt(when)
 	for _, task := range phase.Tasks {
-		if task.Type == nemeton.TaskTypeTweetNemeton && task.InProgress() {
+		if task.Type == nemeton.TaskTypeTweetNemeton && task.InProgressAt(when) {
 
 			if !e.CreatedAt.After(task.StartDate) || !e.CreatedAt.Before(task.EndDate) {
 				log.Warn().Time("startDate", task.StartDate).
@@ -148,7 +148,7 @@ func (a *Actor) handleNewTweetEvent(data map[string]interface{}) {
 				continue
 			}
 
-			err := a.store.CompleteTweetTask(a.ctx, e.User.Username, phase, &task)
+			err := a.store.CompleteTweetTask(a.ctx, when, e.User.Username, phase, &task)
 			if err != nil {
 				log.Panic().Err(err).Msg("❌ Could not complete tweet task")
 			}
