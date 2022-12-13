@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	"okp4/nemeton-leaderboard/app/util"
 
@@ -108,9 +109,16 @@ func (s *Store) GetPhase(number int) *Phase {
 	return nil
 }
 
+// GetCurrentPhase returns the phase which is in progress, if any.
+// WARNING: Do not use this when processing and event, the event sourcing shall use only the event's context: we need
+// the phase in progress at the time of the event, not now.
 func (s *Store) GetCurrentPhase() *Phase {
+	return s.GetCurrentPhaseAt(time.Now())
+}
+
+func (s *Store) GetCurrentPhaseAt(at time.Time) *Phase {
 	for _, phase := range s.phases {
-		if phase.InProgress() {
+		if phase.InProgressAt(at) {
 			return phase
 		}
 	}
@@ -269,7 +277,13 @@ func makeBoardFilter(search *string, after *Cursor) bson.M {
 	return filter
 }
 
-func (s *Store) CreateValidator(ctx context.Context, discord, country string, twitter *string, genTX map[string]interface{}) error {
+func (s *Store) CreateValidator(
+	ctx context.Context,
+	createdAt time.Time,
+	discord, country string,
+	twitter *string,
+	genTX map[string]interface{},
+) error {
 	msgCreateVal, err := ParseGenTX(genTX)
 	if err != nil {
 		return err
@@ -282,7 +296,7 @@ func (s *Store) CreateValidator(ctx context.Context, discord, country string, tw
 
 	points := uint64(0)
 	var tasks map[int]map[string]TaskState
-	if p := s.GetCurrentPhase(); p != nil {
+	if p := s.GetCurrentPhaseAt(createdAt); p != nil {
 		for _, task := range p.Tasks {
 			if task.Type == taskTypeGentx && task.InProgress() {
 				points = *task.Rewards
