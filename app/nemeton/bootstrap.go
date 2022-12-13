@@ -40,7 +40,7 @@ You will receive the points once the OKP4 team has integrated your gentx in the 
 How to submit
 Send the issue number in a private message to Anik#9282 on Discord.`,
 					StartDate: time.Date(2022, time.December, 1, 11, 0, 0, 0, time.UTC),
-					EndDate:   time.Date(2022, time.December, 12, 0, 0, 0, 0, time.UTC),
+					EndDate:   time.Date(2022, time.December, 13, 0, 0, 0, 0, time.UTC),
 					Rewards:   &r1000,
 				},
 				{

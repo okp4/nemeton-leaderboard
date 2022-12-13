@@ -110,7 +110,8 @@ func (s *Store) GetPhase(number int) *Phase {
 }
 
 // GetCurrentPhase returns the phase which is in progress, if any.
-// WARNING: Do not use this when processing and event, the event sourcing shall use only the event's context: we need the phase in progress at the time of the event, not now.
+// WARNING: Do not use this when processing and event, the event sourcing shall use only the event's context: we need
+// the phase in progress at the time of the event, not now.
 func (s *Store) GetCurrentPhase() *Phase {
 	return s.GetCurrentPhaseAt(time.Now())
 }
@@ -276,7 +277,13 @@ func makeBoardFilter(search *string, after *Cursor) bson.M {
 	return filter
 }
 
-func (s *Store) CreateValidator(ctx context.Context, createdAt time.Time, discord, country string, twitter *string, genTX map[string]interface{}) error {
+func (s *Store) CreateValidator(
+	ctx context.Context,
+	createdAt time.Time,
+	discord, country string,
+	twitter *string,
+	genTX map[string]interface{},
+) error {
 	msgCreateVal, err := ParseGenTX(genTX)
 	if err != nil {
 		return err
