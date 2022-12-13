@@ -139,7 +139,6 @@ func (a *Actor) handleNewTweetEvent(when time.Time, data map[string]interface{})
 	phase := a.store.GetCurrentPhaseAt(when)
 	for _, task := range phase.Tasks {
 		if task.Type == nemeton.TaskTypeTweetNemeton && task.InProgressAt(when) {
-
 			if !e.CreatedAt.After(task.StartDate) || !e.CreatedAt.Before(task.EndDate) {
 				log.Warn().Time("startDate", task.StartDate).
 					Time("endDate", task.EndDate).
@@ -148,7 +147,7 @@ func (a *Actor) handleNewTweetEvent(when time.Time, data map[string]interface{})
 				continue
 			}
 
-			err := a.store.CompleteTweetTask(a.ctx, when, e.User.Username, phase, &task)
+			err := a.store.CompleteTweetTask(a.ctx, when, e.User.Username, phase, task)
 			if err != nil {
 				log.Panic().Err(err).Msg("❌ Could not complete tweet task")
 			}

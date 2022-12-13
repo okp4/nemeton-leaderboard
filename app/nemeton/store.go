@@ -358,14 +358,14 @@ func (s *Store) UpdateValidatorUptime(ctx context.Context, consensusAddrs []type
 	return err
 }
 
-func (s *Store) CompleteTweetTask(ctx context.Context, when time.Time, username string, phase *Phase, task *Task) error {
+func (s *Store) CompleteTweetTask(ctx context.Context, when time.Time, username string, phase *Phase, task Task) error {
 	filter := bson.M{"twitter": username}
 	return s.completeTask(ctx, when, filter, phase, task)
 }
 
-func (s *Store) completeTask(ctx context.Context, when time.Time, filter bson.M, phase *Phase, task *Task) error {
+func (s *Store) completeTask(ctx context.Context, when time.Time, filter bson.M, phase *Phase, task Task) error {
 	if !phase.InProgressAt(when) || !task.InProgressAt(when) {
-		return errors.New(fmt.Sprintf("could not complete task since task or phase is not in progress at %s", when.Format(time.RFC3339)))
+		return fmt.Errorf("could not complete task since task or phase is not in progress at %s", when.Format(time.RFC3339))
 	}
 
 	c, err := s.db.Collection(validatorsCollectionName).UpdateOne(ctx, filter, bson.M{
