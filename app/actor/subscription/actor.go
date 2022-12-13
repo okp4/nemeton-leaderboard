@@ -7,6 +7,7 @@ import (
 	"okp4/nemeton-leaderboard/graphql"
 
 	"okp4/nemeton-leaderboard/app/actor/synchronization"
+	"okp4/nemeton-leaderboard/app/actor/tweet"
 	"okp4/nemeton-leaderboard/app/event"
 	"okp4/nemeton-leaderboard/app/message"
 	"okp4/nemeton-leaderboard/app/nemeton"
@@ -84,6 +85,8 @@ func (a *Actor) receiveNewEvent(e event.Event) {
 		a.handleNewBlockEvent(e.Data)
 	case graphql.GenTXSubmittedEventType:
 		a.handleGenTXSubmittedEvent(e.Date, e.Data)
+	case tweet.NewTweetEventType:
+		a.handleNewTweetEvent(e.Date, e.Data)
 	default:
 		log.Warn().Msg("⚠️ No event handler for this event.")
 	}
@@ -122,5 +125,33 @@ func (a *Actor) handleGenTXSubmittedEvent(when time.Time, data map[string]interf
 
 	if err := a.store.CreateValidator(context.Background(), when, e.Discord, e.Country, e.Twitter, e.GenTX); err != nil {
 		log.Err(err).Interface("data", data).Msg("🤕 Couldn't create validator")
+	}
+}
+
+func (a *Actor) handleNewTweetEvent(when time.Time, data map[string]interface{}) {
+	log.Info().Interface("event", data).Msg("Handle NewTweet event")
+
+	e, err := tweet.Unmarshall(data)
+	if err != nil {
+		log.Panic().Err(err).Msg("❌ Failed unmarshall event to NewTweetEvent")
+		return
+	}
+	phase := a.store.GetCurrentPhaseAt(when)
+	for _, task := range phase.Tasks {
+		if task.Type == nemeton.TaskTypeTweetNemeton && task.InProgressAt(when) {
+			if !e.CreatedAt.After(task.StartDate) || !e.CreatedAt.Before(task.EndDate) {
+				log.Warn().Time("startDate", task.StartDate).
+					Time("endDate", task.EndDate).
+					Time("tweetDate", e.CreatedAt).
+					Msg("🐦 Tweet has been posted before or after the task time.")
+				continue
+			}
+
+			err := a.store.CompleteTweetTask(a.ctx, when, e.User.Username, phase, task)
+			if err != nil {
+				log.Panic().Err(err).Msg("❌ Could not complete tweet task")
+			}
+			return // We consider that there is only one tweet task by phase
+		}
 	}
 }

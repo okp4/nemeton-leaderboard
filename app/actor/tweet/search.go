@@ -113,6 +113,7 @@ func (a *SearchActor) fetchTweets(sinceID, nextToken string) (*Response, error) 
 	query.Add("query", fmt.Sprintf("%s -is:retweet", a.twitterAccount))
 	query.Add("expansions", "author_id")
 	query.Add("user.fields", "username")
+	query.Add("tweet.fields", "created_at")
 
 	if len(nextToken) > 0 {
 		query.Add("next_token", nextToken)
@@ -159,10 +160,11 @@ func (a *SearchActor) handleTweets(ctx actor.Context, tweets *Response) {
 		}
 
 		e := NewTweetEvent{
-			ID:       tweet.ID,
-			AuthorID: tweet.AuthorID,
-			Text:     tweet.Text,
-			User:     author,
+			ID:        tweet.ID,
+			AuthorID:  tweet.AuthorID,
+			CreatedAt: tweet.CreatedAt,
+			Text:      tweet.Text,
+			User:      author,
 		}
 
 		eventData, err := e.Marshall()

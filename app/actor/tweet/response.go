@@ -1,11 +1,16 @@
 package tweet
 
+import (
+	"time"
+)
+
 type Response struct {
 	Data []struct {
-		ID                  string   `json:"id"`
-		EditHistoryTweetIds []string `json:"edit_history_tweet_ids"`
-		AuthorID            string   `json:"author_id"`
-		Text                string   `json:"text"`
+		ID                  string    `json:"id"`
+		EditHistoryTweetIds []string  `json:"edit_history_tweet_ids"`
+		CreatedAt           time.Time `json:"created_at"`
+		AuthorID            string    `json:"author_id"`
+		Text                string    `json:"text"`
 	} `json:"data"`
 	Includes struct {
 		Users []User `json:"users"`

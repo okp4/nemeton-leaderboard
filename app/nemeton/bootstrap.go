@@ -67,7 +67,7 @@ The validator presence in the consensus will be automatically checked.`,
 				},
 				{
 					ID:   "2",
-					Type: taskTypeTweetNemeton,
+					Type: TaskTypeTweetNemeton,
 					Name: "Tweet about the OKP4 testnet",
 					Description: `When?
 From Dec 12th to Jan 1st.
