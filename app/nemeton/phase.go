@@ -22,3 +22,15 @@ func (p Phase) Finished() bool {
 func (p Phase) InProgress() bool {
 	return p.Started() && !p.Finished()
 }
+
+func (p Phase) StartedAt(at time.Time) bool {
+	return at.After(p.StartDate)
+}
+
+func (p Phase) FinishedAt(at time.Time) bool {
+	return at.After(p.EndDate)
+}
+
+func (p Phase) InProgressAt(at time.Time) bool {
+	return p.StartedAt(at) && !p.FinishedAt(at)
+}

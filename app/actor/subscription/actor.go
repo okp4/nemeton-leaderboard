@@ -2,6 +2,7 @@ package subscription
 
 import (
 	"context"
+	"time"
 
 	"okp4/nemeton-leaderboard/graphql"
 
@@ -82,7 +83,7 @@ func (a *Actor) receiveNewEvent(e event.Event) {
 	case synchronization.NewBlockEventType:
 		a.handleNewBlockEvent(e.Data)
 	case graphql.GenTXSubmittedEventType:
-		a.handleGenTXSubmittedEvent(e.Data)
+		a.handleGenTXSubmittedEvent(e.Date, e.Data)
 	default:
 		log.Warn().Msg("⚠️ No event handler for this event.")
 	}
@@ -110,7 +111,7 @@ func (a *Actor) handleNewBlockEvent(data map[string]interface{}) {
 	}
 }
 
-func (a *Actor) handleGenTXSubmittedEvent(data map[string]interface{}) {
+func (a *Actor) handleGenTXSubmittedEvent(when time.Time, data map[string]interface{}) {
 	log.Info().Interface("event", data).Msg("Handle GenTXSubmitted event")
 
 	e, err := graphql.Unmarshall(data)
@@ -119,7 +120,7 @@ func (a *Actor) handleGenTXSubmittedEvent(data map[string]interface{}) {
 		return
 	}
 
-	if err := a.store.CreateValidator(context.Background(), e.Discord, e.Country, e.Twitter, e.GenTX); err != nil {
+	if err := a.store.CreateValidator(context.Background(), when, e.Discord, e.Country, e.Twitter, e.GenTX); err != nil {
 		log.Err(err).Interface("data", data).Msg("🤕 Couldn't create validator")
 	}
 }

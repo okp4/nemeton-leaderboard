@@ -32,6 +32,18 @@ func (t Task) InProgress() bool {
 	return t.Started() && !t.Finished()
 }
 
+func (t Task) StartedAt(at time.Time) bool {
+	return at.After(t.StartDate)
+}
+
+func (t Task) FinishedAt(at time.Time) bool {
+	return at.After(t.EndDate)
+}
+
+func (t Task) InProgressAt(at time.Time) bool {
+	return t.StartedAt(at) && !t.FinishedAt(at)
+}
+
 func (t Task) WithSubmission() bool {
 	return t.Type == taskTypeSubmission
 }
