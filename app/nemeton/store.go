@@ -408,3 +408,17 @@ func (s *Store) UpdatePhaseBlocks(ctx context.Context, blockTime time.Time, heig
 	})
 	return err
 }
+
+func (s *Store) GetPhaseBlocks(ctx context.Context, number int) (*BlockRange, error) {
+	var phase struct {
+		Blocks *BlockRange `bson:"blocks"`
+	}
+	if err := s.db.Collection(phasesCollectionName).FindOne(ctx,
+		bson.M{"_id": number},
+		options.FindOne().SetProjection(bson.M{"blocks": 1}),
+	).Decode(&phase); err != nil {
+		return nil, err
+	}
+
+	return phase.Blocks, nil
+}
