@@ -1105,9 +1105,9 @@ type Phase {
     tasks: [Task!]!
 
     """
-    The current block range of the phase. In the case the phase hasn't started its size is 0, for a phase in progress the range will evolve.
+    The current block range of the phase, if any.
     """
-    blocks: BlockRange! @goField(forceResolver: true)
+    blocks: BlockRange @goField(forceResolver: true)
 }
 
 """
@@ -1170,7 +1170,7 @@ type BlockRange {
     from: Int!
 
     """
-    The block height the range end, inclusive.
+    The block height the range end, exclusive.
     """
     to: Int!
 
@@ -3135,14 +3135,11 @@ func (ec *executionContext) _Phase_blocks(ctx context.Context, field graphql.Col
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
 		return graphql.Null
 	}
 	res := resTmp.(*model.BlockRange)
 	fc.Result = res
-	return ec.marshalNBlockRange2ᚖokp4ᚋnemetonᚑleaderboardᚋgraphqlᚋmodelᚐBlockRange(ctx, field.Selections, res)
+	return ec.marshalOBlockRange2ᚖokp4ᚋnemetonᚑleaderboardᚋgraphqlᚋmodelᚐBlockRange(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Phase_blocks(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -7999,9 +7996,6 @@ func (ec *executionContext) _Phase(ctx context.Context, sel ast.SelectionSet, ob
 					}
 				}()
 				res = ec._Phase_blocks(ctx, field, obj)
-				if res == graphql.Null {
-					atomic.AddUint32(&invalids, 1)
-				}
 				return res
 			}
 
@@ -9070,10 +9064,6 @@ func (ec *executionContext) marshalNAccAddress2githubᚗcomᚋcosmosᚋcosmosᚑ
 	return res
 }
 
-func (ec *executionContext) marshalNBlockRange2okp4ᚋnemetonᚑleaderboardᚋgraphqlᚋmodelᚐBlockRange(ctx context.Context, sel ast.SelectionSet, v model.BlockRange) graphql.Marshaler {
-	return ec._BlockRange(ctx, sel, &v)
-}
-
 func (ec *executionContext) marshalNBlockRange2ᚕᚖokp4ᚋnemetonᚑleaderboardᚋgraphqlᚋmodelᚐBlockRangeᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.BlockRange) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
@@ -9930,6 +9920,13 @@ func (ec *executionContext) marshalOAccAddress2githubᚗcomᚋcosmosᚋcosmosᚑ
 	}
 	res := scalar.MarshalAccAddress(v)
 	return res
+}
+
+func (ec *executionContext) marshalOBlockRange2ᚖokp4ᚋnemetonᚑleaderboardᚋgraphqlᚋmodelᚐBlockRange(ctx context.Context, sel ast.SelectionSet, v *model.BlockRange) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._BlockRange(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalOBoolean2bool(ctx context.Context, v interface{}) (bool, error) {

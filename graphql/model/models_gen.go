@@ -47,7 +47,7 @@ func (this BasicTaskState) GetEarnedPoints() uint64 { return this.EarnedPoints }
 type BlockRange struct {
 	// The block height the range begin, inclusive.
 	From int `json:"from"`
-	// The block height the range end, inclusive.
+	// The block height the range end, exclusive.
 	To int `json:"to"`
 	// The size of the range (i.e. `size` =  `to` - `from`).
 	Count int `json:"count"`
