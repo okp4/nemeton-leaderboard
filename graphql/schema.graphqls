@@ -212,9 +212,9 @@ type Phase {
     tasks: [Task!]!
 
     """
-    The current block range of the phase. In the case the phase hasn't started its size is 0, for a phase in progress the range will evolve.
+    The current block range of the phase, if any.
     """
-    blocks: BlockRange! @goField(forceResolver: true)
+    blocks: BlockRange @goField(forceResolver: true)
 }
 
 """
@@ -277,7 +277,7 @@ type BlockRange {
     from: Int!
 
     """
-    The block height the range end, inclusive.
+    The block height the range end, exclusive.
     """
     to: Int!
 

@@ -385,6 +385,40 @@ func (s *Store) completeTask(ctx context.Context, when time.Time, filter bson.M,
 			},
 		})
 	}
-
 	return err
+}
+
+func (s *Store) UpdatePhaseBlocks(ctx context.Context, blockTime time.Time, height int64) error {
+	_, err := s.db.Collection(phasesCollectionName).UpdateOne(ctx, bson.M{
+		"startDate": bson.M{"$lte": blockTime},
+		"endDate":   bson.M{"$gt": blockTime},
+	}, bson.A{
+		bson.M{
+			"$set": bson.M{
+				"blocks": bson.M{
+					"$ifNull": bson.A{
+						"$blocks",
+						bson.M{"from": height, "to": height + 1},
+						"$blocks",
+					},
+				},
+			},
+		},
+		bson.M{"$set": bson.M{"blocks.to": height + 1}},
+	})
+	return err
+}
+
+func (s *Store) GetPhaseBlocks(ctx context.Context, number int) (*BlockRange, error) {
+	var phase struct {
+		Blocks *BlockRange `bson:"blocks"`
+	}
+	if err := s.db.Collection(phasesCollectionName).FindOne(ctx,
+		bson.M{"_id": number},
+		options.FindOne().SetProjection(bson.M{"blocks": 1}),
+	).Decode(&phase); err != nil {
+		return nil, err
+	}
+
+	return phase.Blocks, nil
 }

@@ -1,6 +1,8 @@
 package nemeton
 
-import "time"
+import (
+	"time"
+)
 
 type Phase struct {
 	Number      int       `bson:"_id"`
