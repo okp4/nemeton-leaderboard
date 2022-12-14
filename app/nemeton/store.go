@@ -398,13 +398,13 @@ func (s *Store) UpdatePhaseBlocks(ctx context.Context, blockTime time.Time, heig
 				"blocks": bson.M{
 					"$ifNull": bson.A{
 						"$blocks",
-						bson.M{"from": height, "to": height},
+						bson.M{"from": height, "to": height + 1},
 						"$blocks",
 					},
 				},
 			},
 		},
-		bson.M{"$set": bson.M{"blocks.to": height}},
+		bson.M{"$set": bson.M{"blocks.to": height + 1}},
 	})
 	return err
 }
