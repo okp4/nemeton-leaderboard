@@ -82,24 +82,9 @@ func (a *Actor) syncBlock(ctx actor.Context) {
 		return
 	}
 
-	blockEvent := NewBlockEvent{
-		Height:     block.Header.Height,
-		Time:       block.Header.Time,
-		Signatures: block.LastCommit.Signatures,
-	}
-
-	blockData, err := blockEvent.Marshall()
+	err = a.publishEvent(ctx, block)
 	if err != nil {
 		log.Err(err).Msg("❌ Failed to marshall event to map interface")
-		return
-	}
-
-	ctx.Send(a.eventStore, &message.PublishEventMessage{Event: event.NewEvent(NewBlockEventType, blockData)})
-
-	log.Info().Int64("blockHeight", block.Header.Height).Msg("Successful request block")
-
-	if a.offsetStore.Save(a.context, block.Header.Height) != nil {
-		log.Err(err).Msg("❌ Failed saved current block height into database")
 		return
 	}
 
@@ -136,21 +121,9 @@ func (a *Actor) catchUpSyncBlocks(ctx actor.Context) error {
 			log.Panic().Err(err).Msg("❌ Could not get block for sync.")
 		}
 
-		blockEvent := NewBlockEvent{
-			Height:     block.Header.Height,
-			Time:       block.Header.Time,
-			Signatures: block.LastCommit.Signatures,
-		}
-
-		blockData, err := blockEvent.Marshall()
+		err = a.publishEvent(ctx, block)
 		if err != nil {
-			log.Panic().Err(err).Msg("❌ Failed to marshall event to map interface")
-		}
-
-		ctx.Send(a.eventStore, &message.PublishEventMessage{Event: event.NewEvent(NewBlockEventType, blockData)})
-
-		if a.offsetStore.Save(a.context, block.Header.Height) != nil {
-			log.Panic().Err(err).Msg("❌ Failed saved block height into database")
+			log.Panic().Err(err).Msg("❌ Failed publish block event on sync")
 		}
 
 		log.Info().Int64("blockHeight", block.Header.Height).Msg("Successful request block on sync")
@@ -176,4 +149,25 @@ func (a *Actor) getBlock(ctx actor.Context, height int64) (*tmservice.Block, err
 	}
 
 	return block, nil
+}
+
+func (a *Actor) publishEvent(ctx actor.Context, block *tmservice.Block) error {
+	blockEvent := NewBlockEvent{
+		Height:     block.Header.Height,
+		Time:       block.Header.Time,
+		Signatures: block.LastCommit.Signatures,
+	}
+
+	blockData, err := blockEvent.Marshall()
+	if err != nil {
+		return err
+	}
+
+	ctx.Send(a.eventStore, &message.PublishEventMessage{Event: event.NewEvent(NewBlockEventType, blockData)})
+
+	if a.offsetStore.Save(a.context, block.Header.Height) != nil {
+		return err
+	}
+
+	return nil
 }
