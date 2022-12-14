@@ -1,5 +1,30 @@
 # ØKP4 🧙 Nemeton Leaderboard 🏆
 
+## [1.2.0](https://github.com/okp4/nemeton-leaderboard/compare/v1.1.1...v1.2.0) (2022-12-14)
+
+
+### Features
+
+* **phase:** add query to update phase block range ([27da464](https://github.com/okp4/nemeton-leaderboard/commit/27da4643009022181e67bf100ff05e8a6c973c2e))
+* **phase:** return block range on graphql phase ([35260fd](https://github.com/okp4/nemeton-leaderboard/commit/35260fdc2aee56a7c59fcf058bc3c182ead5dead))
+* **phase:** update phase block range on new block ([99880d9](https://github.com/okp4/nemeton-leaderboard/commit/99880d994ea1fd2f52524db9caf356dad1ba6ccb))
+* **tweet:** handle tweet event ([1f083a0](https://github.com/okp4/nemeton-leaderboard/commit/1f083a0baf935940dc43f8021e9f0ab8b99dac57))
+* **tweet:** increment point if task is validated ([e37c48e](https://github.com/okp4/nemeton-leaderboard/commit/e37c48ee9719bdb0eec8b5935525732d5c23cf47))
+
+
+### Bug Fixes
+
+* **ci:** fix lint go ([3c9a0e0](https://github.com/okp4/nemeton-leaderboard/commit/3c9a0e0e4e7d56824d2513adabda55b74f70da73))
+* **ci:** make linter happy ([9d26039](https://github.com/okp4/nemeton-leaderboard/commit/9d26039659e4c9bbcc075914123f4fe8f2368f1a))
+* **graphql:** dissociate phase blocks fetch from phase ([7047db9](https://github.com/okp4/nemeton-leaderboard/commit/7047db9f67149e687f847d5c7291ff82353c1fa1))
+* **graphql:** make phase block range optional ([8d96bb2](https://github.com/okp4/nemeton-leaderboard/commit/8d96bb2cf8ba7a63cd1af1e25be4247d6509ddbc))
+* **phase:** incorrect date for phase 2 ([370eb81](https://github.com/okp4/nemeton-leaderboard/commit/370eb814734f1d365d547d49dc2fb9c96e34bea3))
+* **phase:** make block range to exclusif ([6aec212](https://github.com/okp4/nemeton-leaderboard/commit/6aec2127f83c4833edce4f2c17293a5bb45e93c4))
+* **store:** handle event in their time context ([4bf6879](https://github.com/okp4/nemeton-leaderboard/commit/4bf6879c706ff0299c6d1d411bd03a5612a820c3))
+* **tasks:** update first task end date ([ed1be39](https://github.com/okp4/nemeton-leaderboard/commit/ed1be3914c92f2436814a974eb1e1ecb1c427b48))
+* **tweet:** handle tweet on event date instead of now ([b90efdc](https://github.com/okp4/nemeton-leaderboard/commit/b90efdc58fc533c891b025a88aa463bb6210e096))
+* **tweet:** only earn point if tweet has been posted on task period ([84d2426](https://github.com/okp4/nemeton-leaderboard/commit/84d2426a8c5672330570304ed3f629ad5df6d642))
+
 ## [1.1.1](https://github.com/okp4/nemeton-leaderboard/compare/v1.1.0...v1.1.1) (2022-12-06)
 
 
