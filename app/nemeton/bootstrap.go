@@ -147,7 +147,7 @@ Share the content links to botanik#4248 on Discord. Only one submission per drui
 			Number:      2,
 			Name:        "Imbolc",
 			Description: "The second phase is focused on testing Druids' performance and uptime. Maintenance tasks and upgrades will be performed to test different kinds of state migrations.",
-			StartDate:   time.Date(2022, time.January, 2, 0, 0, 0, 0, time.UTC),
+			StartDate:   time.Date(2023, time.January, 2, 0, 0, 0, 0, time.UTC),
 			EndDate:     time.Date(2023, time.January, 31, 23, 59, 59, 0, time.UTC),
 		},
 		{
