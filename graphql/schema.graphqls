@@ -506,6 +506,11 @@ type PerPhaseTasks {
     finishedCount: Int!
 
     """
+    The current points earned by the validator in this phase.
+    """
+    points: UInt64!
+
+    """
     The phase we're talking about.
     """
     phase: Phase!
