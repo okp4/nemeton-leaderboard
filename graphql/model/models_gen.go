@@ -100,6 +100,8 @@ type PerPhaseTasks struct {
 	StartedCount int `json:"startedCount"`
 	// The total number of finished tasks in this phase.
 	FinishedCount int `json:"finishedCount"`
+	// The current points earned by the validator in this phase.
+	Points uint64 `json:"points"`
 	// The phase we're talking about.
 	Phase *nemeton.Phase `json:"phase"`
 	// The current status of the phase's tasks for a validator.

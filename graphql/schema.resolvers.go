@@ -208,6 +208,7 @@ func (r *validatorResolver) Tasks(ctx context.Context, obj *nemeton.Validator) (
 			CompletedCount: 0,
 			StartedCount:   0,
 			FinishedCount:  0,
+			Points:         0,
 			Phase:          phase,
 		}
 		for i, task := range phase.Tasks {
@@ -229,6 +230,7 @@ func (r *validatorResolver) Tasks(ctx context.Context, obj *nemeton.Validator) (
 				perPhase.FinishedCount++
 			}
 			perPhase.Tasks = append(perPhase.Tasks, mappedState)
+			perPhase.Points += mappedState.EarnedPoints
 		}
 
 		result.CompletedCount += perPhase.CompletedCount
