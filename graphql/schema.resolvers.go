@@ -203,7 +203,7 @@ func (r *validatorResolver) Tasks(ctx context.Context, obj *nemeton.Validator) (
 		StartedCount:   0,
 		FinishedCount:  0,
 	}
-	for _, phase := range append(r.store.GetFinishedPhases(), r.store.GetCurrentPhase()) {
+	for _, phase := range r.store.GetAllPhases() {
 		perPhase := &model.PerPhaseTasks{
 			CompletedCount: 0,
 			StartedCount:   0,
