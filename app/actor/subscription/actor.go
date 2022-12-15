@@ -113,6 +113,10 @@ func (a *Actor) handleNewBlockEvent(data map[string]interface{}) {
 		logger.Panic().Err(err).Msg("🤕 Failed update validator uptime.")
 	}
 
+	if err := a.store.CompleteNodeSetupTask(a.ctx, e.Time, consensusAddr); err != nil {
+		logger.Panic().Err(err).Msg("🤕 Failed update validator node setup task.")
+	}
+
 	if err := a.store.UpdatePhaseBlocks(a.ctx, e.Time, e.Height); err != nil {
 		logger.Panic().Err(err).Msg("🤕 Failed update phase block range.")
 	}

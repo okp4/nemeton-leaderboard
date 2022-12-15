@@ -3,9 +3,9 @@ package nemeton
 import "time"
 
 const (
-	taskTypeBasic        = "basic"
 	taskTypeGentx        = "gentx"
 	taskTypeSubmission   = "submission"
+	taskTypeNodeSetup    = "node-setup"
 	taskTypeUptime       = "uptime"
 	TaskTypeTweetNemeton = "tweet-nemeton"
 )
