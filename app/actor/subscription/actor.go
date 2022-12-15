@@ -96,25 +96,29 @@ func (a *Actor) receiveNewEvent(e event.Event) {
 }
 
 func (a *Actor) handleNewBlockEvent(data map[string]interface{}) {
-	log.Info().Interface("event", data).Msg("Handle NewBlock event")
-
 	e, err := synchronization.Unmarshall(data)
 	if err != nil {
 		log.Panic().Err(err).Msg("❌ Failed unmarshall event to NewBlockEvent")
 		return
 	}
 
+	logger := log.With().Time("blockTime", e.Time).Int64("height", e.Height).Logger()
+	logger.Info().Msg("Handle NewBlock event")
 	consensusAddr := make([]types.ConsAddress, len(e.Signatures))
 	for i, signature := range e.Signatures {
 		consensusAddr[i] = signature.GetValidatorAddress()
 	}
 
 	if err := a.store.UpdateValidatorUptime(a.ctx, consensusAddr, e.Height); err != nil {
-		log.Panic().Err(err).Msg("🤕 Failed update validator uptime.")
+		logger.Panic().Err(err).Msg("🤕 Failed update validator uptime.")
+	}
+
+	if err := a.store.CompleteNodeSetupTask(a.ctx, e.Time, consensusAddr); err != nil {
+		logger.Panic().Err(err).Msg("🤕 Failed update validator node setup task.")
 	}
 
 	if err := a.store.UpdatePhaseBlocks(a.ctx, e.Time, e.Height); err != nil {
-		log.Panic().Err(err).Msg("🤕 Failed update phase block range.")
+		logger.Panic().Err(err).Msg("🤕 Failed update phase block range.")
 	}
 }
 

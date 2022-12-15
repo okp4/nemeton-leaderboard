@@ -298,7 +298,7 @@ func (s *Store) CreateValidator(
 	var tasks map[int]map[string]TaskState
 	if p := s.GetCurrentPhaseAt(createdAt); p != nil {
 		for _, task := range p.Tasks {
-			if task.Type == taskTypeGentx && task.InProgress() {
+			if task.Type == taskTypeGentx && task.InProgressAt(createdAt) {
 				points = *task.Rewards
 				tasks = map[int]map[string]TaskState{
 					p.Number: {
@@ -360,31 +360,42 @@ func (s *Store) UpdateValidatorUptime(ctx context.Context, consensusAddrs []type
 
 func (s *Store) CompleteTweetTask(ctx context.Context, when time.Time, username string, phase *Phase, task Task) error {
 	filter := bson.M{"twitter": username}
-	return s.completeTask(ctx, when, filter, phase, task)
-}
-
-func (s *Store) completeTask(ctx context.Context, when time.Time, filter bson.M, phase *Phase, task Task) error {
 	if !phase.InProgressAt(when) || !task.InProgressAt(when) {
 		return fmt.Errorf("could not complete task since task or phase is not in progress at %s", when.Format(time.RFC3339))
 	}
 
-	c, err := s.db.Collection(validatorsCollectionName).UpdateOne(ctx, filter, bson.M{
-		"$set": bson.M{
-			fmt.Sprintf("tasks.%d.%s.completed", phase.Number, task.ID): true,
-			fmt.Sprintf("tasks.%d.%s.points", phase.Number, task.ID):    task.Rewards,
-		},
-	})
-	if err != nil {
-		return err
-	}
+	return s.ensureTaskCompleted(ctx, filter, phase.Number, task.ID, *task.Rewards)
+}
 
-	if c.ModifiedCount == 1 {
-		_, err = s.db.Collection(validatorsCollectionName).UpdateOne(ctx, filter, bson.M{
+func (s *Store) CompleteNodeSetupTask(ctx context.Context, when time.Time, vals []types.ConsAddress) error {
+	phase := s.GetCurrentPhaseAt(when)
+	if phase != nil {
+		for _, task := range phase.Tasks {
+			if task.Type == taskTypeNodeSetup && task.InProgressAt(when) {
+				return s.ensureTaskCompleted(ctx, bson.M{"valcons": bson.M{"$in": vals}}, phase.Number, task.ID, *task.Rewards)
+			}
+		}
+	}
+	return nil
+}
+
+func (s *Store) ensureTaskCompleted(ctx context.Context, filter bson.M, phase int, task string, rewards uint64) error {
+	_, err := s.db.Collection(validatorsCollectionName).UpdateMany(ctx,
+		bson.M{
+			"$and": bson.A{
+				filter,
+				bson.M{fmt.Sprintf("tasks.%d.%s.completed", phase, task): bson.M{"$ne": true}},
+			},
+		},
+		bson.M{
+			"$set": bson.M{
+				fmt.Sprintf("tasks.%d.%s.completed", phase, task): true,
+				fmt.Sprintf("tasks.%d.%s.points", phase, task):    rewards,
+			},
 			"$inc": bson.M{
-				"points": task.Rewards,
+				"points": rewards,
 			},
 		})
-	}
 	return err
 }
 

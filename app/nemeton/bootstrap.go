@@ -45,7 +45,7 @@ Send the issue number in a private message to Anik#9282 on Discord.`,
 				},
 				{
 					ID:   "1",
-					Type: taskTypeBasic,
+					Type: taskTypeNodeSetup,
 					Name: "Setup your node",
 					Description: `When?
 From Dec 14th at 15pm UTC to Jan 1st.
