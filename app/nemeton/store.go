@@ -433,3 +433,17 @@ func (s *Store) GetPhaseBlocks(ctx context.Context, number int) (*BlockRange, er
 
 	return phase.Blocks, nil
 }
+
+func (s *Store) GetPreviousPhaseByBlock(ctx context.Context, height int64) (*Phase, error) {
+	res := s.db.Collection(phasesCollectionName).
+		FindOne(ctx, bson.M{"blocks.to": height - 1}, options.FindOne())
+	if err := res.Err(); err != nil {
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	var phase Phase
+	return &phase, res.Decode(&phase)
+}
