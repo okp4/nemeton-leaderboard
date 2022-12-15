@@ -1,5 +1,15 @@
 # ØKP4 🧙 Nemeton Leaderboard 🏆
 
+## [1.3.0](https://github.com/okp4/nemeton-leaderboard/compare/v1.2.0...v1.3.0) (2022-12-15)
+
+
+### Features
+
+* **graphql:** return all phases in per phase validator tasks ([d3762c8](https://github.com/okp4/nemeton-leaderboard/commit/d3762c8215c70c588a3efeb4f241200ad1ba14bc))
+* **graphql:** return the points earned per phase ([86e650a](https://github.com/okp4/nemeton-leaderboard/commit/86e650ae15439ab908986e9d921d1ee528f910d9))
+* **logging:** log essential infos on new block event handling ([52af41b](https://github.com/okp4/nemeton-leaderboard/commit/52af41b87e52119b45020194a7f2a98813af4b10))
+* **task:** implements node setup task completion ([7ca6a1d](https://github.com/okp4/nemeton-leaderboard/commit/7ca6a1dc65bc68156b7dc1a0a1002b9cccae409f))
+
 ## [1.2.0](https://github.com/okp4/nemeton-leaderboard/compare/v1.1.1...v1.2.0) (2022-12-14)
 
 
