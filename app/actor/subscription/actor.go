@@ -186,7 +186,12 @@ func (a *Actor) handleNewTweetEvent(when time.Time, data map[string]interface{})
 }
 
 func (a *Actor) handlePhaseEnded(phase *nemeton.Phase) {
-	// TODO: update validator uptime
+	err := a.store.CompleteValidatorsUptimeForPhase(a.ctx, phase)
+	if err != nil {
+		log.Panic().Err(err).Msg("❌⏱️ An error occurs fetch uptime validators.")
+		return
+	}
+	log.Info().Int("phaseNumber", phase.Number).Msg("✅ Uptime points for phase has been set.")
 }
 
 func (a *Actor) handlePhaseStarted(phase *nemeton.Phase) {

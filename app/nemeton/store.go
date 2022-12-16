@@ -447,3 +447,98 @@ func (s *Store) GetPreviousPhaseByBlock(ctx context.Context, height int64) (*Pha
 	var phase Phase
 	return &phase, res.Decode(&phase)
 }
+
+// CompleteValidatorsUptimeForPhase is used to concat all missed blocks on a given phase and calculate the number of
+// points rewarded.
+func (s *Store) CompleteValidatorsUptimeForPhase(ctx context.Context, phase *Phase) error {
+	_, err := s.db.Collection(validatorsCollectionName).Aggregate(ctx, bson.A{
+		bson.M{"$lookup": bson.M{
+			"from": "phases",
+			"pipeline": bson.A{
+				bson.M{"$match": bson.M{"_id": phase.Number}},
+				bson.M{"$project": bson.M{"blocks": 1}},
+			},
+			"as": "currentPhase",
+		}},
+		bson.M{"$unwind": bson.M{"path": "$missedBlocks", "preserveNullAndEmptyArrays": true}},
+		bson.M{"$unwind": bson.M{"path": "$currentPhase"}},
+		bson.M{"$replaceRoot": bson.M{
+			"newRoot": bson.M{
+				"count": bson.M{
+					"$switch": bson.M{
+						"branches": bson.A{
+							bson.M{
+								"case": bson.M{"$and": bson.A{bson.M{"$gte": bson.A{"$missedBlocks.from", "$currentPhase.blocks.from"}}, bson.M{"$lte": bson.A{"$missedBlocks.to", "$currentPhase.blocks.to"}}}},
+								"then": bson.M{"$subtract": bson.A{"$missedBlocks.to", "$missedBlocks.from"}},
+							},
+							bson.M{
+								"case": bson.M{"$and": bson.A{
+									bson.M{"$lt": bson.A{"$missedBlocks.from", "$currentPhase.blocks.from"}},
+									bson.M{"$lte": bson.A{"$missedBlocks.to", "$currentPhase.blocks.to"}},
+									bson.M{"$gte": bson.A{"$missedBlocks.to", "$currentPhase.blocks.from"}},
+								}},
+								"then": bson.M{"$subtract": bson.A{"$missedBlocks.to", "$currentPhase.blocks.from"}},
+							},
+							bson.M{
+								"case": bson.M{"$and": bson.A{
+									bson.M{"$gte": bson.A{"$missedBlocks.from", "$currentPhase.blocks.from"}},
+									bson.M{"$gt": bson.A{"$missedBlocks.to", "$currentPhase.blocks.to"}},
+									bson.M{"$lte": bson.A{"$missedBlocks.from", "$currentPhase.blocks.to"}},
+								}},
+								"then": bson.M{"$subtract": bson.A{"$currentPhase.blocks.to", "$missedBlocks.from"}},
+							},
+						},
+						"default": 0,
+					},
+				},
+				"currentPhase": "$currentPhase",
+				"validator":    "$_id",
+				"points":       "$points",
+			},
+		}},
+		bson.M{"$group": bson.M{
+			"_id":              "$validator",
+			"totalMissedBlock": bson.M{"$sum": "$count"},
+			"phase":            bson.M{"$mergeObjects": "$currentPhase"},
+			"points":           bson.M{"$first": "$points"},
+		}},
+		bson.M{"$addFields": bson.M{
+			"uptime": bson.M{"$subtract": bson.A{
+				bson.M{
+					"$pow": bson.A{2501, bson.M{
+						"$multiply": bson.A{0.01, bson.M{
+							"$subtract": bson.A{100, bson.M{"$divide": bson.A{
+								bson.M{"$multiply": bson.A{100, "$totalMissedBlock"}},
+								bson.M{"$subtract": bson.A{"$phase.blocks.to", "$phase.blocks.from"}},
+							}}},
+						}},
+					}},
+				},
+				1,
+			}},
+		}},
+		bson.M{"$addFields": bson.M{
+			"newPoints": bson.M{"$add": bson.A{"$points", "$uptime"}},
+		}},
+		bson.M{"$merge": bson.M{
+			"into": "validators",
+			"on":   "_id",
+			"let":  bson.M{"uptime": "$uptime", "newPoints": "$newPoints"},
+			"whenMatched": bson.A{
+				bson.M{
+					"$set": bson.M{
+						"tasks.1.3.points":    "$$uptime",
+						"tasks.1.3.completed": true,
+						"points":              "$$newPoints",
+					},
+				},
+			},
+			"whenNotMatched": "discard",
+		}},
+	})
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
