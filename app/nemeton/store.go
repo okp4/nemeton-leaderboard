@@ -450,12 +450,14 @@ func (s *Store) GetPreviousPhaseByBlock(ctx context.Context, height int64) (*Pha
 
 // CompleteValidatorsUptimeForPhase is used to concat all missed blocks on a given phase and calculate the number of
 // points rewarded.
+//
+//nolint:funlen
 func (s *Store) CompleteValidatorsUptimeForPhase(ctx context.Context, phase *Phase) error {
-	var taskId string
+	var taskID string
 	if phase != nil {
 		for _, task := range phase.Tasks {
 			if task.Type == taskTypeUptime {
-				taskId = task.ID
+				taskID = task.ID
 				break
 			}
 		}
@@ -478,7 +480,10 @@ func (s *Store) CompleteValidatorsUptimeForPhase(ctx context.Context, phase *Pha
 					"$switch": bson.M{
 						"branches": bson.A{
 							bson.M{
-								"case": bson.M{"$and": bson.A{bson.M{"$gte": bson.A{"$missedBlocks.from", "$currentPhase.blocks.from"}}, bson.M{"$lte": bson.A{"$missedBlocks.to", "$currentPhase.blocks.to"}}}},
+								"case": bson.M{"$and": bson.A{
+									bson.M{"$gte": bson.A{"$missedBlocks.from", "$currentPhase.blocks.from"}},
+									bson.M{"$lte": bson.A{"$missedBlocks.to", "$currentPhase.blocks.to"}},
+								}},
 								"then": bson.M{"$subtract": bson.A{"$missedBlocks.to", "$missedBlocks.from"}},
 							},
 							bson.M{
@@ -537,8 +542,8 @@ func (s *Store) CompleteValidatorsUptimeForPhase(ctx context.Context, phase *Pha
 			"whenMatched": bson.A{
 				bson.M{
 					"$set": bson.M{
-						fmt.Sprintf("tasks.%d.%s.points", phase.Number, taskId):    "$$uptime",
-						fmt.Sprintf("tasks.%d.%s.completed", phase.Number, taskId): true,
+						fmt.Sprintf("tasks.%d.%s.points", phase.Number, taskID):    "$$uptime",
+						fmt.Sprintf("tasks.%d.%s.completed", phase.Number, taskID): true,
 						"points": "$$newPoints",
 					},
 				},
