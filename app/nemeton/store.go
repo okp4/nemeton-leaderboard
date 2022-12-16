@@ -436,7 +436,7 @@ func (s *Store) GetPhaseBlocks(ctx context.Context, number int) (*BlockRange, er
 
 func (s *Store) GetPreviousPhaseByBlock(ctx context.Context, height int64) (*Phase, error) {
 	res := s.db.Collection(phasesCollectionName).
-		FindOne(ctx, bson.M{"blocks.to": height - 1}, options.FindOne())
+		FindOne(ctx, bson.M{"blocks.to": height}, options.FindOne())
 	if err := res.Err(); err != nil {
 		if errors.Is(err, mongo.ErrNoDocuments) {
 			return nil, nil
@@ -451,6 +451,16 @@ func (s *Store) GetPreviousPhaseByBlock(ctx context.Context, height int64) (*Pha
 // CompleteValidatorsUptimeForPhase is used to concat all missed blocks on a given phase and calculate the number of
 // points rewarded.
 func (s *Store) CompleteValidatorsUptimeForPhase(ctx context.Context, phase *Phase) error {
+	var taskId string
+	if phase != nil {
+		for _, task := range phase.Tasks {
+			if task.Type == taskTypeUptime {
+				taskId = task.ID
+				break
+			}
+		}
+	}
+
 	_, err := s.db.Collection(validatorsCollectionName).Aggregate(ctx, bson.A{
 		bson.M{"$lookup": bson.M{
 			"from": "phases",
@@ -527,9 +537,9 @@ func (s *Store) CompleteValidatorsUptimeForPhase(ctx context.Context, phase *Pha
 			"whenMatched": bson.A{
 				bson.M{
 					"$set": bson.M{
-						"tasks.1.3.points":    "$$uptime",
-						"tasks.1.3.completed": true,
-						"points":              "$$newPoints",
+						fmt.Sprintf("tasks.%d.%s.points", phase.Number, taskId):    "$$uptime",
+						fmt.Sprintf("tasks.%d.%s.completed", phase.Number, taskId): true,
+						"points": "$$newPoints",
 					},
 				},
 			},
