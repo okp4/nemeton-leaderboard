@@ -84,7 +84,7 @@ func (a *Actor) syncBlock(ctx actor.Context) {
 
 	err = a.publishEvent(ctx, block)
 	if err != nil {
-		log.Err(err).Msg("❌ Failed to marshall event to map interface")
+		log.Err(err).Msg("❌ Failed publish block event")
 		return
 	}
 
