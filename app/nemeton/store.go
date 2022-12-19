@@ -542,9 +542,9 @@ func (s *Store) CompleteValidatorsUptimeForPhase(ctx context.Context, phase *Pha
 			"whenMatched": bson.A{
 				bson.M{
 					"$set": bson.M{
-						fmt.Sprintf("tasks.%d.%s.points", phase.Number, taskID):    "$$uptime",
+						fmt.Sprintf("tasks.%d.%s.points", phase.Number, taskID):    bson.M{"$toLong": "$$uptime"},
 						fmt.Sprintf("tasks.%d.%s.completed", phase.Number, taskID): true,
-						"points": "$$newPoints",
+						"points": bson.M{"$toLong": "$$newPoints"},
 					},
 				},
 			},
