@@ -215,6 +215,11 @@ func (r *validatorResolver) Identity(ctx context.Context, obj *nemeton.Validator
 	}, nil
 }
 
+// RPCEndpoint is the resolver for the rpcEndpoint field.
+func (r *validatorResolver) RPCEndpoint(ctx context.Context, obj *nemeton.Validator) (*url.URL, error) {
+	return obj.RPCEndpoint, nil
+}
+
 // Status is the resolver for the status field.
 func (r *validatorResolver) Status(ctx context.Context, obj *nemeton.Validator) (model.ValidatorStatus, error) {
 	panic(fmt.Errorf("not implemented: Status - status"))

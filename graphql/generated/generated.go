@@ -157,6 +157,7 @@ type ComplexityRoot struct {
 		MissedBlocks func(childComplexity int) int
 		Moniker      func(childComplexity int) int
 		Points       func(childComplexity int) int
+		RPCEndpoint  func(childComplexity int) int
 		Rank         func(childComplexity int) int
 		Status       func(childComplexity int) int
 		Tasks        func(childComplexity int) int
@@ -202,6 +203,7 @@ type ValidatorResolver interface {
 
 	Identity(ctx context.Context, obj *nemeton.Validator) (*model.Identity, error)
 
+	RPCEndpoint(ctx context.Context, obj *nemeton.Validator) (*url.URL, error)
 	Status(ctx context.Context, obj *nemeton.Validator) (model.ValidatorStatus, error)
 
 	Tasks(ctx context.Context, obj *nemeton.Validator) (*model.Tasks, error)
@@ -686,6 +688,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Validator.Points(childComplexity), true
+
+	case "Validator.rpcEndpoint":
+		if e.complexity.Validator.RPCEndpoint == nil {
+			break
+		}
+
+		return e.complexity.Validator.RPCEndpoint(childComplexity), true
 
 	case "Validator.rank":
 		if e.complexity.Validator.Rank == nil {
@@ -1220,6 +1229,11 @@ type Validator {
     The validator country.
     """
     country: String!
+
+    """
+    The validator rpc node endpoint.
+    """
+    rpcEndpoint: URI
 
     """
     The validator current status.
@@ -3549,6 +3563,8 @@ func (ec *executionContext) fieldContext_Query_validator(ctx context.Context, fi
 				return ec.fieldContext_Validator_discord(ctx, field)
 			case "country":
 				return ec.fieldContext_Validator_country(ctx, field)
+			case "rpcEndpoint":
+				return ec.fieldContext_Validator_rpcEndpoint(ctx, field)
 			case "status":
 				return ec.fieldContext_Validator_status(ctx, field)
 			case "points":
@@ -4893,6 +4909,47 @@ func (ec *executionContext) fieldContext_Validator_country(ctx context.Context, 
 	return fc, nil
 }
 
+func (ec *executionContext) _Validator_rpcEndpoint(ctx context.Context, field graphql.CollectedField, obj *nemeton.Validator) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Validator_rpcEndpoint(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Validator().RPCEndpoint(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*url.URL)
+	fc.Result = res
+	return ec.marshalOURI2ᚖnetᚋurlᚐURL(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Validator_rpcEndpoint(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Validator",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type URI does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Validator_status(ctx context.Context, field graphql.CollectedField, obj *nemeton.Validator) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Validator_status(ctx, field)
 	if err != nil {
@@ -5192,6 +5249,8 @@ func (ec *executionContext) fieldContext_ValidatorEdge_node(ctx context.Context,
 				return ec.fieldContext_Validator_discord(ctx, field)
 			case "country":
 				return ec.fieldContext_Validator_country(ctx, field)
+			case "rpcEndpoint":
+				return ec.fieldContext_Validator_rpcEndpoint(ctx, field)
 			case "status":
 				return ec.fieldContext_Validator_status(ctx, field)
 			case "points":
@@ -7905,6 +7964,23 @@ func (ec *executionContext) _Validator(ctx context.Context, sel ast.SelectionSet
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)
 			}
+		case "rpcEndpoint":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Validator_rpcEndpoint(ctx, field, obj)
+				return res
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
 		case "status":
 			field := field
 

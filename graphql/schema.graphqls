@@ -410,6 +410,11 @@ type Validator {
     country: String!
 
     """
+    The validator rpc node endpoint.
+    """
+    rpcEndpoint: URI
+
+    """
     The validator current status.
     """
     status: ValidatorStatus!

@@ -11,20 +11,21 @@ import (
 )
 
 type Validator struct {
-	ID        primitive.ObjectID           `bson:"_id,omitempty"`
-	Moniker   string                       `bson:"moniker"`
-	Identity  *string                      `bson:"identity,omitempty"`
-	Details   *string                      `bson:"details,omitempty"`
-	Valoper   types.ValAddress             `bson:"valoper"`
-	Delegator types.AccAddress             `bson:"delegator"`
-	Valcons   types.ConsAddress            `bson:"valcons"`
-	Twitter   *string                      `bson:"twitter,omitempty"`
-	Website   *url.URL                     `bson:"website,omitempty"`
-	Discord   string                       `bson:"discord"`
-	Country   string                       `bson:"country"`
-	Status    string                       `bson:"status"`
-	Points    uint64                       `bson:"points"`
-	Tasks     map[int]map[string]TaskState `bson:"tasks"`
+	ID          primitive.ObjectID           `bson:"_id,omitempty"`
+	Moniker     string                       `bson:"moniker"`
+	Identity    *string                      `bson:"identity,omitempty"`
+	Details     *string                      `bson:"details,omitempty"`
+	Valoper     types.ValAddress             `bson:"valoper"`
+	Delegator   types.AccAddress             `bson:"delegator"`
+	Valcons     types.ConsAddress            `bson:"valcons"`
+	Twitter     *string                      `bson:"twitter,omitempty"`
+	Website     *url.URL                     `bson:"website,omitempty"`
+	Discord     string                       `bson:"discord"`
+	Country     string                       `bson:"country"`
+	RPCEndpoint *url.URL                     `bson:"rpcEndpoint"`
+	Status      string                       `bson:"status"`
+	Points      uint64                       `bson:"points"`
+	Tasks       map[int]map[string]TaskState `bson:"tasks"`
 }
 
 func MakeValidator(createMsg *stakingtypes.MsgCreateValidator, discord, country string, twitter *string) (*Validator, error) {
