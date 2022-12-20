@@ -209,7 +209,7 @@ func (a *Actor) handleRegisterRPCEndpointEvent(data map[string]interface{}) {
 		return
 	}
 
-	if err := a.store.RegisterValidatorRPC(a.ctx, e.Moniker, e.Url); err != nil {
+	if err := a.store.RegisterValidatorRPC(a.ctx, e.Moniker, e.URL); err != nil {
 		log.Err(err).Interface("data", data).Msg("🤕 Couldn't register/update validator rpc endpoint")
 	}
 }
