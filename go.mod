@@ -173,3 +173,5 @@ require (
 )
 
 replace github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
+
+replace go.opentelemetry.io/otel/metric => go.opentelemetry.io/otel/metric v0.30.0
