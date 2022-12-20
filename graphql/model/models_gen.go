@@ -6,9 +6,8 @@ import (
 	"fmt"
 	"io"
 	"net/url"
-	"strconv"
-
 	"okp4/nemeton-leaderboard/app/nemeton"
+	"strconv"
 )
 
 // Represents a blockchain block range.

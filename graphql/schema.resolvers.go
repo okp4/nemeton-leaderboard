@@ -7,6 +7,7 @@ package graphql
 import (
 	"context"
 	"fmt"
+	"net/url"
 
 	"okp4/nemeton-leaderboard/app/event"
 	"okp4/nemeton-leaderboard/app/message"
@@ -54,6 +55,11 @@ func (r *mutationResolver) SubmitValidatorGenTx(ctx context.Context, twitter *st
 		},
 	)
 	return nil, nil
+}
+
+// RegisterRPCEndpoint is the resolver for the registerRPCEndpoint field.
+func (r *mutationResolver) RegisterRPCEndpoint(ctx context.Context, validator string, url *url.URL) (*string, error) {
+	panic(fmt.Errorf("not implemented: RegisterRPCEndpoint - registerRPCEndpoint"))
 }
 
 // Blocks is the resolver for the blocks field.
