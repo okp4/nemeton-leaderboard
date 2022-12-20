@@ -76,7 +76,7 @@ type ComplexityRoot struct {
 	}
 
 	Mutation struct {
-		RegisterRPCEndpoint  func(childComplexity int, validator string, url *url.URL) int
+		RegisterRPCEndpoint  func(childComplexity int, moniker string, url *url.URL) int
 		SubmitValidatorGenTx func(childComplexity int, twitter *string, discord string, country string, gentx map[string]interface{}) int
 	}
 
@@ -177,7 +177,7 @@ type IdentityResolver interface {
 }
 type MutationResolver interface {
 	SubmitValidatorGenTx(ctx context.Context, twitter *string, discord string, country string, gentx map[string]interface{}) (*string, error)
-	RegisterRPCEndpoint(ctx context.Context, validator string, url *url.URL) (*string, error)
+	RegisterRPCEndpoint(ctx context.Context, moniker string, url *url.URL) (*string, error)
 }
 type PhaseResolver interface {
 	Blocks(ctx context.Context, obj *nemeton.Phase) (*model.BlockRange, error)
@@ -203,7 +203,6 @@ type ValidatorResolver interface {
 
 	Identity(ctx context.Context, obj *nemeton.Validator) (*model.Identity, error)
 
-	RPCEndpoint(ctx context.Context, obj *nemeton.Validator) (*url.URL, error)
 	Status(ctx context.Context, obj *nemeton.Validator) (model.ValidatorStatus, error)
 
 	Tasks(ctx context.Context, obj *nemeton.Validator) (*model.Tasks, error)
@@ -291,7 +290,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.RegisterRPCEndpoint(childComplexity, args["validator"].(string), args["url"].(*url.URL)), true
+		return e.complexity.Mutation.RegisterRPCEndpoint(childComplexity, args["moniker"].(string), args["url"].(*url.URL)), true
 
 	case "Mutation.submitValidatorGenTX":
 		if e.complexity.Mutation.SubmitValidatorGenTx == nil {
@@ -970,9 +969,9 @@ type Mutation {
     """
     registerRPCEndpoint(
         """
-        The validator ID that will register the RPC endpoint.
+        The validator moniker that will register the RPC endpoint.
         """
-        validator: ID!
+        moniker: String!
 
         """
         The RPC endpoint url of validator.
@@ -1391,14 +1390,14 @@ func (ec *executionContext) field_Mutation_registerRPCEndpoint_args(ctx context.
 	var err error
 	args := map[string]interface{}{}
 	var arg0 string
-	if tmp, ok := rawArgs["validator"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("validator"))
-		arg0, err = ec.unmarshalNID2string(ctx, tmp)
+	if tmp, ok := rawArgs["moniker"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("moniker"))
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["validator"] = arg0
+	args["moniker"] = arg0
 	var arg1 *url.URL
 	if tmp, ok := rawArgs["url"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("url"))
@@ -2085,7 +2084,7 @@ func (ec *executionContext) _Mutation_registerRPCEndpoint(ctx context.Context, f
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		directive0 := func(rctx context.Context) (interface{}, error) {
 			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Mutation().RegisterRPCEndpoint(rctx, fc.Args["validator"].(string), fc.Args["url"].(*url.URL))
+			return ec.resolvers.Mutation().RegisterRPCEndpoint(rctx, fc.Args["moniker"].(string), fc.Args["url"].(*url.URL))
 		}
 		directive1 := func(ctx context.Context) (interface{}, error) {
 			if ec.directives.Auth == nil {
@@ -4923,7 +4922,7 @@ func (ec *executionContext) _Validator_rpcEndpoint(ctx context.Context, field gr
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Validator().RPCEndpoint(rctx, obj)
+		return obj.RPCEndpoint, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -4941,8 +4940,8 @@ func (ec *executionContext) fieldContext_Validator_rpcEndpoint(ctx context.Conte
 	fc = &graphql.FieldContext{
 		Object:     "Validator",
 		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
+		IsMethod:   false,
+		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type URI does not have child fields")
 		},
@@ -7965,22 +7964,9 @@ func (ec *executionContext) _Validator(ctx context.Context, sel ast.SelectionSet
 				atomic.AddUint32(&invalids, 1)
 			}
 		case "rpcEndpoint":
-			field := field
 
-			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._Validator_rpcEndpoint(ctx, field, obj)
-				return res
-			}
+			out.Values[i] = ec._Validator_rpcEndpoint(ctx, field, obj)
 
-			out.Concurrently(i, func() graphql.Marshaler {
-				return innerFunc(ctx)
-
-			})
 		case "status":
 			field := field
 

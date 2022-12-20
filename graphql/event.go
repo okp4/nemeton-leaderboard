@@ -38,8 +38,8 @@ func Unmarshall(data map[string]interface{}) (*GenTXSubmittedEvent, error) {
 }
 
 type RegisterRPCEndpointEvent struct {
-	Validator string   `json:"validator"`
-	url       *url.URL `json:"url"`
+	Moniker string   `json:"moniker"`
+	Url     *url.URL `json:"url"`
 }
 
 func (e *RegisterRPCEndpointEvent) Marshall() (map[string]interface{}, error) {

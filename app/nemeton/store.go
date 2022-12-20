@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/url"
 	"time"
 
 	"okp4/nemeton-leaderboard/app/util"
@@ -317,6 +318,18 @@ func (s *Store) CreateValidator(
 	validator.Tasks = tasks
 
 	_, err = s.db.Collection(validatorsCollectionName).InsertOne(ctx, validator)
+	return err
+}
+
+func (s *Store) RegisterValidatorRPC(ctx context.Context, moniker string, rpc *url.URL) error {
+	filter := bson.M{"moniker": moniker}
+	_, err := s.db.Collection(validatorsCollectionName).UpdateOne(ctx,
+		filter,
+		bson.M{"$set": bson.M{"rpcEndpoint": rpc}},
+	)
+
+	// TODO: get phase and task to add rewards.
+	// s.ensureTaskCompleted(ctx, filter)
 	return err
 }
 
