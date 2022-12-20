@@ -4,9 +4,6 @@ import "time"
 
 // nolint: funlen,lll
 func bootstrapPhases() []Phase {
-	r1000 := uint64(1000)
-	r2000 := uint64(2000)
-	r500 := uint64(500)
 	return []Phase{
 		{
 			Number:      1,
@@ -15,11 +12,10 @@ func bootstrapPhases() []Phase {
 			StartDate:   time.Date(2022, time.December, 1, 11, 0, 0, 0, time.UTC),
 			EndDate:     time.Date(2023, time.January, 1, 23, 59, 59, 0, time.UTC),
 			Tasks: []Task{
-				{
-					ID:   "0",
-					Type: taskTypeGentx,
-					Name: "Submit your gentx",
-					Description: `When?
+				makeGentxTask(
+					"0",
+					"Submit your gentx",
+					`When?
 From Dec 1st to Dec 12th.
 
 Description
@@ -39,15 +35,14 @@ You will receive the points once the OKP4 team has integrated your gentx in the 
 
 How to submit
 Send the issue number in a private message to Anik#9282 on Discord.`,
-					StartDate: time.Date(2022, time.December, 1, 11, 0, 0, 0, time.UTC),
-					EndDate:   time.Date(2022, time.December, 13, 0, 0, 0, 0, time.UTC),
-					Rewards:   &r1000,
-				},
-				{
-					ID:   "1",
-					Type: taskTypeNodeSetup,
-					Name: "Setup your node",
-					Description: `When?
+					time.Date(2022, time.December, 1, 11, 0, 0, 0, time.UTC),
+					time.Date(2022, time.December, 13, 0, 0, 0, 0, time.UTC),
+					1000,
+				),
+				makeNodeSetupTask(
+					"1",
+					"Setup your node",
+					`When?
 From Dec 14th at 15pm UTC to Jan 1st.
 
 Description
@@ -61,15 +56,14 @@ Your validator is up and running.
 
 How to submit
 The validator presence in the consensus will be automatically checked.`,
-					StartDate: time.Date(2022, time.December, 14, 15, 0, 0, 0, time.UTC),
-					EndDate:   time.Date(2023, time.January, 1, 23, 59, 59, 0, time.UTC),
-					Rewards:   &r2000,
-				},
-				{
-					ID:   "2",
-					Type: TaskTypeTweetNemeton,
-					Name: "Tweet about the OKP4 testnet",
-					Description: `When?
+					time.Date(2022, time.December, 14, 15, 0, 0, 0, time.UTC),
+					time.Date(2023, time.January, 1, 23, 59, 59, 0, time.UTC),
+					2000,
+				),
+				makeTweetNemetonTask(
+					"2",
+					"Tweet about the OKP4 testnet",
+					`When?
 From Dec 12th to Jan 1st.
 No rush to tweet about it when the task opens – it is better to spread them across that period.
 
@@ -85,15 +79,14 @@ You will receive the points once the OKP4 team has reviewed your tweet.
 
 How to submit
 Tweets are automatically tracked.`,
-					StartDate: time.Date(2022, time.December, 12, 0, 0, 0, 0, time.UTC),
-					EndDate:   time.Date(2023, time.January, 1, 23, 59, 59, 0, time.UTC),
-					Rewards:   &r500,
-				},
-				{
-					ID:   "3",
-					Type: taskTypeUptime,
-					Name: "Uptime",
-					Description: `When?
+					time.Date(2022, time.December, 12, 0, 0, 0, 0, time.UTC),
+					time.Date(2023, time.January, 1, 23, 59, 59, 0, time.UTC),
+					500,
+				),
+				makeUptimeTask(
+					"3",
+					"Uptime",
+					`When?
 From Dec 14th at 15pm UTC to Jan 1st.
 
 Description
@@ -107,14 +100,14 @@ The less blocks your validator miss, the more points you get.
 
 How to submit
 Missed blocks are automatically tracked.`,
-					StartDate: time.Date(2022, time.December, 14, 16, 0, 0, 0, time.UTC),
-					EndDate:   time.Date(2023, time.January, 1, 23, 59, 59, 0, time.UTC),
-				},
-				{
-					ID:   "4",
-					Type: taskTypeSubmission,
-					Name: "Submit an original content related to validation",
-					Description: `When?
+					time.Date(2022, time.December, 14, 16, 0, 0, 0, time.UTC),
+					time.Date(2023, time.January, 1, 23, 59, 59, 0, time.UTC),
+					2500,
+				),
+				makeSubmissionTask(
+					"4",
+					"Submit an original content related to validation",
+					`When?
 From Dec 12th to Jan 1st
 
 Description
@@ -138,9 +131,9 @@ Non-relevant submissions or low-value ones will earn 0 points.
 
 How to submit
 Share the content links to botanik#4248 on Discord. Only one submission per druid will be studied.`,
-					StartDate: time.Date(2022, time.December, 12, 0, 0, 0, 0, time.UTC),
-					EndDate:   time.Date(2023, time.January, 1, 23, 59, 59, 0, time.UTC),
-				},
+					time.Date(2022, time.December, 12, 0, 0, 0, 0, time.UTC),
+					time.Date(2023, time.January, 1, 23, 59, 59, 0, time.UTC),
+				),
 			},
 		},
 		{
@@ -149,6 +142,47 @@ Share the content links to botanik#4248 on Discord. Only one submission per drui
 			Description: "The second phase is focused on testing Druids' performance and uptime. Maintenance tasks and upgrades will be performed to test different kinds of state migrations.",
 			StartDate:   time.Date(2023, time.January, 2, 0, 0, 0, 0, time.UTC),
 			EndDate:     time.Date(2023, time.January, 31, 23, 59, 59, 0, time.UTC),
+			Tasks: []Task{
+				makeRPCTask(
+					"0",
+					"Expose RPC node",
+					"",
+					time.Date(2023, time.January, 2, 0, 0, 0, 0, time.UTC),
+					time.Date(2023, time.January, 31, 23, 59, 59, 0, time.UTC),
+					1500,
+				),
+				makeSnapshotsTask(
+					"1",
+					"Provide snapshots",
+					"",
+					time.Date(2023, time.January, 2, 0, 0, 0, 0, time.UTC),
+					time.Date(2023, time.January, 31, 23, 59, 59, 0, time.UTC),
+					2000,
+				),
+				makeDashboardTask(
+					"2",
+					"Provide dashboard for the OKP4 network",
+					"",
+					time.Date(2023, time.January, 2, 0, 0, 0, 0, time.UTC),
+					time.Date(2023, time.January, 31, 23, 59, 59, 0, time.UTC),
+				),
+				makeTweetNemetonTask(
+					"3",
+					"Tweet about the uptime war",
+					"",
+					time.Date(2023, time.January, 2, 0, 0, 0, 0, time.UTC),
+					time.Date(2023, time.January, 31, 23, 59, 59, 0, time.UTC),
+					500,
+				),
+				makeUptimeTask(
+					"4",
+					"Uptime war: prevent getting jailed!",
+					"",
+					time.Date(2023, time.January, 2, 0, 0, 0, 0, time.UTC),
+					time.Date(2023, time.January, 31, 23, 59, 59, 0, time.UTC),
+					15000,
+				),
+			},
 		},
 		{
 			Number:      3,
