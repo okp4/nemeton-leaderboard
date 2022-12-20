@@ -11,38 +11,6 @@ import (
 	"okp4/nemeton-leaderboard/app/nemeton"
 )
 
-// Represents the progress/result of a task assigned to a validator.
-type TaskState interface {
-	IsTaskState()
-	// The task we're talking about.
-	GetTask() *nemeton.Task
-	// `true` if the validator  completed this task.
-	GetCompleted() bool
-	// The number of points earned by the validator on this task.
-	GetEarnedPoints() uint64
-}
-
-// Represents the state of a basic task.
-type BasicTaskState struct {
-	// The task we're talking about.
-	Task *nemeton.Task `json:"task"`
-	// `true` if the validator  completed this task.
-	Completed bool `json:"completed"`
-	// The number of points earned by the validator on this task.
-	EarnedPoints uint64 `json:"earnedPoints"`
-}
-
-func (BasicTaskState) IsTaskState() {}
-
-// The task we're talking about.
-func (this BasicTaskState) GetTask() *nemeton.Task { return this.Task }
-
-// `true` if the validator  completed this task.
-func (this BasicTaskState) GetCompleted() bool { return this.Completed }
-
-// The number of points earned by the validator on this task.
-func (this BasicTaskState) GetEarnedPoints() uint64 { return this.EarnedPoints }
-
 // Represents a blockchain block range.
 type BlockRange struct {
 	// The block height the range begin, inclusive.
@@ -105,7 +73,7 @@ type PerPhaseTasks struct {
 	// The phase we're talking about.
 	Phase *nemeton.Phase `json:"phase"`
 	// The current status of the phase's tasks for a validator.
-	Tasks []TaskState `json:"tasks"`
+	Tasks []*TaskState `json:"tasks"`
 }
 
 // Represents a Phases payload
@@ -120,28 +88,15 @@ type Phases struct {
 	Current *nemeton.Phase `json:"current"`
 }
 
-// Represents the state of a specific task requiring a manual submission from the validator.
-type SubmissionTask struct {
+// Represents the progress/result of a task assigned to a validator.
+type TaskState struct {
 	// The task we're talking about.
 	Task *nemeton.Task `json:"task"`
 	// `true` if the validator  completed this task.
 	Completed bool `json:"completed"`
 	// The number of points earned by the validator on this task.
 	EarnedPoints uint64 `json:"earnedPoints"`
-	// `true` if the validator has submitted the content expected for the task.
-	Submitted bool `json:"submitted"`
 }
-
-func (SubmissionTask) IsTaskState() {}
-
-// The task we're talking about.
-func (this SubmissionTask) GetTask() *nemeton.Task { return this.Task }
-
-// `true` if the validator  completed this task.
-func (this SubmissionTask) GetCompleted() bool { return this.Completed }
-
-// The number of points earned by the validator on this task.
-func (this SubmissionTask) GetEarnedPoints() uint64 { return this.EarnedPoints }
 
 // Contains information relative to the state of the tasks a validator shall perform.
 type Tasks struct {
@@ -156,35 +111,6 @@ type Tasks struct {
 	// Details the tasks state a validator is supposed to perform in the specified phase.
 	ForPhase *PerPhaseTasks `json:"forPhase"`
 }
-
-// Represents the state of a specific task of uptime.
-type UptimeTask struct {
-	// The task we're talking about.
-	Task *nemeton.Task `json:"task"`
-	// `true` if the validator  completed this task.
-	Completed bool `json:"completed"`
-	// The number of points earned by the validator on this task.
-	EarnedPoints uint64 `json:"earnedPoints"`
-	// The total number of blocks expected to be signed.
-	BlockCount int `json:"blockCount"`
-	// The number of missed blocks.
-	MissedBlockCount int `json:"missedBlockCount"`
-	// The missed block ranges.
-	MissedBlocks []*BlockRange `json:"missedBlocks"`
-	// The ratio of signed blocks.
-	Ratio int `json:"ratio"`
-}
-
-func (UptimeTask) IsTaskState() {}
-
-// The task we're talking about.
-func (this UptimeTask) GetTask() *nemeton.Task { return this.Task }
-
-// `true` if the validator  completed this task.
-func (this UptimeTask) GetCompleted() bool { return this.Completed }
-
-// The number of points earned by the validator on this task.
-func (this UptimeTask) GetEarnedPoints() uint64 { return this.EarnedPoints }
 
 // Represents an edge to a validator.
 type ValidatorEdge struct {

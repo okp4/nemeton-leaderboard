@@ -212,7 +212,7 @@ func (r *validatorResolver) Tasks(ctx context.Context, obj *nemeton.Validator) (
 			Phase:          phase,
 		}
 		for i, task := range phase.Tasks {
-			mappedState := &model.BasicTaskState{
+			mappedState := &model.TaskState{
 				Task: &phase.Tasks[i],
 			}
 			if state := obj.Task(phase.Number, task.ID); state != nil {
