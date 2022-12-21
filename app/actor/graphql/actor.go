@@ -13,11 +13,12 @@ type Actor struct {
 	mongoURI   string
 	dbName     string
 	eventStore *actor.PID
+	grpcClient *actor.PID
 	bearer     *string
 	srv        *server
 }
 
-func NewActor(httpAddr, mongoURI, dbName string, eventStore *actor.PID, bearer *string) *Actor {
+func NewActor(httpAddr, mongoURI, dbName string, eventStore, grpcClient *actor.PID, bearer *string) *Actor {
 	return &Actor{
 		addr:       httpAddr,
 		mongoURI:   mongoURI,

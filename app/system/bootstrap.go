@@ -57,6 +57,10 @@ func boot(ctx actor.Context, listenAddr, mongoURI, dbName, grpcAddr, twitterToke
 
 		return grpcClient
 	})
+	grpcClientPID, err := ctx.SpawnNamed(grpcClientProps, "grpc-client")
+	if err != nil {
+		log.Panic().Err(err).Msg("❌ Could not create grpc client actor")
+	}
 
 	eventStoreProps := actor.PropsFromProducer(func() actor.Actor {
 		return event.NewEventStoreActor(mongoURI, dbName)
@@ -69,7 +73,7 @@ func boot(ctx actor.Context, listenAddr, mongoURI, dbName, grpcAddr, twitterToke
 	startSubscriber(ctx, eventStorePID, mongoURI, dbName)
 
 	blockSync := actor.PropsFromProducer(func() actor.Actor {
-		sync, err := synchronization.NewActor(grpcClientProps, eventStorePID, mongoURI, dbName)
+		sync, err := synchronization.NewActor(eventStorePID, grpcClientPID, mongoURI, dbName)
 		if err != nil {
 			log.Panic().Err(err).Msg("❌ Could not start block synchronisation actor")
 		}
@@ -91,7 +95,7 @@ func boot(ctx actor.Context, listenAddr, mongoURI, dbName, grpcAddr, twitterToke
 	}
 
 	graphqlProps := actor.PropsFromProducer(func() actor.Actor {
-		return graphql.NewActor(listenAddr, mongoURI, dbName, eventStorePID, accessToken)
+		return graphql.NewActor(listenAddr, mongoURI, dbName, eventStorePID, grpcClientPID, accessToken)
 	})
 	if _, err := ctx.SpawnNamed(graphqlProps, "graphql"); err != nil {
 		log.Panic().Err(err).Str("actor", "graphql").Msg("❌ Could not create actor")
