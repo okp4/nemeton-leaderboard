@@ -57,8 +57,9 @@ func (t Task) InProgressAt(at time.Time) bool {
 
 func (t Task) GetUptimeMaxPoints() *uint64 {
 	if v, ok := t.Params[taskParamUptimeMaxPoints]; ok {
-		if maxPoints, ok := v.(uint64); ok {
-			return &maxPoints
+		if maxPoints, ok := v.(int64); ok {
+			p := uint64(maxPoints)
+			return &p
 		}
 	}
 	return nil
