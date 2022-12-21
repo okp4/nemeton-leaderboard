@@ -5,10 +5,12 @@ import (
 	"net/url"
 
 	"github.com/cosmos/cosmos-sdk/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 const (
 	GenTXSubmittedEventType      = "gentx-submitted"
+	ValidatorRegisteredEventType = "validator-registered"
 	RegisterRPCEndpointEventType = "register-rpc-endpoint"
 )
 
@@ -29,14 +31,40 @@ func (e *GenTXSubmittedEvent) Marshall() (map[string]interface{}, error) {
 	return event, err
 }
 
-func Unmarshall(data map[string]interface{}) (*GenTXSubmittedEvent, error) {
-	var event *GenTXSubmittedEvent
+func (e *GenTXSubmittedEvent) Unmarshall(data map[string]interface{}) error {
 	d, err := json.Marshal(data)
+	if err != nil {
+		return err
+	}
+
+	return json.Unmarshal(d, e)
+}
+
+type ValidatorRegisteredEvent struct {
+	Twitter   *string                `json:"twitter,omitempty"`
+	Discord   string                 `json:"discord"`
+	Country   string                 `json:"country"`
+	Delegator types.AccAddress       `json:"delegator"`
+	Validator stakingtypes.Validator `json:"validator"`
+}
+
+func (e *ValidatorRegisteredEvent) Marshall() (map[string]interface{}, error) {
+	var event map[string]interface{}
+	data, err := json.Marshal(&e)
 	if err != nil {
 		return nil, err
 	}
-	err = json.Unmarshal(d, &event)
+	err = json.Unmarshal(data, &event)
 	return event, err
+}
+
+func (e *ValidatorRegisteredEvent) Unmarshall(data map[string]interface{}) error {
+	d, err := json.Marshal(data)
+	if err != nil {
+		return err
+	}
+
+	return json.Unmarshal(d, e)
 }
 
 type RegisterRPCEndpointEvent struct {

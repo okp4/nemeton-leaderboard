@@ -8,14 +8,13 @@ import (
 	"errors"
 	"fmt"
 	"net/url"
+	"okp4/nemeton-leaderboard/app/nemeton"
+	"okp4/nemeton-leaderboard/graphql/model"
+	"okp4/nemeton-leaderboard/graphql/scalar"
 	"strconv"
 	"sync"
 	"sync/atomic"
 	"time"
-
-	"okp4/nemeton-leaderboard/app/nemeton"
-	"okp4/nemeton-leaderboard/graphql/model"
-	"okp4/nemeton-leaderboard/graphql/scalar"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/99designs/gqlgen/graphql/introspection"
@@ -78,7 +77,7 @@ type ComplexityRoot struct {
 
 	Mutation struct {
 		RegisterRPCEndpoint  func(childComplexity int, validator types.ValAddress, url *url.URL) int
-		RegisterValidator    func(childComplexity int, twitter *string, discord string, country string, validator types.ValAddress) int
+		RegisterValidator    func(childComplexity int, twitter *string, discord string, country string, delegator types.AccAddress, validator types.ValAddress) int
 		SubmitValidatorGenTx func(childComplexity int, twitter *string, discord string, country string, gentx map[string]interface{}) int
 	}
 
@@ -179,7 +178,7 @@ type IdentityResolver interface {
 }
 type MutationResolver interface {
 	SubmitValidatorGenTx(ctx context.Context, twitter *string, discord string, country string, gentx map[string]interface{}) (*string, error)
-	RegisterValidator(ctx context.Context, twitter *string, discord string, country string, validator types.ValAddress) (*string, error)
+	RegisterValidator(ctx context.Context, twitter *string, discord string, country string, delegator types.AccAddress, validator types.ValAddress) (*string, error)
 	RegisterRPCEndpoint(ctx context.Context, validator types.ValAddress, url *url.URL) (*string, error)
 }
 type PhaseResolver interface {
@@ -305,7 +304,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.RegisterValidator(childComplexity, args["twitter"].(*string), args["discord"].(string), args["country"].(string), args["validator"].(types.ValAddress)), true
+		return e.complexity.Mutation.RegisterValidator(childComplexity, args["twitter"].(*string), args["discord"].(string), args["country"].(string), args["delegator"].(types.AccAddress), args["validator"].(types.ValAddress)), true
 
 	case "Mutation.submitValidatorGenTX":
 		if e.complexity.Mutation.SubmitValidatorGenTx == nil {
@@ -998,6 +997,11 @@ type Mutation {
         country: String!
 
         """
+        The delegator address who created the validator.
+        """
+        delegator: AccAddress!
+
+        """
         The validator address, used to retrieve its information on chain.
         """
         validator: ValoperAddress!
@@ -1482,15 +1486,24 @@ func (ec *executionContext) field_Mutation_registerValidator_args(ctx context.Co
 		}
 	}
 	args["country"] = arg2
-	var arg3 types.ValAddress
-	if tmp, ok := rawArgs["validator"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("validator"))
-		arg3, err = ec.unmarshalNValoperAddress2githubᚗcomᚋcosmosᚋcosmosᚑsdkᚋtypesᚐValAddress(ctx, tmp)
+	var arg3 types.AccAddress
+	if tmp, ok := rawArgs["delegator"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("delegator"))
+		arg3, err = ec.unmarshalNAccAddress2githubᚗcomᚋcosmosᚋcosmosᚑsdkᚋtypesᚐAccAddress(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["validator"] = arg3
+	args["delegator"] = arg3
+	var arg4 types.ValAddress
+	if tmp, ok := rawArgs["validator"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("validator"))
+		arg4, err = ec.unmarshalNValoperAddress2githubᚗcomᚋcosmosᚋcosmosᚑsdkᚋtypesᚐValAddress(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["validator"] = arg4
 	return args, nil
 }
 
@@ -2168,7 +2181,7 @@ func (ec *executionContext) _Mutation_registerValidator(ctx context.Context, fie
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		directive0 := func(rctx context.Context) (interface{}, error) {
 			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Mutation().RegisterValidator(rctx, fc.Args["twitter"].(*string), fc.Args["discord"].(string), fc.Args["country"].(string), fc.Args["validator"].(types.ValAddress))
+			return ec.resolvers.Mutation().RegisterValidator(rctx, fc.Args["twitter"].(*string), fc.Args["discord"].(string), fc.Args["country"].(string), fc.Args["delegator"].(types.AccAddress), fc.Args["validator"].(types.ValAddress))
 		}
 		directive1 := func(ctx context.Context) (interface{}, error) {
 			if ec.directives.Auth == nil {
@@ -7311,6 +7324,7 @@ func (ec *executionContext) _Identity(ctx context.Context, sel ast.SelectionSet,
 
 			out.Concurrently(i, func() graphql.Marshaler {
 				return innerFunc(ctx)
+
 			})
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
@@ -7586,6 +7600,7 @@ func (ec *executionContext) _Phase(ctx context.Context, sel ast.SelectionSet, ob
 
 			out.Concurrently(i, func() graphql.Marshaler {
 				return innerFunc(ctx)
+
 			})
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
@@ -7626,6 +7641,7 @@ func (ec *executionContext) _Phases(ctx context.Context, sel ast.SelectionSet, o
 
 			out.Concurrently(i, func() graphql.Marshaler {
 				return innerFunc(ctx)
+
 			})
 		case "ongoing":
 			field := field
@@ -7645,6 +7661,7 @@ func (ec *executionContext) _Phases(ctx context.Context, sel ast.SelectionSet, o
 
 			out.Concurrently(i, func() graphql.Marshaler {
 				return innerFunc(ctx)
+
 			})
 		case "finished":
 			field := field
@@ -7664,6 +7681,7 @@ func (ec *executionContext) _Phases(ctx context.Context, sel ast.SelectionSet, o
 
 			out.Concurrently(i, func() graphql.Marshaler {
 				return innerFunc(ctx)
+
 			})
 		case "current":
 			field := field
@@ -7680,6 +7698,7 @@ func (ec *executionContext) _Phases(ctx context.Context, sel ast.SelectionSet, o
 
 			out.Concurrently(i, func() graphql.Marshaler {
 				return innerFunc(ctx)
+
 			})
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
@@ -8012,6 +8031,7 @@ func (ec *executionContext) _Tasks(ctx context.Context, sel ast.SelectionSet, ob
 
 			out.Concurrently(i, func() graphql.Marshaler {
 				return innerFunc(ctx)
+
 			})
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
@@ -8052,6 +8072,7 @@ func (ec *executionContext) _Validator(ctx context.Context, sel ast.SelectionSet
 
 			out.Concurrently(i, func() graphql.Marshaler {
 				return innerFunc(ctx)
+
 			})
 		case "moniker":
 
@@ -8075,6 +8096,7 @@ func (ec *executionContext) _Validator(ctx context.Context, sel ast.SelectionSet
 
 			out.Concurrently(i, func() graphql.Marshaler {
 				return innerFunc(ctx)
+
 			})
 		case "details":
 
@@ -8138,6 +8160,7 @@ func (ec *executionContext) _Validator(ctx context.Context, sel ast.SelectionSet
 
 			out.Concurrently(i, func() graphql.Marshaler {
 				return innerFunc(ctx)
+
 			})
 		case "points":
 
@@ -8164,6 +8187,7 @@ func (ec *executionContext) _Validator(ctx context.Context, sel ast.SelectionSet
 
 			out.Concurrently(i, func() graphql.Marshaler {
 				return innerFunc(ctx)
+
 			})
 		case "missedBlocks":
 			field := field
@@ -8183,6 +8207,7 @@ func (ec *executionContext) _Validator(ctx context.Context, sel ast.SelectionSet
 
 			out.Concurrently(i, func() graphql.Marshaler {
 				return innerFunc(ctx)
+
 			})
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))

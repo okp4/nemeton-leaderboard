@@ -24,6 +24,7 @@ func NewActor(httpAddr, mongoURI, dbName string, eventStore, grpcClient *actor.P
 		mongoURI:   mongoURI,
 		dbName:     dbName,
 		eventStore: eventStore,
+		grpcClient: grpcClient,
 		bearer:     bearer,
 	}
 }
@@ -38,7 +39,7 @@ func (a *Actor) Receive(ctx actor.Context) {
 }
 
 func (a *Actor) handleStart(ctx actor.Context) {
-	graphqlServer, err := NewGraphQLServer(context.Background(), ctx, a.mongoURI, a.dbName, a.eventStore, a.bearer)
+	graphqlServer, err := NewGraphQLServer(context.Background(), ctx, a.mongoURI, a.dbName, a.eventStore, a.grpcClient, a.bearer)
 	if err != nil {
 		log.Fatal().Err(err).Str("db", a.dbName).Msg("❌ Couldn't create graphql server")
 	}

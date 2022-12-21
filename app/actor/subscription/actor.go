@@ -148,8 +148,8 @@ func (a *Actor) handleNewBlockEvent(data map[string]interface{}) {
 func (a *Actor) handleGenTXSubmittedEvent(when time.Time, data map[string]interface{}) {
 	log.Info().Interface("event", data).Msg("Handle GenTXSubmitted event")
 
-	e, err := graphql.Unmarshall(data)
-	if err != nil {
+	e := &graphql.GenTXSubmittedEvent{}
+	if err := e.Unmarshall(data); err != nil {
 		log.Panic().Err(err).Msg("❌ Failed unmarshall event to GenTXSubmitted")
 		return
 	}

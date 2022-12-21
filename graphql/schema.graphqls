@@ -163,6 +163,11 @@ type Mutation {
         country: String!
 
         """
+        The delegator address who created the validator.
+        """
+        delegator: AccAddress!
+
+        """
         The validator address, used to retrieve its information on chain.
         """
         validator: ValoperAddress!
