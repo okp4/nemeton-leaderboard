@@ -331,6 +331,33 @@ func (s *Store) RegisterValidator(
 	return err
 }
 
+func (s *Store) UpdateValidator(
+	ctx context.Context,
+	delegator types.AccAddress,
+	valoper types.ValAddress,
+	valcons types.ConsAddress,
+	description stakingtypes.Description,
+	discord, country string,
+	twitter *string,
+) error {
+	validator, err := NewValidator(valoper, delegator, valcons, description, discord, country, twitter)
+	if err != nil {
+		return err
+	}
+
+	_, err = s.db.Collection(validatorsCollectionName).
+		UpdateOne(
+			ctx,
+			bson.M{
+				"delegator": delegator,
+			},
+			bson.M{
+				"$set": validator,
+			},
+		)
+	return err
+}
+
 func (s *Store) RegisterValidatorRPC(ctx context.Context, when time.Time, validator types.ValAddress, rpc *url.URL) error {
 	filter := bson.M{"valoper": validator}
 	_, err := s.db.Collection(validatorsCollectionName).UpdateOne(ctx,
