@@ -88,7 +88,7 @@ func (a *Actor) receiveNewEvent(e event.Event) {
 	case tweet.NewTweetEventType:
 		a.handleNewTweetEvent(e.Date, e.Data)
 	case graphql.RegisterRPCEndpointEventType:
-		a.handleRegisterRPCEndpointEvent(e.Data)
+		a.handleRegisterRPCEndpointEvent(e.Date, e.Data)
 	default:
 		log.Warn().Msg("⚠️ No event handler for this event.")
 	}
@@ -200,7 +200,7 @@ func (a *Actor) handlePhaseStarted(phase *nemeton.Phase) {
 	// TODO: handle phase started
 }
 
-func (a *Actor) handleRegisterRPCEndpointEvent(data map[string]interface{}) {
+func (a *Actor) handleRegisterRPCEndpointEvent(when time.Time, data map[string]interface{}) {
 	log.Info().Interface("event", data).Msg("Handle RegisterRPC event")
 
 	e, err := graphql.UnmarshallRegisterRPCEndpointEvent(data)
@@ -209,7 +209,7 @@ func (a *Actor) handleRegisterRPCEndpointEvent(data map[string]interface{}) {
 		return
 	}
 
-	if err := a.store.RegisterValidatorRPC(a.ctx, e.Moniker, e.URL); err != nil {
+	if err := a.store.RegisterValidatorRPC(a.ctx, when, e.Moniker, e.URL); err != nil {
 		log.Err(err).Interface("data", data).Msg("🤕 Couldn't register/update validator rpc endpoint")
 	}
 }
