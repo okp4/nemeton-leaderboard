@@ -57,6 +57,11 @@ func (r *mutationResolver) SubmitValidatorGenTx(ctx context.Context, twitter *st
 	return nil, nil
 }
 
+// RegisterValidator is the resolver for the registerValidator field.
+func (r *mutationResolver) RegisterValidator(ctx context.Context, twitter *string, discord string, country string, validator types.ValAddress) (*string, error) {
+	panic(fmt.Errorf("not implemented: RegisterValidator - registerValidator"))
+}
+
 // RegisterRPCEndpoint is the resolver for the registerRPCEndpoint field.
 func (r *mutationResolver) RegisterRPCEndpoint(ctx context.Context, validator types.ValAddress, url *url.URL) (*string, error) {
 	evt := RegisterRPCEndpointEvent{
