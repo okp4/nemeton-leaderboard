@@ -453,14 +453,19 @@ func (s *Store) GetPreviousPhaseByBlock(ctx context.Context, height int64) (*Pha
 //
 //nolint:funlen
 func (s *Store) CompleteValidatorsUptimeForPhase(ctx context.Context, phase *Phase) error {
-	var taskID string
+	var task Task
 	if phase != nil {
-		for _, task := range phase.Tasks {
-			if task.Type == taskTypeUptime {
-				taskID = task.ID
+		for _, t := range phase.Tasks {
+			if t.Type == taskTypeUptime {
+				task = t
 				break
 			}
 		}
+	}
+
+	reward := task.GetUptimeMaxPoints()
+	if reward == nil {
+		return fmt.Errorf("could not retrive the maximum number of point for task %s", task.ID)
 	}
 
 	_, err := s.db.Collection(validatorsCollectionName).Aggregate(ctx, bson.A{
@@ -520,7 +525,7 @@ func (s *Store) CompleteValidatorsUptimeForPhase(ctx context.Context, phase *Pha
 		bson.M{"$addFields": bson.M{
 			"uptime": bson.M{"$subtract": bson.A{
 				bson.M{
-					"$pow": bson.A{2501, bson.M{
+					"$pow": bson.A{*reward + 1, bson.M{
 						"$multiply": bson.A{0.01, bson.M{
 							"$subtract": bson.A{100, bson.M{"$divide": bson.A{
 								bson.M{"$multiply": bson.A{100, "$totalMissedBlock"}},
@@ -542,8 +547,8 @@ func (s *Store) CompleteValidatorsUptimeForPhase(ctx context.Context, phase *Pha
 			"whenMatched": bson.A{
 				bson.M{
 					"$set": bson.M{
-						fmt.Sprintf("tasks.%d.%s.points", phase.Number, taskID):    bson.M{"$toLong": "$$uptime"},
-						fmt.Sprintf("tasks.%d.%s.completed", phase.Number, taskID): true,
+						fmt.Sprintf("tasks.%d.%s.points", phase.Number, task.ID):    bson.M{"$toLong": "$$uptime"},
+						fmt.Sprintf("tasks.%d.%s.completed", phase.Number, task.ID): true,
 						"points": bson.M{"$toLong": "$$newPoints"},
 					},
 				},
