@@ -120,6 +120,11 @@ func (r *mutationResolver) RegisterValidator(ctx context.Context, twitter *strin
 	return nil, nil
 }
 
+// UpdateValidator is the resolver for the updateValidator field.
+func (r *mutationResolver) UpdateValidator(ctx context.Context, delegator types.AccAddress, twitter *string, discord string, country string, valoper types.ValAddress) (*string, error) {
+	panic(fmt.Errorf("not implemented: UpdateValidator - updateValidator"))
+}
+
 // RegisterRPCEndpoint is the resolver for the registerRPCEndpoint field.
 func (r *mutationResolver) RegisterRPCEndpoint(ctx context.Context, validator types.ValAddress, url *url.URL) (*string, error) {
 	evt := RegisterRPCEndpointEvent{
