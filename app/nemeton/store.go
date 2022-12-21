@@ -429,6 +429,38 @@ func (s *Store) CompleteNodeSetupTask(ctx context.Context, when time.Time, vals 
 	return nil
 }
 
+func (s *Store) ManualCompleteTask(
+	ctx context.Context,
+	valoper types.ValAddress,
+	when time.Time,
+	phaseNB int,
+	taskID string,
+	rewards *uint64,
+) error {
+	phase := s.GetPhase(phaseNB)
+	var task *Task
+	for i, it := range phase.Tasks {
+		if it.ID == taskID {
+			task = &phase.Tasks[i]
+		}
+	}
+	if task == nil {
+		return fmt.Errorf("task '%s' not found in phase '%d'", taskID, phaseNB)
+	}
+
+	points := uint64(0)
+	if rewards != nil {
+		points = *rewards
+	} else if task.InProgressAt(when) {
+		if task.Rewards == nil {
+			return fmt.Errorf("no rewards found for task '%s' in phase '%d'", taskID, phaseNB)
+		}
+		points = *task.Rewards
+	}
+
+	return s.ensureTaskCompleted(ctx, bson.M{"valoper": valoper}, phaseNB, taskID, points)
+}
+
 func (s *Store) ensureTaskCompleted(ctx context.Context, filter bson.M, phase int, task string, rewards uint64) error {
 	_, err := s.db.Collection(validatorsCollectionName).UpdateMany(ctx,
 		bson.M{

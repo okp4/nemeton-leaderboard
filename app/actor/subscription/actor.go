@@ -95,6 +95,8 @@ func (a *Actor) receiveNewEvent(e event.Event) {
 		a.handleNewTweetEvent(e.Date, e.Data)
 	case graphql.RegisterRPCEndpointEventType:
 		a.handleRegisterRPCEndpointEvent(e.Date, e.Data)
+	case graphql.TaskCompletedEventType:
+		a.handleTaskCompletedEvent(e.Date, e.Data)
 	default:
 		log.Warn().Msg("⚠️ No event handler for this event.")
 	}
@@ -267,6 +269,20 @@ func (a *Actor) handleRegisterRPCEndpointEvent(when time.Time, data map[string]i
 	}
 
 	if err := a.store.RegisterValidatorRPC(a.ctx, when, e.Validator, e.URL); err != nil {
+		log.Err(err).Interface("data", data).Msg("🤕 Couldn't register/update validator rpc endpoint")
+	}
+}
+
+func (a *Actor) handleTaskCompletedEvent(when time.Time, data map[string]interface{}) {
+	log.Info().Interface("event", data).Msg("Handle TaskCompleted event")
+
+	e := &graphql.TaskCompletedEvent{}
+	if err := e.Unmarshal(data); err != nil {
+		log.Panic().Err(err).Msg("❌ Failed unmarshal event to TaskCompletedEvent")
+		return
+	}
+
+	if err := a.store.ManualCompleteTask(a.ctx, e.Validator, when, e.Phase, e.Task, e.Points); err != nil {
 		log.Err(err).Interface("data", data).Msg("🤕 Couldn't register/update validator rpc endpoint")
 	}
 }
