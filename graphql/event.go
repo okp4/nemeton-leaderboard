@@ -11,6 +11,7 @@ import (
 const (
 	GenTXSubmittedEventType      = "gentx-submitted"
 	ValidatorRegisteredEventType = "validator-registered"
+	ValidatorUpdatedEventType    = "validator-updated"
 	RegisterRPCEndpointEventType = "register-rpc-endpoint"
 )
 
@@ -61,6 +62,35 @@ func (e *ValidatorRegisteredEvent) Marshal() (map[string]interface{}, error) {
 }
 
 func (e *ValidatorRegisteredEvent) Unmarshal(data map[string]interface{}) error {
+	d, err := json.Marshal(data)
+	if err != nil {
+		return err
+	}
+
+	return json.Unmarshal(d, e)
+}
+
+type ValidatorUpdatedEvent struct {
+	Delegator   types.AccAddress         `json:"delegator"`
+	Twitter     *string                  `json:"twitter,omitempty"`
+	Discord     string                   `json:"discord"`
+	Country     string                   `json:"country"`
+	Valoper     types.ValAddress         `json:"valoper"`
+	Valcons     types.ConsAddress        `json:"valcons"`
+	Description stakingtypes.Description `json:"description"`
+}
+
+func (e *ValidatorUpdatedEvent) Marshal() (map[string]interface{}, error) {
+	var event map[string]interface{}
+	data, err := json.Marshal(&e)
+	if err != nil {
+		return nil, err
+	}
+	err = json.Unmarshal(data, &event)
+	return event, err
+}
+
+func (e *ValidatorUpdatedEvent) Unmarshal(data map[string]interface{}) error {
 	d, err := json.Marshal(data)
 	if err != nil {
 		return err
