@@ -4,6 +4,8 @@ import (
 	"context"
 	"time"
 
+	"okp4/nemeton-leaderboard/app/util"
+
 	"okp4/nemeton-leaderboard/graphql"
 
 	"okp4/nemeton-leaderboard/app/actor/synchronization"
@@ -154,7 +156,12 @@ func (a *Actor) handleGenTXSubmittedEvent(when time.Time, data map[string]interf
 		return
 	}
 
-	if err := a.store.CreateValidator(context.Background(), when, e.Discord, e.Country, e.Twitter, e.GenTX); err != nil {
+	msgCreateVal, err := util.ParseGenTX(e.GenTX)
+	if err != nil {
+		log.Panic().Err(err).Msg("❌ Failed unmarshall gentx")
+	}
+
+	if err := a.store.CreateGentxValidator(context.Background(), when, msgCreateVal, e.Discord, e.Country, e.Twitter); err != nil {
 		log.Err(err).Interface("data", data).Msg("🤕 Couldn't create validator")
 	}
 }

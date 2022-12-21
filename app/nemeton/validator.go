@@ -28,7 +28,7 @@ type Validator struct {
 	Tasks       map[int]map[string]TaskState `bson:"tasks"`
 }
 
-func MakeValidator(createMsg *stakingtypes.MsgCreateValidator, discord, country string, twitter *string) (*Validator, error) {
+func MakeValidatorFromMsg(createMsg *stakingtypes.MsgCreateValidator, discord, country string, twitter *string) (*Validator, error) {
 	valoper, err := types.ValAddressFromBech32(createMsg.ValidatorAddress)
 	if err != nil {
 		return nil, err
