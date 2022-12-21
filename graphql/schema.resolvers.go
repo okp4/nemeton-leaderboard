@@ -157,7 +157,27 @@ func (r *mutationResolver) RegisterRPCEndpoint(ctx context.Context, validator ty
 
 // CompleteTask is the resolver for the completeTask field.
 func (r *mutationResolver) CompleteTask(ctx context.Context, validator types.ValAddress, phase int, task string, points *uint64) (*string, error) {
-	panic(fmt.Errorf("not implemented: CompleteTask - completeTask"))
+	evt := &TaskCompletedEvent{
+		Validator: validator,
+		Phase:     phase,
+		Task:      task,
+		Points:    points,
+	}
+	rawEvt, err := evt.Marshal()
+	if err != nil {
+		return nil, err
+	}
+
+	r.actorCTX.Send(
+		r.eventStore,
+		&message.PublishEventMessage{
+			Event: event.NewEvent(
+				TaskCompletedEventType,
+				rawEvt,
+			),
+		},
+	)
+	return nil, nil
 }
 
 // Blocks is the resolver for the blocks field.
