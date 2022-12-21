@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/url"
 	"time"
 
 	"okp4/nemeton-leaderboard/app/util"
@@ -296,20 +297,16 @@ func (s *Store) CreateValidator(
 
 	points := uint64(0)
 	var tasks map[int]map[string]TaskState
-	if p := s.GetCurrentPhaseAt(createdAt); p != nil {
-		for _, task := range p.Tasks {
-			if task.Type == taskTypeGentx && task.InProgressAt(createdAt) {
-				points = *task.Rewards
-				tasks = map[int]map[string]TaskState{
-					p.Number: {
-						task.ID: {
-							Completed:    true,
-							EarnedPoints: *task.Rewards,
-						},
-					},
-				}
-				break
-			}
+	p, task := s.getTaskPhaseByType(taskTypeGentx, createdAt)
+	if p != nil && task != nil {
+		points = *task.Rewards
+		tasks = map[int]map[string]TaskState{
+			p.Number: {
+				task.ID: {
+					Completed:    true,
+					EarnedPoints: *task.Rewards,
+				},
+			},
 		}
 	}
 
@@ -318,6 +315,22 @@ func (s *Store) CreateValidator(
 
 	_, err = s.db.Collection(validatorsCollectionName).InsertOne(ctx, validator)
 	return err
+}
+
+func (s *Store) RegisterValidatorRPC(ctx context.Context, when time.Time, validator types.ValAddress, rpc *url.URL) error {
+	filter := bson.M{"valoper": validator}
+	_, err := s.db.Collection(validatorsCollectionName).UpdateOne(ctx,
+		filter,
+		bson.M{"$set": bson.M{"rpcEndpoint": rpc}},
+	)
+	if err != nil {
+		return err
+	}
+
+	if phase, task := s.getTaskPhaseByType(taskTypeRPC, when); phase != nil && task != nil {
+		return s.ensureTaskCompleted(ctx, filter, phase.Number, task.ID, *task.Rewards)
+	}
+	return fmt.Errorf("could not find corresponding phase and task at %s. Did this task begun ? ", when.Format(time.RFC3339))
 }
 
 func (s *Store) UpdateValidatorUptime(ctx context.Context, consensusAddrs []types.ConsAddress, height int64) error {
@@ -368,13 +381,9 @@ func (s *Store) CompleteTweetTask(ctx context.Context, when time.Time, username 
 }
 
 func (s *Store) CompleteNodeSetupTask(ctx context.Context, when time.Time, vals []types.ConsAddress) error {
-	phase := s.GetCurrentPhaseAt(when)
-	if phase != nil {
-		for _, task := range phase.Tasks {
-			if task.Type == taskTypeNodeSetup && task.InProgressAt(when) {
-				return s.ensureTaskCompleted(ctx, bson.M{"valcons": bson.M{"$in": vals}}, phase.Number, task.ID, *task.Rewards)
-			}
-		}
+	phase, task := s.getTaskPhaseByType(taskTypeNodeSetup, when)
+	if phase != nil && task != nil {
+		return s.ensureTaskCompleted(ctx, bson.M{"valcons": bson.M{"$in": vals}}, phase.Number, task.ID, *task.Rewards)
 	}
 	return nil
 }
@@ -397,6 +406,18 @@ func (s *Store) ensureTaskCompleted(ctx context.Context, filter bson.M, phase in
 			},
 		})
 	return err
+}
+
+func (s *Store) getTaskPhaseByType(id string, at time.Time) (*Phase, *Task) {
+	phase := s.GetCurrentPhaseAt(at)
+	if phase != nil {
+		for _, task := range phase.Tasks {
+			if task.Type == id && task.InProgressAt(at) {
+				return phase, &task
+			}
+		}
+	}
+	return phase, nil
 }
 
 func (s *Store) UpdatePhaseBlocks(ctx context.Context, blockTime time.Time, height int64) error {
@@ -453,19 +474,15 @@ func (s *Store) GetPreviousPhaseByBlock(ctx context.Context, height int64) (*Pha
 //
 //nolint:funlen
 func (s *Store) CompleteValidatorsUptimeForPhase(ctx context.Context, phase *Phase) error {
-	var task Task
-	if phase != nil {
-		for _, t := range phase.Tasks {
-			if t.Type == taskTypeUptime {
-				task = t
-				break
-			}
-		}
+	// Retrieve task at the phase end time since event time is thrown at the next phase (so task and phase are ended)
+	_, task := s.getTaskPhaseByType(taskTypeUptime, phase.EndDate)
+	if task == nil {
+		return fmt.Errorf("could not retrieve uptime task for phase %d", phase.Number)
 	}
 
 	reward := task.GetUptimeMaxPoints()
 	if reward == nil {
-		return fmt.Errorf("could not retrive the maximum number of point for task %s", task.ID)
+		return fmt.Errorf("could not retrieve the maximum number of point for task %s", task.ID)
 	}
 
 	_, err := s.db.Collection(validatorsCollectionName).Aggregate(ctx, bson.A{

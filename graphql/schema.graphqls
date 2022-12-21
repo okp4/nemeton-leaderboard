@@ -140,6 +140,24 @@ type Mutation {
         """
         gentx: JSON!
     ): Void @auth
+
+    """
+    Emit a `RegisterRPCEndpointEvent` in the system to register RPC node url for the given druid validator.
+
+    Through the event handling logic, the validator will be fulfilled with his RPC endpoint url and task completed with points
+    attribution if still in progress. If event is submitted multiple time, RPC endpoint is updated.
+    """
+    registerRPCEndpoint(
+        """
+        The valoper address of the validator that will register the RPC endpoint.
+        """
+        validator: ValoperAddress!
+
+        """
+        The RPC endpoint url of validator.
+        """
+        url: URI!
+    ): Void @auth
 }
 
 """
@@ -390,6 +408,11 @@ type Validator {
     The validator country.
     """
     country: String!
+
+    """
+    The validator rpc node endpoint.
+    """
+    rpcEndpoint: URI
 
     """
     The validator current status.
