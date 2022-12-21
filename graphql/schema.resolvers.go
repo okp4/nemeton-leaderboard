@@ -58,10 +58,10 @@ func (r *mutationResolver) SubmitValidatorGenTx(ctx context.Context, twitter *st
 }
 
 // RegisterRPCEndpoint is the resolver for the registerRPCEndpoint field.
-func (r *mutationResolver) RegisterRPCEndpoint(ctx context.Context, moniker string, url *url.URL) (*string, error) {
+func (r *mutationResolver) RegisterRPCEndpoint(ctx context.Context, validator types.ValAddress, url *url.URL) (*string, error) {
 	evt := RegisterRPCEndpointEvent{
-		Moniker: moniker,
-		URL:     url,
+		Validator: validator,
+		URL:       url,
 	}
 	rawEvt, err := evt.Marshall()
 	if err != nil {

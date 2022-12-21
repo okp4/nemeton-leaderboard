@@ -317,8 +317,8 @@ func (s *Store) CreateValidator(
 	return err
 }
 
-func (s *Store) RegisterValidatorRPC(ctx context.Context, when time.Time, moniker string, rpc *url.URL) error {
-	filter := bson.M{"moniker": moniker}
+func (s *Store) RegisterValidatorRPC(ctx context.Context, when time.Time, validator types.ValAddress, rpc *url.URL) error {
+	filter := bson.M{"valoper": validator}
 	_, err := s.db.Collection(validatorsCollectionName).UpdateOne(ctx,
 		filter,
 		bson.M{"$set": bson.M{"rpcEndpoint": rpc}},

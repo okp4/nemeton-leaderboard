@@ -3,6 +3,8 @@ package graphql
 import (
 	"encoding/json"
 	"net/url"
+
+	"github.com/cosmos/cosmos-sdk/types"
 )
 
 const (
@@ -38,8 +40,8 @@ func Unmarshall(data map[string]interface{}) (*GenTXSubmittedEvent, error) {
 }
 
 type RegisterRPCEndpointEvent struct {
-	Moniker string   `json:"moniker"`
-	URL     *url.URL `json:"url"`
+	Validator types.ValAddress `json:"validator"`
+	URL       *url.URL         `json:"url"`
 }
 
 func (e *RegisterRPCEndpointEvent) Marshall() (map[string]interface{}, error) {

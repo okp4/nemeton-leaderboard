@@ -149,9 +149,9 @@ type Mutation {
     """
     registerRPCEndpoint(
         """
-        The validator moniker that will register the RPC endpoint.
+        The valoper address of the validator that will register the RPC endpoint.
         """
-        moniker: String!
+        validator: ValoperAddress!
 
         """
         The RPC endpoint url of validator.
