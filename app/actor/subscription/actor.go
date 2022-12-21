@@ -87,6 +87,8 @@ func (a *Actor) receiveNewEvent(e event.Event) {
 		a.handleNewBlockEvent(e.Data)
 	case graphql.GenTXSubmittedEventType:
 		a.handleGenTXSubmittedEvent(e.Date, e.Data)
+	case graphql.ValidatorRegisteredEventType:
+		a.handleValidatorRegisteredEvent(e.Data)
 	case tweet.NewTweetEventType:
 		a.handleNewTweetEvent(e.Date, e.Data)
 	case graphql.RegisterRPCEndpointEventType:
@@ -151,7 +153,7 @@ func (a *Actor) handleGenTXSubmittedEvent(when time.Time, data map[string]interf
 	log.Info().Interface("event", data).Msg("Handle GenTXSubmitted event")
 
 	e := &graphql.GenTXSubmittedEvent{}
-	if err := e.Unmarshall(data); err != nil {
+	if err := e.Unmarshal(data); err != nil {
 		log.Panic().Err(err).Msg("❌ Failed unmarshall event to GenTXSubmitted")
 		return
 	}
@@ -163,6 +165,29 @@ func (a *Actor) handleGenTXSubmittedEvent(when time.Time, data map[string]interf
 
 	if err := a.store.CreateGentxValidator(context.Background(), when, msgCreateVal, e.Discord, e.Country, e.Twitter); err != nil {
 		log.Err(err).Interface("data", data).Msg("🤕 Couldn't create validator")
+	}
+}
+
+func (a *Actor) handleValidatorRegisteredEvent(data map[string]interface{}) {
+	log.Info().Interface("event", data).Msg("Handle ValidatorRegistered event")
+
+	e := &graphql.ValidatorRegisteredEvent{}
+	if err := e.Unmarshal(data); err != nil {
+		log.Panic().Err(err).Msg("❌ Failed unmarshall event to ValidatorRegistered")
+		return
+	}
+
+	if err := a.store.RegisterValidator(
+		context.Background(),
+		e.Valoper,
+		e.Delegator,
+		e.Valcons,
+		e.Description,
+		e.Discord,
+		e.Country,
+		e.Twitter,
+	); err != nil {
+		log.Err(err).Interface("data", data).Msg("🤕 Couldn't register validator")
 	}
 }
 

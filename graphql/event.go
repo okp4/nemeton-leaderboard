@@ -21,7 +21,7 @@ type GenTXSubmittedEvent struct {
 	GenTX   map[string]interface{} `json:"gentx"`
 }
 
-func (e *GenTXSubmittedEvent) Marshall() (map[string]interface{}, error) {
+func (e *GenTXSubmittedEvent) Marshal() (map[string]interface{}, error) {
 	var event map[string]interface{}
 	data, err := json.Marshal(&e)
 	if err != nil {
@@ -31,7 +31,7 @@ func (e *GenTXSubmittedEvent) Marshall() (map[string]interface{}, error) {
 	return event, err
 }
 
-func (e *GenTXSubmittedEvent) Unmarshall(data map[string]interface{}) error {
+func (e *GenTXSubmittedEvent) Unmarshal(data map[string]interface{}) error {
 	d, err := json.Marshal(data)
 	if err != nil {
 		return err
@@ -41,14 +41,16 @@ func (e *GenTXSubmittedEvent) Unmarshall(data map[string]interface{}) error {
 }
 
 type ValidatorRegisteredEvent struct {
-	Twitter   *string                `json:"twitter,omitempty"`
-	Discord   string                 `json:"discord"`
-	Country   string                 `json:"country"`
-	Delegator types.AccAddress       `json:"delegator"`
-	Validator stakingtypes.Validator `json:"validator"`
+	Twitter     *string                  `json:"twitter,omitempty"`
+	Discord     string                   `json:"discord"`
+	Country     string                   `json:"country"`
+	Valoper     types.ValAddress         `json:"valoper"`
+	Delegator   types.AccAddress         `json:"delegator"`
+	Valcons     types.ConsAddress        `json:"valcons"`
+	Description stakingtypes.Description `json:"description"`
 }
 
-func (e *ValidatorRegisteredEvent) Marshall() (map[string]interface{}, error) {
+func (e *ValidatorRegisteredEvent) Marshal() (map[string]interface{}, error) {
 	var event map[string]interface{}
 	data, err := json.Marshal(&e)
 	if err != nil {
@@ -58,7 +60,7 @@ func (e *ValidatorRegisteredEvent) Marshall() (map[string]interface{}, error) {
 	return event, err
 }
 
-func (e *ValidatorRegisteredEvent) Unmarshall(data map[string]interface{}) error {
+func (e *ValidatorRegisteredEvent) Unmarshal(data map[string]interface{}) error {
 	d, err := json.Marshal(data)
 	if err != nil {
 		return err

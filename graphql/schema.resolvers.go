@@ -16,6 +16,8 @@ import (
 	"okp4/nemeton-leaderboard/graphql/generated"
 	"okp4/nemeton-leaderboard/graphql/model"
 
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/types"
 	"github.com/rs/zerolog/log"
 )
@@ -42,7 +44,7 @@ func (r *mutationResolver) SubmitValidatorGenTx(ctx context.Context, twitter *st
 		Country: country,
 		GenTX:   gentx,
 	}
-	rawEvt, err := evt.Marshall()
+	rawEvt, err := evt.Marshal()
 	if err != nil {
 		return nil, err
 	}
@@ -86,14 +88,22 @@ func (r *mutationResolver) RegisterValidator(ctx context.Context, twitter *strin
 		return nil, err
 	}
 
-	evt := ValidatorRegisteredEvent{
-		Twitter:   twitter,
-		Discord:   discord,
-		Country:   country,
-		Delegator: delegator,
-		Validator: *val.Validator,
+	var pubkey cryptotypes.PubKey
+	if err := simapp.MakeTestEncodingConfig().InterfaceRegistry.UnpackAny(val.Validator.ConsensusPubkey, &pubkey); err != nil {
+		log.Err(err).Str("valoper", validator.String()).Msg("🤕 Couldn't fetch validator")
+		return nil, err
 	}
-	rawEvt, err := evt.Marshall()
+
+	evt := ValidatorRegisteredEvent{
+		Twitter:     twitter,
+		Discord:     discord,
+		Country:     country,
+		Valoper:     validator,
+		Delegator:   delegator,
+		Valcons:     types.GetConsAddress(pubkey),
+		Description: val.Validator.Description,
+	}
+	rawEvt, err := evt.Marshal()
 	if err != nil {
 		return nil, err
 	}

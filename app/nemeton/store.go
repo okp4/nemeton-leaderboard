@@ -313,6 +313,24 @@ func (s *Store) CreateGentxValidator(
 	return err
 }
 
+func (s *Store) RegisterValidator(
+	ctx context.Context,
+	valoper types.ValAddress,
+	delegator types.AccAddress,
+	valcons types.ConsAddress,
+	description stakingtypes.Description,
+	discord, country string,
+	twitter *string,
+) error {
+	validator, err := NewValidator(valoper, delegator, valcons, description, discord, country, twitter)
+	if err != nil {
+		return err
+	}
+
+	_, err = s.db.Collection(validatorsCollectionName).InsertOne(ctx, validator)
+	return err
+}
+
 func (s *Store) RegisterValidatorRPC(ctx context.Context, when time.Time, validator types.ValAddress, rpc *url.URL) error {
 	filter := bson.M{"valoper": validator}
 	_, err := s.db.Collection(validatorsCollectionName).UpdateOne(ctx,
