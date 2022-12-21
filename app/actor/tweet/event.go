@@ -15,7 +15,7 @@ type NewTweetEvent struct {
 	User      User      `json:"user"`
 }
 
-func (e *NewTweetEvent) Marshall() (map[string]interface{}, error) {
+func (e *NewTweetEvent) Marshal() (map[string]interface{}, error) {
 	var event map[string]interface{}
 	data, err := json.Marshal(&e)
 	if err != nil {
@@ -25,12 +25,11 @@ func (e *NewTweetEvent) Marshall() (map[string]interface{}, error) {
 	return event, err
 }
 
-func Unmarshall(data map[string]interface{}) (*NewTweetEvent, error) {
-	var event *NewTweetEvent
+func (e *NewTweetEvent) Unmarshal(data map[string]interface{}) error {
 	d, err := json.Marshal(data)
 	if err != nil {
-		return nil, err
+		return err
 	}
-	err = json.Unmarshal(d, &event)
-	return event, err
+
+	return json.Unmarshal(d, e)
 }

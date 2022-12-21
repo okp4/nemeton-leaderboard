@@ -126,7 +126,7 @@ func (r *mutationResolver) RegisterRPCEndpoint(ctx context.Context, validator ty
 		Validator: validator,
 		URL:       url,
 	}
-	rawEvt, err := evt.Marshall()
+	rawEvt, err := evt.Marshal()
 	if err != nil {
 		return nil, err
 	}

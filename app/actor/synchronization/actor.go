@@ -154,7 +154,7 @@ func (a *Actor) publishEvent(ctx actor.Context, block *tmservice.Block) error {
 		Signatures: block.LastCommit.Signatures,
 	}
 
-	blockData, err := blockEvent.Marshall()
+	blockData, err := blockEvent.Marshal()
 	if err != nil {
 		return err
 	}

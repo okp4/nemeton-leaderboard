@@ -74,7 +74,7 @@ type RegisterRPCEndpointEvent struct {
 	URL       *url.URL         `json:"url"`
 }
 
-func (e *RegisterRPCEndpointEvent) Marshall() (map[string]interface{}, error) {
+func (e *RegisterRPCEndpointEvent) Marshal() (map[string]interface{}, error) {
 	var event map[string]interface{}
 	data, err := json.Marshal(&e)
 	if err != nil {
@@ -84,12 +84,11 @@ func (e *RegisterRPCEndpointEvent) Marshall() (map[string]interface{}, error) {
 	return event, err
 }
 
-func UnmarshallRegisterRPCEndpointEvent(data map[string]interface{}) (*RegisterRPCEndpointEvent, error) {
-	var event *RegisterRPCEndpointEvent
+func (e *RegisterRPCEndpointEvent) Unmarshal(data map[string]interface{}) error {
 	d, err := json.Marshal(data)
 	if err != nil {
-		return nil, err
+		return err
 	}
-	err = json.Unmarshal(d, &event)
-	return event, err
+
+	return json.Unmarshal(d, e)
 }
