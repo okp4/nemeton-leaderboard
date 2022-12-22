@@ -358,7 +358,7 @@ func (s *Store) UpdateValidator(
 	return err
 }
 
-func (s *Store) RegisterValidatorURL(ctx context.Context, when time.Time, urlType string, validator types.ValAddress, url *url.URL) error {
+func (s *Store) RegisterValidatorURL(ctx context.Context, when time.Time, urlType string, validator types.ValAddress, url *url.URL, rewards *uint64) error {
 	var field string
 	switch urlType {
 	case TaskTypeRPC:
@@ -379,7 +379,14 @@ func (s *Store) RegisterValidatorURL(ctx context.Context, when time.Time, urlTyp
 	}
 
 	if phase, task := s.getTaskPhaseByType(urlType, when); phase != nil && task != nil {
-		return s.ensureTaskCompleted(ctx, filter, phase.Number, task.ID, *task.Rewards)
+		var r uint64
+		switch urlType {
+		case TaskTypeRPC, TaskTypeSnapshots:
+			r = *task.Rewards
+		case TaskTypeDashboard:
+			r = *rewards
+		}
+		return s.ensureTaskCompleted(ctx, filter, phase.Number, task.ID, r)
 	}
 	return fmt.Errorf("could not find corresponding phase and task at %s. Did this task begun ? ", when.Format(time.RFC3339))
 }

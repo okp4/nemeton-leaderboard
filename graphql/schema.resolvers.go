@@ -137,6 +137,7 @@ func (r *mutationResolver) RegisterRPCEndpoint(ctx context.Context, validator ty
 		Type:      nemeton.TaskTypeRPC,
 		Validator: validator,
 		URL:       url,
+		Rewards:   nil,
 	}
 	rawEvt, err := evt.Marshal()
 	if err != nil {
@@ -161,6 +162,7 @@ func (r *mutationResolver) RegisterSnapshotURL(ctx context.Context, validator ty
 		Type:      nemeton.TaskTypeSnapshots,
 		Validator: validator,
 		URL:       url,
+		Rewards:   nil,
 	}
 	rawEvt, err := evt.Marshal()
 	if err != nil {
@@ -194,6 +196,7 @@ func (r *mutationResolver) RegisterDashboardURL(ctx context.Context, validator t
 		Type:      nemeton.TaskTypeDashboard,
 		Validator: validator,
 		URL:       url,
+		Rewards:   &rewards,
 	}
 	rawEvt, err := evt.Marshal()
 	if err != nil {
