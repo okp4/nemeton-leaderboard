@@ -77,7 +77,7 @@ type ComplexityRoot struct {
 
 	Mutation struct {
 		CompleteTask         func(childComplexity int, validator types.ValAddress, phase int, task string, points *uint64) int
-		RegisterDashboardURL func(childComplexity int, validator types.ValAddress, url *url.URL, rewards uint64) int
+		RegisterDashboardURL func(childComplexity int, validator types.ValAddress, url *url.URL, points uint64) int
 		RegisterRPCEndpoint  func(childComplexity int, validator types.ValAddress, url *url.URL) int
 		RegisterSnapshotURL  func(childComplexity int, validator types.ValAddress, url *url.URL) int
 		RegisterValidator    func(childComplexity int, twitter *string, discord string, country string, delegator types.AccAddress, validator types.ValAddress) int
@@ -188,7 +188,7 @@ type MutationResolver interface {
 	UpdateValidator(ctx context.Context, delegator types.AccAddress, twitter *string, discord string, country string, valoper types.ValAddress) (*string, error)
 	RegisterRPCEndpoint(ctx context.Context, validator types.ValAddress, url *url.URL) (*string, error)
 	RegisterSnapshotURL(ctx context.Context, validator types.ValAddress, url *url.URL) (*string, error)
-	RegisterDashboardURL(ctx context.Context, validator types.ValAddress, url *url.URL, rewards uint64) (*string, error)
+	RegisterDashboardURL(ctx context.Context, validator types.ValAddress, url *url.URL, points uint64) (*string, error)
 	CompleteTask(ctx context.Context, validator types.ValAddress, phase int, task string, points *uint64) (*string, error)
 }
 type PhaseResolver interface {
@@ -314,7 +314,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.RegisterDashboardURL(childComplexity, args["validator"].(types.ValAddress), args["url"].(*url.URL), args["rewards"].(uint64)), true
+		return e.complexity.Mutation.RegisterDashboardURL(childComplexity, args["validator"].(types.ValAddress), args["url"].(*url.URL), args["points"].(uint64)), true
 
 	case "Mutation.registerRPCEndpoint":
 		if e.complexity.Mutation.RegisterRPCEndpoint == nil {
@@ -1166,7 +1166,7 @@ type Mutation {
         """
         Number of point to give to the validator. Up to 2000.
         """
-        rewards: UInt64!
+        points: UInt64!
     ): Void @auth
 
     """
@@ -1679,14 +1679,14 @@ func (ec *executionContext) field_Mutation_registerDashboardURL_args(ctx context
 	}
 	args["url"] = arg1
 	var arg2 uint64
-	if tmp, ok := rawArgs["rewards"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("rewards"))
+	if tmp, ok := rawArgs["points"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("points"))
 		arg2, err = ec.unmarshalNUInt642uint64(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["rewards"] = arg2
+	args["points"] = arg2
 	return args, nil
 }
 
@@ -2802,7 +2802,7 @@ func (ec *executionContext) _Mutation_registerDashboardURL(ctx context.Context, 
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		directive0 := func(rctx context.Context) (interface{}, error) {
 			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Mutation().RegisterDashboardURL(rctx, fc.Args["validator"].(types.ValAddress), fc.Args["url"].(*url.URL), fc.Args["rewards"].(uint64))
+			return ec.resolvers.Mutation().RegisterDashboardURL(rctx, fc.Args["validator"].(types.ValAddress), fc.Args["url"].(*url.URL), fc.Args["points"].(uint64))
 		}
 		directive1 := func(ctx context.Context) (interface{}, error) {
 			if ec.directives.Auth == nil {

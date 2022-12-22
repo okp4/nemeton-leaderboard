@@ -358,7 +358,13 @@ func (s *Store) UpdateValidator(
 	return err
 }
 
-func (s *Store) RegisterValidatorURL(ctx context.Context, when time.Time, urlType string, validator types.ValAddress, url *url.URL, rewards *uint64) error {
+func (s *Store) RegisterValidatorURL(ctx context.Context,
+	when time.Time,
+	urlType string,
+	validator types.ValAddress,
+	url *url.URL,
+	rewards *uint64,
+) error {
 	var field string
 	switch urlType {
 	case TaskTypeRPC:

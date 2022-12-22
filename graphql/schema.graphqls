@@ -260,7 +260,7 @@ type Mutation {
         """
         Number of point to give to the validator. Up to 2000.
         """
-        rewards: UInt64!
+        points: UInt64!
     ): Void @auth
 
     """
