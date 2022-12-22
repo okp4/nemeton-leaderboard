@@ -8,9 +8,9 @@ const (
 	taskTypeNodeSetup    = "node-setup"
 	taskTypeUptime       = "uptime"
 	TaskTypeTweetNemeton = "tweet-nemeton"
-	taskTypeRPC          = "rpc"
-	taskTypeSnapshots    = "snapshots"
-	taskTypeDashboard    = "dashboard"
+	TaskTypeRPC          = "rpc"
+	TaskTypeSnapshots    = "snapshots"
+	TaskTypeDashboard    = "dashboard"
 
 	taskParamUptimeMaxPoints = "max-points"
 )
@@ -106,13 +106,13 @@ func makeTweetNemetonTask(id, name, description string, start, end time.Time, re
 }
 
 func makeRPCTask(id, name, description string, start, end time.Time, rewards uint64) Task {
-	return makeTask(taskTypeRPC, id, name, description, start, end, &rewards, nil)
+	return makeTask(TaskTypeRPC, id, name, description, start, end, &rewards, nil)
 }
 
 func makeSnapshotsTask(id, name, description string, start, end time.Time, rewards uint64) Task {
-	return makeTask(taskTypeSnapshots, id, name, description, start, end, &rewards, nil)
+	return makeTask(TaskTypeSnapshots, id, name, description, start, end, &rewards, nil)
 }
 
 func makeDashboardTask(id, name, description string, start, end time.Time) Task {
-	return makeTask(taskTypeDashboard, id, name, description, start, end, nil, nil)
+	return makeTask(TaskTypeDashboard, id, name, description, start, end, nil, nil)
 }

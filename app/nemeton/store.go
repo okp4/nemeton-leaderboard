@@ -358,17 +358,27 @@ func (s *Store) UpdateValidator(
 	return err
 }
 
-func (s *Store) RegisterValidatorRPC(ctx context.Context, when time.Time, validator types.ValAddress, rpc *url.URL) error {
+func (s *Store) RegisterValidatorURL(ctx context.Context, when time.Time, urlType string, validator types.ValAddress, url *url.URL) error {
+	var field string
+	switch urlType {
+	case TaskTypeRPC:
+		field = "rpcEndpoint"
+	case TaskTypeDashboard:
+		field = "dashboard"
+	case TaskTypeSnapshots:
+		field = "snapshot"
+	}
+
 	filter := bson.M{"valoper": validator}
 	_, err := s.db.Collection(validatorsCollectionName).UpdateOne(ctx,
 		filter,
-		bson.M{"$set": bson.M{"rpcEndpoint": rpc}},
+		bson.M{"$set": bson.M{field: url}},
 	)
 	if err != nil {
 		return err
 	}
 
-	if phase, task := s.getTaskPhaseByType(taskTypeRPC, when); phase != nil && task != nil {
+	if phase, task := s.getTaskPhaseByType(urlType, when); phase != nil && task != nil {
 		return s.ensureTaskCompleted(ctx, filter, phase.Number, task.ID, *task.Rewards)
 	}
 	return fmt.Errorf("could not find corresponding phase and task at %s. Did this task begun ? ", when.Format(time.RFC3339))

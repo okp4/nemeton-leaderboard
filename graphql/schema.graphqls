@@ -224,6 +224,41 @@ type Mutation {
     ): Void @auth
 
     """
+    Emit a `RegisterSnapshotEvent` in the system to register a snapshot url for the given druid validator.
+
+    Through the event handling logic, the validator will be fulfilled with it's snapshot url and task completed with points
+    attribution if still in progress. If event is submitted multiple time, snapshot url is updated.
+    """
+    registerSnapshotURL(
+        """
+        The valoper address of the validator that will register the snapshot url.
+        """
+        validator: ValoperAddress!
+        """
+        The snapshot url of validator.
+        """
+        url: URI!
+    ): Void @auth
+
+    """
+    Emit a `RegisterDashboardEvent` in the system to register a dashboard url for the given druid validator.
+
+    Through the event handling logic, the validator will be fulfilled with it's dashboard url and task completed with points
+    attribution if still in progress. If event is submitted multiple time, dashboard url is updated.
+    """
+    registerDashboardURL(
+        """
+        The valoper address of the validator that will register the dashboard url.
+        """
+        validator: ValoperAddress!
+
+        """
+        The dashboard url of validator.
+        """
+        url: URI!
+    ): Void @auth
+
+    """
     Emit a `TaskCompletedEvent` in the system carrying information related to the completion of a task.
 
     The purpose is to manually attribute the points of a task, automated or not. This generic event doesn't carrying task specific context, prefer using more grained mutation to ensure any specific logic is executed, if applicable.
