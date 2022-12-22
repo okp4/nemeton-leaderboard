@@ -18,15 +18,14 @@ import (
 const ownerOffset = "block-synchronization"
 
 type Actor struct {
-	context         context.Context
-	grpcClientProps *actor.Props
-	grpcClient      *actor.PID
-	eventStore      *actor.PID
-	offsetStore     *offset.Store
-	currentBlock    int64
+	context      context.Context
+	grpcClient   *actor.PID
+	eventStore   *actor.PID
+	offsetStore  *offset.Store
+	currentBlock int64
 }
 
-func NewActor(grpcClientProps *actor.Props, eventStore *actor.PID, mongoURI, dbName string) (*Actor, error) {
+func NewActor(eventStore, grpcClient *actor.PID, mongoURI, dbName string) (*Actor, error) {
 	ctx := context.Background()
 	store, err := offset.NewStore(ctx, mongoURI, dbName, ownerOffset)
 	if err != nil {
@@ -43,12 +42,11 @@ func NewActor(grpcClientProps *actor.Props, eventStore *actor.PID, mongoURI, dbN
 	}
 
 	return &Actor{
-		context:         ctx,
-		grpcClientProps: grpcClientProps,
-		grpcClient:      nil,
-		eventStore:      eventStore,
-		offsetStore:     store,
-		currentBlock:    currentBlock,
+		context:      ctx,
+		grpcClient:   grpcClient,
+		eventStore:   eventStore,
+		offsetStore:  store,
+		currentBlock: currentBlock,
 	}, nil
 }
 
@@ -56,8 +54,6 @@ func (a *Actor) Receive(ctx actor.Context) {
 	switch ctx.Message().(type) {
 	case *actor.Started:
 		log.Info().Msg("🔁 Start block syncing")
-
-		a.grpcClient = ctx.Spawn(a.grpcClientProps)
 
 		err := a.catchUpSyncBlocks(ctx)
 		if err != nil {
@@ -158,7 +154,7 @@ func (a *Actor) publishEvent(ctx actor.Context, block *tmservice.Block) error {
 		Signatures: block.LastCommit.Signatures,
 	}
 
-	blockData, err := blockEvent.Marshall()
+	blockData, err := blockEvent.Marshal()
 	if err != nil {
 		return err
 	}

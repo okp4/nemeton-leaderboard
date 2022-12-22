@@ -7,6 +7,8 @@ import (
 
 	"github.com/asynkron/protoactor-go/actor"
 	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
+	"github.com/cosmos/cosmos-sdk/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/rs/zerolog/log"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
@@ -51,6 +53,15 @@ func (client *GrpcClient) Receive(ctx actor.Context) {
 		ctx.Respond(&message.GetBlockResponse{
 			Block: block,
 		})
+
+	case *message.GetValidator:
+		validator, err := client.GetValidator(context.Background(), msg.Valoper)
+		if err != nil {
+			log.Panic().Err(err).Msg("❌ Failed request validator.")
+		}
+		ctx.Respond(&message.GetValidatorResponse{
+			Validator: validator,
+		})
 	}
 }
 
@@ -74,4 +85,20 @@ func (client *GrpcClient) GetLatestBlock(context context.Context) (*tmservice.Bl
 	}
 
 	return query.GetSdkBlock(), nil
+}
+
+func (client *GrpcClient) GetValidator(ctx context.Context, addr types.ValAddress) (*stakingtypes.Validator, error) {
+	res, err := stakingtypes.NewQueryClient(client.grpcConn).
+		Validator(
+			ctx,
+			&stakingtypes.QueryValidatorRequest{
+				ValidatorAddr: addr.String(),
+			},
+		)
+	if err != nil {
+		return nil, err
+	}
+
+	val := res.GetValidator()
+	return &val, nil
 }

@@ -28,7 +28,7 @@ type Validator struct {
 	Tasks       map[int]map[string]TaskState `bson:"tasks"`
 }
 
-func MakeValidator(createMsg *stakingtypes.MsgCreateValidator, discord, country string, twitter *string) (*Validator, error) {
+func MakeValidatorFromMsg(createMsg *stakingtypes.MsgCreateValidator, discord, country string, twitter *string) (*Validator, error) {
 	valoper, err := types.ValAddressFromBech32(createMsg.ValidatorAddress)
 	if err != nil {
 		return nil, err
@@ -38,40 +38,54 @@ func MakeValidator(createMsg *stakingtypes.MsgCreateValidator, discord, country 
 		return nil, err
 	}
 
-	var website *url.URL
-	if len(createMsg.Description.Website) > 0 {
-		website, err = url.Parse(createMsg.Description.Website)
-		if err != nil {
-			return nil, err
-		}
-	}
-
 	pubkey, ok := createMsg.Pubkey.GetCachedValue().(cryptotypes.PubKey)
 	if !ok {
 		return nil, fmt.Errorf("couldn't parse public key")
 	}
 
-	var identity *string
-	if len(createMsg.Description.Identity) > 0 {
-		identity = &createMsg.Description.Identity
+	return NewValidator(valoper, delegator, types.GetConsAddress(pubkey), createMsg.Description, discord, country, twitter)
+}
+
+func NewValidator(
+	valoper types.ValAddress,
+	delegator types.AccAddress,
+	valcons types.ConsAddress,
+	description stakingtypes.Description,
+	discord, country string,
+	twitter *string,
+) (*Validator, error) {
+	var website *url.URL
+	var err error
+	if len(description.Website) > 0 {
+		website, err = url.Parse(description.Website)
+		if err != nil {
+			return nil, err
+		}
 	}
+
+	var identity *string
+	if len(description.Identity) > 0 {
+		identity = &description.Identity
+	}
+
 	var details *string
-	if len(createMsg.Description.Details) > 0 {
-		details = &createMsg.Description.Details
+	if len(description.Details) > 0 {
+		details = &description.Details
 	}
 
 	return &Validator{
-		Moniker:   createMsg.Description.Moniker,
+		Moniker:   description.Moniker,
 		Identity:  identity,
 		Details:   details,
 		Valoper:   valoper,
 		Delegator: delegator,
-		Valcons:   types.GetConsAddress(pubkey),
+		Valcons:   valcons,
 		Twitter:   twitter,
 		Website:   website,
 		Discord:   discord,
 		Country:   country,
 		Status:    "inactive",
+		Tasks:     map[int]map[string]TaskState{},
 	}, nil
 }
 

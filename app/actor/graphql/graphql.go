@@ -21,7 +21,7 @@ func NewGraphQLServer(
 	ctx context.Context,
 	actorCTX actor.Context,
 	mongoURI, db string,
-	eventStore *actor.PID,
+	eventStore, grpcClient *actor.PID,
 	bearer *string,
 ) (*handler.Server, error) {
 	store, err := nemeton.NewStore(ctx, mongoURI, db)
@@ -29,7 +29,7 @@ func NewGraphQLServer(
 		return nil, err
 	}
 
-	cfg := generated.Config{Resolvers: graphql.NewResolver(actorCTX, store, keybase.NewClient(), eventStore)}
+	cfg := generated.Config{Resolvers: graphql.NewResolver(actorCTX, store, keybase.NewClient(), eventStore, grpcClient)}
 	cfg.Directives.Auth = func(ctx context.Context, obj interface{}, next graphql2.Resolver) (interface{}, error) {
 		if err := Authorize(ctx, bearer); err != nil {
 			return nil, err

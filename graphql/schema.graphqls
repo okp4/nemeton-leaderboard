@@ -142,6 +142,38 @@ type Mutation {
     ): Void @auth
 
     """
+    Emit a `ValidatorRegisteredEvent` in the system carrying information related to the integration of a validator post genesis.
+
+    The validator will be integrated into the leaderboard with its on chain information, past tasks will be considered not done.
+    """
+    registerValidator(
+        """
+        The validator twitter account.
+        """
+        twitter: String
+
+        """
+        The validator discord account.
+        """
+        discord: String!
+
+        """
+        The validator country.
+        """
+        country: String!
+
+        """
+        The delegator address who created the validator.
+        """
+        delegator: AccAddress!
+
+        """
+        The validator address, used to retrieve its information on chain.
+        """
+        validator: ValoperAddress!
+    ): Void @auth
+
+    """
     Emit a `RegisterRPCEndpointEvent` in the system to register RPC node url for the given druid validator.
 
     Through the event handling logic, the validator will be fulfilled with his RPC endpoint url and task completed with points

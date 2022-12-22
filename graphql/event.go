@@ -5,10 +5,12 @@ import (
 	"net/url"
 
 	"github.com/cosmos/cosmos-sdk/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 const (
 	GenTXSubmittedEventType      = "gentx-submitted"
+	ValidatorRegisteredEventType = "validator-registered"
 	RegisterRPCEndpointEventType = "register-rpc-endpoint"
 )
 
@@ -19,7 +21,7 @@ type GenTXSubmittedEvent struct {
 	GenTX   map[string]interface{} `json:"gentx"`
 }
 
-func (e *GenTXSubmittedEvent) Marshall() (map[string]interface{}, error) {
+func (e *GenTXSubmittedEvent) Marshal() (map[string]interface{}, error) {
 	var event map[string]interface{}
 	data, err := json.Marshal(&e)
 	if err != nil {
@@ -29,14 +31,42 @@ func (e *GenTXSubmittedEvent) Marshall() (map[string]interface{}, error) {
 	return event, err
 }
 
-func Unmarshall(data map[string]interface{}) (*GenTXSubmittedEvent, error) {
-	var event *GenTXSubmittedEvent
+func (e *GenTXSubmittedEvent) Unmarshal(data map[string]interface{}) error {
 	d, err := json.Marshal(data)
+	if err != nil {
+		return err
+	}
+
+	return json.Unmarshal(d, e)
+}
+
+type ValidatorRegisteredEvent struct {
+	Twitter     *string                  `json:"twitter,omitempty"`
+	Discord     string                   `json:"discord"`
+	Country     string                   `json:"country"`
+	Valoper     types.ValAddress         `json:"valoper"`
+	Delegator   types.AccAddress         `json:"delegator"`
+	Valcons     types.ConsAddress        `json:"valcons"`
+	Description stakingtypes.Description `json:"description"`
+}
+
+func (e *ValidatorRegisteredEvent) Marshal() (map[string]interface{}, error) {
+	var event map[string]interface{}
+	data, err := json.Marshal(&e)
 	if err != nil {
 		return nil, err
 	}
-	err = json.Unmarshal(d, &event)
+	err = json.Unmarshal(data, &event)
 	return event, err
+}
+
+func (e *ValidatorRegisteredEvent) Unmarshal(data map[string]interface{}) error {
+	d, err := json.Marshal(data)
+	if err != nil {
+		return err
+	}
+
+	return json.Unmarshal(d, e)
 }
 
 type RegisterRPCEndpointEvent struct {
@@ -44,7 +74,7 @@ type RegisterRPCEndpointEvent struct {
 	URL       *url.URL         `json:"url"`
 }
 
-func (e *RegisterRPCEndpointEvent) Marshall() (map[string]interface{}, error) {
+func (e *RegisterRPCEndpointEvent) Marshal() (map[string]interface{}, error) {
 	var event map[string]interface{}
 	data, err := json.Marshal(&e)
 	if err != nil {
@@ -54,12 +84,11 @@ func (e *RegisterRPCEndpointEvent) Marshall() (map[string]interface{}, error) {
 	return event, err
 }
 
-func UnmarshallRegisterRPCEndpointEvent(data map[string]interface{}) (*RegisterRPCEndpointEvent, error) {
-	var event *RegisterRPCEndpointEvent
+func (e *RegisterRPCEndpointEvent) Unmarshal(data map[string]interface{}) error {
 	d, err := json.Marshal(data)
 	if err != nil {
-		return nil, err
+		return err
 	}
-	err = json.Unmarshal(d, &event)
-	return event, err
+
+	return json.Unmarshal(d, e)
 }

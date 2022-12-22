@@ -167,7 +167,7 @@ func (a *SearchActor) handleTweets(ctx actor.Context, tweets *Response) {
 			User:      author,
 		}
 
-		eventData, err := e.Marshall()
+		eventData, err := e.Marshal()
 		if err != nil {
 			log.Err(err).Msg("❌ Failed to marshall event to map interface")
 			return

@@ -10,6 +10,7 @@ import (
 	"okp4/nemeton-leaderboard/app/util"
 
 	"github.com/cosmos/cosmos-sdk/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -278,19 +279,14 @@ func makeBoardFilter(search *string, after *Cursor) bson.M {
 	return filter
 }
 
-func (s *Store) CreateValidator(
+func (s *Store) CreateGentxValidator(
 	ctx context.Context,
 	createdAt time.Time,
+	msgCreateVal *stakingtypes.MsgCreateValidator,
 	discord, country string,
 	twitter *string,
-	genTX map[string]interface{},
 ) error {
-	msgCreateVal, err := ParseGenTX(genTX)
-	if err != nil {
-		return err
-	}
-
-	validator, err := MakeValidator(msgCreateVal, discord, country, twitter)
+	validator, err := MakeValidatorFromMsg(msgCreateVal, discord, country, twitter)
 	if err != nil {
 		return err
 	}
@@ -312,6 +308,24 @@ func (s *Store) CreateValidator(
 
 	validator.Points = points
 	validator.Tasks = tasks
+
+	_, err = s.db.Collection(validatorsCollectionName).InsertOne(ctx, validator)
+	return err
+}
+
+func (s *Store) RegisterValidator(
+	ctx context.Context,
+	valoper types.ValAddress,
+	delegator types.AccAddress,
+	valcons types.ConsAddress,
+	description stakingtypes.Description,
+	discord, country string,
+	twitter *string,
+) error {
+	validator, err := NewValidator(valoper, delegator, valcons, description, discord, country, twitter)
+	if err != nil {
+		return err
+	}
 
 	_, err = s.db.Collection(validatorsCollectionName).InsertOne(ctx, validator)
 	return err

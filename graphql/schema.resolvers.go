@@ -8,6 +8,7 @@ import (
 	"context"
 	"fmt"
 	"net/url"
+	"time"
 
 	"okp4/nemeton-leaderboard/app/event"
 	"okp4/nemeton-leaderboard/app/message"
@@ -15,7 +16,10 @@ import (
 	"okp4/nemeton-leaderboard/graphql/generated"
 	"okp4/nemeton-leaderboard/graphql/model"
 
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/types"
+	"github.com/rs/zerolog/log"
 )
 
 // Picture is the resolver for the picture field.
@@ -40,7 +44,7 @@ func (r *mutationResolver) SubmitValidatorGenTx(ctx context.Context, twitter *st
 		Country: country,
 		GenTX:   gentx,
 	}
-	rawEvt, err := evt.Marshall()
+	rawEvt, err := evt.Marshal()
 	if err != nil {
 		return nil, err
 	}
@@ -57,13 +61,72 @@ func (r *mutationResolver) SubmitValidatorGenTx(ctx context.Context, twitter *st
 	return nil, nil
 }
 
+// RegisterValidator is the resolver for the registerValidator field.
+func (r *mutationResolver) RegisterValidator(ctx context.Context, twitter *string, discord string, country string, delegator types.AccAddress, validator types.ValAddress) (*string, error) {
+	res, err := r.actorCTX.RequestFuture(
+		r.grpcClient,
+		&message.GetValidator{
+			Valoper: validator,
+		},
+		5*time.Second,
+	).Result()
+	if err != nil {
+		log.Err(err).Str("valoper", validator.String()).Msg("🤕 Couldn't fetch validator")
+		return nil, err
+	}
+
+	val, ok := res.(*message.GetValidatorResponse)
+	if !ok {
+		err := fmt.Errorf("cannot read grpc validator response")
+		log.Err(err).Str("valoper", validator.String()).Msg("🤕 Couldn't fetch validator")
+		return nil, err
+	}
+
+	if val.Validator == nil {
+		err := fmt.Errorf("could not find validator")
+		log.Err(err).Str("valoper", validator.String()).Msg("🤕 Couldn't fetch validator")
+		return nil, err
+	}
+
+	var pubkey cryptotypes.PubKey
+	if err := simapp.MakeTestEncodingConfig().InterfaceRegistry.UnpackAny(val.Validator.ConsensusPubkey, &pubkey); err != nil {
+		log.Err(err).Str("valoper", validator.String()).Msg("🤕 Couldn't fetch validator")
+		return nil, err
+	}
+
+	evt := ValidatorRegisteredEvent{
+		Twitter:     twitter,
+		Discord:     discord,
+		Country:     country,
+		Valoper:     validator,
+		Delegator:   delegator,
+		Valcons:     types.GetConsAddress(pubkey),
+		Description: val.Validator.Description,
+	}
+	rawEvt, err := evt.Marshal()
+	if err != nil {
+		return nil, err
+	}
+
+	r.actorCTX.Send(
+		r.eventStore,
+		&message.PublishEventMessage{
+			Event: event.NewEvent(
+				ValidatorRegisteredEventType,
+				rawEvt,
+			),
+		},
+	)
+	return nil, nil
+}
+
 // RegisterRPCEndpoint is the resolver for the registerRPCEndpoint field.
 func (r *mutationResolver) RegisterRPCEndpoint(ctx context.Context, validator types.ValAddress, url *url.URL) (*string, error) {
 	evt := RegisterRPCEndpointEvent{
 		Validator: validator,
 		URL:       url,
 	}
-	rawEvt, err := evt.Marshall()
+	rawEvt, err := evt.Marshal()
 	if err != nil {
 		return nil, err
 	}

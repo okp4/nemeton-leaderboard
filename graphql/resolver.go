@@ -20,18 +20,20 @@ type Resolver struct {
 	store         *nemeton.Store
 	keybaseClient *keybase.Client
 	eventStore    *actor.PID
+	grpcClient    *actor.PID
 }
 
 func NewResolver(
 	ctx actor.Context,
 	store *nemeton.Store,
 	keybaseClient *keybase.Client,
-	eventStore *actor.PID,
+	eventStore, grpcClient *actor.PID,
 ) *Resolver {
 	return &Resolver{
 		actorCTX:      ctx,
 		store:         store,
 		keybaseClient: keybaseClient,
 		eventStore:    eventStore,
+		grpcClient:    grpcClient,
 	}
 }

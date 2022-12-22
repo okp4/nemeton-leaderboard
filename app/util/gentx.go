@@ -1,4 +1,4 @@
-package nemeton
+package util
 
 import (
 	"encoding/json"

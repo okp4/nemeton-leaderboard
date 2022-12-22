@@ -15,7 +15,7 @@ type NewBlockEvent struct {
 	Signatures []types.CommitSig `json:"signatures"`
 }
 
-func (e *NewBlockEvent) Marshall() (map[string]interface{}, error) {
+func (e *NewBlockEvent) Marshal() (map[string]interface{}, error) {
 	var event map[string]interface{}
 	data, err := json.Marshal(&e)
 	if err != nil {
@@ -25,12 +25,11 @@ func (e *NewBlockEvent) Marshall() (map[string]interface{}, error) {
 	return event, err
 }
 
-func Unmarshall(data map[string]interface{}) (*NewBlockEvent, error) {
-	var event *NewBlockEvent
+func (e *NewBlockEvent) Unmarshal(data map[string]interface{}) error {
 	d, err := json.Marshal(data)
 	if err != nil {
-		return nil, err
+		return err
 	}
-	err = json.Unmarshal(d, &event)
-	return event, err
+
+	return json.Unmarshal(d, e)
 }

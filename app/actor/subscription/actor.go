@@ -4,6 +4,8 @@ import (
 	"context"
 	"time"
 
+	"okp4/nemeton-leaderboard/app/util"
+
 	"okp4/nemeton-leaderboard/graphql"
 
 	"okp4/nemeton-leaderboard/app/actor/synchronization"
@@ -85,6 +87,8 @@ func (a *Actor) receiveNewEvent(e event.Event) {
 		a.handleNewBlockEvent(e.Data)
 	case graphql.GenTXSubmittedEventType:
 		a.handleGenTXSubmittedEvent(e.Date, e.Data)
+	case graphql.ValidatorRegisteredEventType:
+		a.handleValidatorRegisteredEvent(e.Data)
 	case tweet.NewTweetEventType:
 		a.handleNewTweetEvent(e.Date, e.Data)
 	case graphql.RegisterRPCEndpointEventType:
@@ -98,9 +102,9 @@ func (a *Actor) receiveNewEvent(e event.Event) {
 }
 
 func (a *Actor) handleNewBlockEvent(data map[string]interface{}) {
-	e, err := synchronization.Unmarshall(data)
-	if err != nil {
-		log.Panic().Err(err).Msg("❌ Failed unmarshall event to NewBlockEvent")
+	e := &synchronization.NewBlockEvent{}
+	if err := e.Unmarshal(data); err != nil {
+		log.Panic().Err(err).Msg("❌ Failed unmarshal event to NewBlockEvent")
 		return
 	}
 
@@ -148,23 +152,51 @@ func (a *Actor) handleNewBlockEvent(data map[string]interface{}) {
 func (a *Actor) handleGenTXSubmittedEvent(when time.Time, data map[string]interface{}) {
 	log.Info().Interface("event", data).Msg("Handle GenTXSubmitted event")
 
-	e, err := graphql.Unmarshall(data)
-	if err != nil {
-		log.Panic().Err(err).Msg("❌ Failed unmarshall event to GenTXSubmitted")
+	e := &graphql.GenTXSubmittedEvent{}
+	if err := e.Unmarshal(data); err != nil {
+		log.Panic().Err(err).Msg("❌ Failed unmarshal event to GenTXSubmitted")
 		return
 	}
 
-	if err := a.store.CreateValidator(context.Background(), when, e.Discord, e.Country, e.Twitter, e.GenTX); err != nil {
+	msgCreateVal, err := util.ParseGenTX(e.GenTX)
+	if err != nil {
+		log.Panic().Err(err).Msg("❌ Failed unmarshal gentx")
+	}
+
+	if err := a.store.CreateGentxValidator(context.Background(), when, msgCreateVal, e.Discord, e.Country, e.Twitter); err != nil {
 		log.Err(err).Interface("data", data).Msg("🤕 Couldn't create validator")
+	}
+}
+
+func (a *Actor) handleValidatorRegisteredEvent(data map[string]interface{}) {
+	log.Info().Interface("event", data).Msg("Handle ValidatorRegistered event")
+
+	e := &graphql.ValidatorRegisteredEvent{}
+	if err := e.Unmarshal(data); err != nil {
+		log.Panic().Err(err).Msg("❌ Failed unmarshal event to ValidatorRegistered")
+		return
+	}
+
+	if err := a.store.RegisterValidator(
+		context.Background(),
+		e.Valoper,
+		e.Delegator,
+		e.Valcons,
+		e.Description,
+		e.Discord,
+		e.Country,
+		e.Twitter,
+	); err != nil {
+		log.Err(err).Interface("data", data).Msg("🤕 Couldn't register validator")
 	}
 }
 
 func (a *Actor) handleNewTweetEvent(when time.Time, data map[string]interface{}) {
 	log.Info().Interface("event", data).Msg("Handle NewTweet event")
 
-	e, err := tweet.Unmarshall(data)
-	if err != nil {
-		log.Panic().Err(err).Msg("❌ Failed unmarshall event to NewTweetEvent")
+	e := &tweet.NewTweetEvent{}
+	if err := e.Unmarshal(data); err != nil {
+		log.Panic().Err(err).Msg("❌ Failed unmarshal event to NewTweetEvent")
 		return
 	}
 	phase := a.store.GetCurrentPhaseAt(when)
@@ -203,9 +235,9 @@ func (a *Actor) handlePhaseStarted(phase *nemeton.Phase) {
 func (a *Actor) handleRegisterRPCEndpointEvent(when time.Time, data map[string]interface{}) {
 	log.Info().Interface("event", data).Msg("Handle RegisterRPC event")
 
-	e, err := graphql.UnmarshallRegisterRPCEndpointEvent(data)
-	if err != nil {
-		log.Panic().Err(err).Msg("❌ Failed unmarshall event to RegisterRPCEndpointEvent")
+	e := &graphql.RegisterRPCEndpointEvent{}
+	if err := e.Unmarshal(data); err != nil {
+		log.Panic().Err(err).Msg("❌ Failed unmarshal event to RegisterRPCEndpointEvent")
 		return
 	}
 
