@@ -264,7 +264,7 @@ func (a *Actor) handleRegisterURLEvent(when time.Time, data map[string]interface
 
 	e := &graphql.RegisterURLEvent{}
 	if err := e.Unmarshal(data); err != nil {
-		log.Panic().Err(err).Msg("❌ Failed unmarshal event to RegisterRPCEndpointEvent")
+		log.Panic().Err(err).Msg("❌ Failed unmarshal event to RegisterURLEvent")
 		return
 	}
 
