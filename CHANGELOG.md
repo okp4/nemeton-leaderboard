@@ -1,5 +1,52 @@
 # ØKP4 🧙 Nemeton Leaderboard 🏆
 
+## [2.0.0](https://github.com/okp4/nemeton-leaderboard/compare/v1.3.0...v2.0.0) (2022-12-22)
+
+
+### ⚠ BREAKING CHANGES
+
+* **graphql:** simplify schema
+
+### Features
+
+* **event:** design task completed event ([11a836b](https://github.com/okp4/nemeton-leaderboard/commit/11a836b522309697ab76a817794f140ceb0e00fd))
+* **event:** design validator updated event ([a10a34c](https://github.com/okp4/nemeton-leaderboard/commit/a10a34c659bbfb5c3697c0d2e24ec619c723c68a))
+* **event:** implements validator registered evt publish ([6da11ed](https://github.com/okp4/nemeton-leaderboard/commit/6da11ed47a2404ada38ce942fb581e402934708f))
+* **graphql:** implement completeTask mutation ([ce2faf3](https://github.com/okp4/nemeton-leaderboard/commit/ce2faf31c4f3a9cc4a1c66df5597ef775cf4c17a))
+* **graphql:** implement updateValidator mutation ([1176b71](https://github.com/okp4/nemeton-leaderboard/commit/1176b715c9c9b01f866ced6841804a72bc1a2c0e))
+* **graphql:** introduce validator registration mutation ([08d09b6](https://github.com/okp4/nemeton-leaderboard/commit/08d09b6e793589ff0860df12fdb581f68ba0d67e))
+* **graphql:** simplify schema ([0893f89](https://github.com/okp4/nemeton-leaderboard/commit/0893f89d96063093129f5aeefc30a295fb9abde9))
+* **graphql:** specify completeTask mutation ([48f54a7](https://github.com/okp4/nemeton-leaderboard/commit/48f54a7dc08daed24330d5939dc4fc017af403db))
+* **graphql:** specify updateValidator mutation ([eb08434](https://github.com/okp4/nemeton-leaderboard/commit/eb08434e4b4748ed9a4e882a7d279af67fc74c08))
+* **grpc:** implements validator fetching ([f0d6b23](https://github.com/okp4/nemeton-leaderboard/commit/f0d6b237c8432cc4f185bae65cb2db07d406163f))
+* **grpc:** share grpc client actor with graphql ([a9882e3](https://github.com/okp4/nemeton-leaderboard/commit/a9882e3b4aa901bf31b72683ea07f007068feadf))
+* **leaderboard:** handle task completed event ([e28027d](https://github.com/okp4/nemeton-leaderboard/commit/e28027d97961a5df06464b6fe450cb46c11aca51))
+* **leaderboard:** handle validator updated event ([c86e862](https://github.com/okp4/nemeton-leaderboard/commit/c86e862fdd3880c7f0b0397cee1924b9c829f0ea))
+* **leaderboard:** implements validator register ([a92e3b9](https://github.com/okp4/nemeton-leaderboard/commit/a92e3b90f8695b0778934e243b6f7066c4101cf4))
+* **nemeton:** bootstrap phase2 ([1d34833](https://github.com/okp4/nemeton-leaderboard/commit/1d3483325bc76a4d38fdff2c0eb617b665e1814f))
+* **nemeton:** introduce new task types ([59d41eb](https://github.com/okp4/nemeton-leaderboard/commit/59d41eba231103f7665ad249dae133b1625758b1))
+* **phase2:** add mutation to register rpc ([340e1b0](https://github.com/okp4/nemeton-leaderboard/commit/340e1b069db5c7beb545bebb7a551e708285b271))
+* **phase2:** handle Register rpc event ([2a4d0af](https://github.com/okp4/nemeton-leaderboard/commit/2a4d0af236f11f1cfc3c5b4b7bba05250333c322))
+* **phase2:** include rpc endpoint in mongo validator model ([702d9e8](https://github.com/okp4/nemeton-leaderboard/commit/702d9e878d65ee85a0880407b7bcdd4f4c7faa53))
+* **phase2:** omit empty rpc endpoint field ([f6c4730](https://github.com/okp4/nemeton-leaderboard/commit/f6c473008279e34031f654e08ab1fc6d04a4ef12))
+* **phase2:** register event for rpc endpoint ([4ce3fa1](https://github.com/okp4/nemeton-leaderboard/commit/4ce3fa17eeaa45ef6338774a17f1ff81df81ce42))
+* **phase2:** register reward for rpc endpoint ([555a177](https://github.com/okp4/nemeton-leaderboard/commit/555a177b3e36329142349aa963a833fa3efc6100))
+* **phase:** handle phase started and phase end ([7b3013b](https://github.com/okp4/nemeton-leaderboard/commit/7b3013bd05f3492257db4876afe0d9b5e016652e))
+* **phase:** register validator uptime points on phase ended ([1b2f16f](https://github.com/okp4/nemeton-leaderboard/commit/1b2f16fc02474cfe35dab2bccb934dd78e9d22b3))
+* **uptime:** get uptime max point from task ([85d6252](https://github.com/okp4/nemeton-leaderboard/commit/85d62521601da23135d77cb2f1394e653907f2ef))
+
+
+### Bug Fixes
+
+* **lint:** linter correction ([c711a9f](https://github.com/okp4/nemeton-leaderboard/commit/c711a9fb692fb066e1baa10e35dab8235f677a21))
+* **log:** talk about the right thing ([9f6d06e](https://github.com/okp4/nemeton-leaderboard/commit/9f6d06eff4f3bbc9604fa525eb1b2968e1c6d865))
+* **phase2:** register rpc by valoper instead of moniker ([9ecfd63](https://github.com/okp4/nemeton-leaderboard/commit/9ecfd637077fb760bebe871ee1e99922d82d6bae))
+* **phase2:** remove old graphql generated code ([5de7dc0](https://github.com/okp4/nemeton-leaderboard/commit/5de7dc0fa44b2e1c0cbbe1e974a8eed5a3595921))
+* **phase:** get correct previous phase ([d33b092](https://github.com/okp4/nemeton-leaderboard/commit/d33b0924625b8e4bd2c285c186cf7a8bc0448364))
+* **phase:** uptime point round ([480a887](https://github.com/okp4/nemeton-leaderboard/commit/480a887271d67bdfd214f8df67d5bb2ba5b28d32))
+* **sync:** correct inconcistant log message ([41149fc](https://github.com/okp4/nemeton-leaderboard/commit/41149fc859e6486b8e4046a671bbffaf84cbdc52))
+* **task:** cast uptime from int64 to uint64 ([993a891](https://github.com/okp4/nemeton-leaderboard/commit/993a891398a53f9c6131d90f551ce7dfc304d994))
+
 ## [1.3.0](https://github.com/okp4/nemeton-leaderboard/compare/v1.2.0...v1.3.0) (2022-12-15)
 
 
