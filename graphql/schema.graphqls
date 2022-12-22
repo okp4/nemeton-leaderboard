@@ -222,6 +222,35 @@ type Mutation {
         """
         url: URI!
     ): Void @auth
+
+    """
+    Emit a `TaskCompletedEvent` in the system carrying information related to the completion of a task.
+
+    The purpose is to manually attribute the points of a task, automated or not. This generic event doesn't carrying task specific context, prefer using more grained mutation to ensure any specific logic is executed, if applicable.
+
+    The event handling is idempotent, it ensures the task is completed and the points attributed once.
+    """
+    completeTask(
+        """
+        The validator who has completed the task.
+        """
+        validator: ValoperAddress!
+
+        """
+        The phase the task belongs to.
+        """
+        phase: Int!
+
+        """
+        The completed task.
+        """
+        task: ID!
+
+        """
+        The points to attribute, if applicable. The priority will be given to the static rewards amount specified in the task definition.
+        """
+        points: UInt64
+    ): Void @auth
 }
 
 """
