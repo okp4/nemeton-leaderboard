@@ -358,18 +358,41 @@ func (s *Store) UpdateValidator(
 	return err
 }
 
-func (s *Store) RegisterValidatorRPC(ctx context.Context, when time.Time, validator types.ValAddress, rpc *url.URL) error {
+func (s *Store) RegisterValidatorURL(ctx context.Context,
+	when time.Time,
+	urlType string,
+	validator types.ValAddress,
+	url *url.URL,
+	rewards *uint64,
+) error {
+	var field string
+	switch urlType {
+	case TaskTypeRPC:
+		field = "rpcEndpoint"
+	case TaskTypeDashboard:
+		field = "dashboard"
+	case TaskTypeSnapshots:
+		field = "snapshot"
+	}
+
 	filter := bson.M{"valoper": validator}
 	_, err := s.db.Collection(validatorsCollectionName).UpdateOne(ctx,
 		filter,
-		bson.M{"$set": bson.M{"rpcEndpoint": rpc}},
+		bson.M{"$set": bson.M{field: url}},
 	)
 	if err != nil {
 		return err
 	}
 
-	if phase, task := s.getTaskPhaseByType(taskTypeRPC, when); phase != nil && task != nil {
-		return s.ensureTaskCompleted(ctx, filter, phase.Number, task.ID, *task.Rewards)
+	if phase, task := s.getTaskPhaseByType(urlType, when); phase != nil && task != nil {
+		var r uint64
+		switch urlType {
+		case TaskTypeRPC, TaskTypeSnapshots:
+			r = *task.Rewards
+		case TaskTypeDashboard:
+			r = *rewards
+		}
+		return s.ensureTaskCompleted(ctx, filter, phase.Number, task.ID, r)
 	}
 	return fmt.Errorf("could not find corresponding phase and task at %s. Did this task begun ? ", when.Format(time.RFC3339))
 }
@@ -553,7 +576,7 @@ func (s *Store) CompleteValidatorsUptimeForPhase(ctx context.Context, phase *Pha
 		return fmt.Errorf("could not retrieve uptime task for phase %d", phase.Number)
 	}
 
-	reward := task.GetUptimeMaxPoints()
+	reward := task.GetParamMaxPoints()
 	if reward == nil {
 		return fmt.Errorf("could not retrieve the maximum number of point for task %s", task.ID)
 	}

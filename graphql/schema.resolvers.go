@@ -134,9 +134,11 @@ func (r *mutationResolver) UpdateValidator(ctx context.Context, delegator types.
 
 // RegisterRPCEndpoint is the resolver for the registerRPCEndpoint field.
 func (r *mutationResolver) RegisterRPCEndpoint(ctx context.Context, validator types.ValAddress, url *url.URL) (*string, error) {
-	evt := RegisterRPCEndpointEvent{
+	evt := RegisterURLEvent{
+		Type:      nemeton.TaskTypeRPC,
 		Validator: validator,
 		URL:       url,
+		Points:    nil,
 	}
 	rawEvt, err := evt.Marshal()
 	if err != nil {
@@ -147,7 +149,66 @@ func (r *mutationResolver) RegisterRPCEndpoint(ctx context.Context, validator ty
 		r.eventStore,
 		&message.PublishEventMessage{
 			Event: event.NewEvent(
-				RegisterRPCEndpointEventType,
+				RegisterURLEventType,
+				rawEvt,
+			),
+		},
+	)
+	return nil, nil
+}
+
+// RegisterSnapshotURL is the resolver for the registerSnapshotURL field.
+func (r *mutationResolver) RegisterSnapshotURL(ctx context.Context, validator types.ValAddress, url *url.URL) (*string, error) {
+	evt := RegisterURLEvent{
+		Type:      nemeton.TaskTypeSnapshots,
+		Validator: validator,
+		URL:       url,
+		Points:    nil,
+	}
+	rawEvt, err := evt.Marshal()
+	if err != nil {
+		return nil, err
+	}
+
+	r.actorCTX.Send(
+		r.eventStore,
+		&message.PublishEventMessage{
+			Event: event.NewEvent(
+				RegisterURLEventType,
+				rawEvt,
+			),
+		},
+	)
+	return nil, nil
+}
+
+// RegisterDashboardURL is the resolver for the registerDashboardURL field.
+func (r *mutationResolver) RegisterDashboardURL(ctx context.Context, validator types.ValAddress, url *url.URL, points uint64) (*string, error) {
+	phase := r.store.GetCurrentPhase()
+	for _, task := range phase.Tasks {
+		if task.Type == nemeton.TaskTypeDashboard {
+			if maxPoints := task.GetParamMaxPoints(); maxPoints != nil && points > *maxPoints {
+				return nil, fmt.Errorf("the maximum number of points allowed for this task is %d, you give %d points", *maxPoints, points)
+			}
+		}
+	}
+
+	evt := RegisterURLEvent{
+		Type:      nemeton.TaskTypeDashboard,
+		Validator: validator,
+		URL:       url,
+		Points:    &points,
+	}
+	rawEvt, err := evt.Marshal()
+	if err != nil {
+		return nil, err
+	}
+
+	r.actorCTX.Send(
+		r.eventStore,
+		&message.PublishEventMessage{
+			Event: event.NewEvent(
+				RegisterURLEventType,
 				rawEvt,
 			),
 		},

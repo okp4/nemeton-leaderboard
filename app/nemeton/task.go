@@ -8,11 +8,11 @@ const (
 	taskTypeNodeSetup    = "node-setup"
 	taskTypeUptime       = "uptime"
 	TaskTypeTweetNemeton = "tweet-nemeton"
-	taskTypeRPC          = "rpc"
-	taskTypeSnapshots    = "snapshots"
-	taskTypeDashboard    = "dashboard"
+	TaskTypeRPC          = "rpc"
+	TaskTypeSnapshots    = "snapshots"
+	TaskTypeDashboard    = "dashboard"
 
-	taskParamUptimeMaxPoints = "max-points"
+	taskParamMaxPoints = "max-points"
 )
 
 type TaskState struct {
@@ -55,8 +55,8 @@ func (t Task) InProgressAt(at time.Time) bool {
 	return t.StartedAt(at) && !t.FinishedAt(at)
 }
 
-func (t Task) GetUptimeMaxPoints() *uint64 {
-	if v, ok := t.Params[taskParamUptimeMaxPoints]; ok {
+func (t Task) GetParamMaxPoints() *uint64 {
+	if v, ok := t.Params[taskParamMaxPoints]; ok {
 		if maxPoints, ok := v.(int64); ok {
 			p := uint64(maxPoints)
 			return &p
@@ -97,7 +97,7 @@ func makeNodeSetupTask(id, name, description string, start, end time.Time, rewar
 
 func makeUptimeTask(id, name, description string, start, end time.Time, maxPoints uint64) Task {
 	return makeTask(taskTypeUptime, id, name, description, start, end, nil, map[string]interface{}{
-		taskParamUptimeMaxPoints: maxPoints,
+		taskParamMaxPoints: maxPoints,
 	})
 }
 
@@ -106,13 +106,15 @@ func makeTweetNemetonTask(id, name, description string, start, end time.Time, re
 }
 
 func makeRPCTask(id, name, description string, start, end time.Time, rewards uint64) Task {
-	return makeTask(taskTypeRPC, id, name, description, start, end, &rewards, nil)
+	return makeTask(TaskTypeRPC, id, name, description, start, end, &rewards, nil)
 }
 
 func makeSnapshotsTask(id, name, description string, start, end time.Time, rewards uint64) Task {
-	return makeTask(taskTypeSnapshots, id, name, description, start, end, &rewards, nil)
+	return makeTask(TaskTypeSnapshots, id, name, description, start, end, &rewards, nil)
 }
 
-func makeDashboardTask(id, name, description string, start, end time.Time) Task {
-	return makeTask(taskTypeDashboard, id, name, description, start, end, nil, nil)
+func makeDashboardTask(id, name, description string, start, end time.Time, maxPoints uint64) Task {
+	return makeTask(TaskTypeDashboard, id, name, description, start, end, nil, map[string]interface{}{
+		taskParamMaxPoints: maxPoints,
+	})
 }

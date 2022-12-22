@@ -12,8 +12,8 @@ const (
 	GenTXSubmittedEventType      = "gentx-submitted"
 	ValidatorRegisteredEventType = "validator-registered"
 	ValidatorUpdatedEventType    = "validator-updated"
-	RegisterRPCEndpointEventType = "register-rpc-endpoint"
 	TaskCompletedEventType       = "task-completed"
+	RegisterURLEventType         = "register-url-endpoint"
 )
 
 type GenTXSubmittedEvent struct {
@@ -100,12 +100,14 @@ func (e *ValidatorUpdatedEvent) Unmarshal(data map[string]interface{}) error {
 	return json.Unmarshal(d, e)
 }
 
-type RegisterRPCEndpointEvent struct {
+type RegisterURLEvent struct {
+	Type      string           `json:"type"`
 	Validator types.ValAddress `json:"validator"`
 	URL       *url.URL         `json:"url"`
+	Points    *uint64          `json:"rewards,omitempty"`
 }
 
-func (e *RegisterRPCEndpointEvent) Marshal() (map[string]interface{}, error) {
+func (e *RegisterURLEvent) Marshal() (map[string]interface{}, error) {
 	var event map[string]interface{}
 	data, err := json.Marshal(&e)
 	if err != nil {
@@ -115,7 +117,7 @@ func (e *RegisterRPCEndpointEvent) Marshal() (map[string]interface{}, error) {
 	return event, err
 }
 
-func (e *RegisterRPCEndpointEvent) Unmarshal(data map[string]interface{}) error {
+func (e *RegisterURLEvent) Unmarshal(data map[string]interface{}) error {
 	d, err := json.Marshal(data)
 	if err != nil {
 		return err

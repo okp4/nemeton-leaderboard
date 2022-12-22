@@ -77,7 +77,9 @@ type ComplexityRoot struct {
 
 	Mutation struct {
 		CompleteTask         func(childComplexity int, validator types.ValAddress, phase int, task string, points *uint64) int
+		RegisterDashboardURL func(childComplexity int, validator types.ValAddress, url *url.URL, points uint64) int
 		RegisterRPCEndpoint  func(childComplexity int, validator types.ValAddress, url *url.URL) int
+		RegisterSnapshotURL  func(childComplexity int, validator types.ValAddress, url *url.URL) int
 		RegisterValidator    func(childComplexity int, twitter *string, discord string, country string, delegator types.AccAddress, validator types.ValAddress) int
 		SubmitValidatorGenTx func(childComplexity int, twitter *string, discord string, country string, gentx map[string]interface{}) int
 		UpdateValidator      func(childComplexity int, delegator types.AccAddress, twitter *string, discord string, country string, valoper types.ValAddress) int
@@ -153,6 +155,7 @@ type ComplexityRoot struct {
 
 	Validator struct {
 		Country      func(childComplexity int) int
+		Dashboard    func(childComplexity int) int
 		Delegator    func(childComplexity int) int
 		Details      func(childComplexity int) int
 		Discord      func(childComplexity int) int
@@ -162,6 +165,7 @@ type ComplexityRoot struct {
 		Points       func(childComplexity int) int
 		RPCEndpoint  func(childComplexity int) int
 		Rank         func(childComplexity int) int
+		Snapshot     func(childComplexity int) int
 		Status       func(childComplexity int) int
 		Tasks        func(childComplexity int) int
 		Twitter      func(childComplexity int) int
@@ -183,6 +187,8 @@ type MutationResolver interface {
 	RegisterValidator(ctx context.Context, twitter *string, discord string, country string, delegator types.AccAddress, validator types.ValAddress) (*string, error)
 	UpdateValidator(ctx context.Context, delegator types.AccAddress, twitter *string, discord string, country string, valoper types.ValAddress) (*string, error)
 	RegisterRPCEndpoint(ctx context.Context, validator types.ValAddress, url *url.URL) (*string, error)
+	RegisterSnapshotURL(ctx context.Context, validator types.ValAddress, url *url.URL) (*string, error)
+	RegisterDashboardURL(ctx context.Context, validator types.ValAddress, url *url.URL, points uint64) (*string, error)
 	CompleteTask(ctx context.Context, validator types.ValAddress, phase int, task string, points *uint64) (*string, error)
 }
 type PhaseResolver interface {
@@ -298,6 +304,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.CompleteTask(childComplexity, args["validator"].(types.ValAddress), args["phase"].(int), args["task"].(string), args["points"].(*uint64)), true
 
+	case "Mutation.registerDashboardURL":
+		if e.complexity.Mutation.RegisterDashboardURL == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_registerDashboardURL_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.RegisterDashboardURL(childComplexity, args["validator"].(types.ValAddress), args["url"].(*url.URL), args["points"].(uint64)), true
+
 	case "Mutation.registerRPCEndpoint":
 		if e.complexity.Mutation.RegisterRPCEndpoint == nil {
 			break
@@ -309,6 +327,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.RegisterRPCEndpoint(childComplexity, args["validator"].(types.ValAddress), args["url"].(*url.URL)), true
+
+	case "Mutation.registerSnapshotURL":
+		if e.complexity.Mutation.RegisterSnapshotURL == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_registerSnapshotURL_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.RegisterSnapshotURL(childComplexity, args["validator"].(types.ValAddress), args["url"].(*url.URL)), true
 
 	case "Mutation.registerValidator":
 		if e.complexity.Mutation.RegisterValidator == nil {
@@ -681,6 +711,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Validator.Country(childComplexity), true
 
+	case "Validator.dashboard":
+		if e.complexity.Validator.Dashboard == nil {
+			break
+		}
+
+		return e.complexity.Validator.Dashboard(childComplexity), true
+
 	case "Validator.delegator":
 		if e.complexity.Validator.Delegator == nil {
 			break
@@ -743,6 +780,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Validator.Rank(childComplexity), true
+
+	case "Validator.snapshot":
+		if e.complexity.Validator.Snapshot == nil {
+			break
+		}
+
+		return e.complexity.Validator.Snapshot(childComplexity), true
 
 	case "Validator.status":
 		if e.complexity.Validator.Status == nil {
@@ -1086,6 +1130,46 @@ type Mutation {
     ): Void @auth
 
     """
+    Emit a ` + "`" + `RegisterSnapshotEvent` + "`" + ` in the system to register a snapshot url for the given druid validator.
+
+    Through the event handling logic, the validator will be fulfilled with it's snapshot url and task completed with points
+    attribution if still in progress. If event is submitted multiple time, snapshot url is updated.
+    """
+    registerSnapshotURL(
+        """
+        The valoper address of the validator that will register the snapshot url.
+        """
+        validator: ValoperAddress!
+        """
+        The snapshot url of validator.
+        """
+        url: URI!
+    ): Void @auth
+
+    """
+    Emit a ` + "`" + `RegisterDashboardEvent` + "`" + ` in the system to register a dashboard url for the given druid validator.
+
+    Through the event handling logic, the validator will be fulfilled with it's dashboard url and task completed with points
+    attribution if still in progress. If event is submitted multiple time, dashboard url is updated.
+    """
+    registerDashboardURL(
+        """
+        The valoper address of the validator that will register the dashboard url.
+        """
+        validator: ValoperAddress!
+
+        """
+        The dashboard url of validator.
+        """
+        url: URI!
+
+        """
+        Number of point to give to the validator. Up to 2000.
+        """
+        points: UInt64!
+    ): Void @auth
+
+    """
     Emit a ` + "`" + `TaskCompletedEvent` + "`" + ` in the system carrying information related to the completion of a task.
 
     The purpose is to manually attribute the points of a task, automated or not. This generic event doesn't carrying task specific context, prefer using more grained mutation to ensure any specific logic is executed, if applicable.
@@ -1370,6 +1454,16 @@ type Validator {
     rpcEndpoint: URI
 
     """
+    The validator snapshots url.
+    """
+    snapshot: URI
+
+    """
+    The validator dashboard url.
+    """
+    dashboard: URI
+
+    """
     The validator current status.
     """
     status: ValidatorStatus!
@@ -1563,7 +1657,64 @@ func (ec *executionContext) field_Mutation_completeTask_args(ctx context.Context
 	return args, nil
 }
 
+func (ec *executionContext) field_Mutation_registerDashboardURL_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 types.ValAddress
+	if tmp, ok := rawArgs["validator"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("validator"))
+		arg0, err = ec.unmarshalNValoperAddress2githubᚗcomᚋcosmosᚋcosmosᚑsdkᚋtypesᚐValAddress(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["validator"] = arg0
+	var arg1 *url.URL
+	if tmp, ok := rawArgs["url"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("url"))
+		arg1, err = ec.unmarshalNURI2ᚖnetᚋurlᚐURL(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["url"] = arg1
+	var arg2 uint64
+	if tmp, ok := rawArgs["points"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("points"))
+		arg2, err = ec.unmarshalNUInt642uint64(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["points"] = arg2
+	return args, nil
+}
+
 func (ec *executionContext) field_Mutation_registerRPCEndpoint_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 types.ValAddress
+	if tmp, ok := rawArgs["validator"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("validator"))
+		arg0, err = ec.unmarshalNValoperAddress2githubᚗcomᚋcosmosᚋcosmosᚑsdkᚋtypesᚐValAddress(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["validator"] = arg0
+	var arg1 *url.URL
+	if tmp, ok := rawArgs["url"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("url"))
+		arg1, err = ec.unmarshalNURI2ᚖnetᚋurlᚐURL(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["url"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_registerSnapshotURL_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
 	var arg0 types.ValAddress
@@ -2558,6 +2709,150 @@ func (ec *executionContext) fieldContext_Mutation_registerRPCEndpoint(ctx contex
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_registerRPCEndpoint_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_registerSnapshotURL(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_registerSnapshotURL(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().RegisterSnapshotURL(rctx, fc.Args["validator"].(types.ValAddress), fc.Args["url"].(*url.URL))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			if ec.directives.Auth == nil {
+				return nil, errors.New("directive auth is not implemented")
+			}
+			return ec.directives.Auth(ctx, nil, directive0)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*string); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *string`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOVoid2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_registerSnapshotURL(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Void does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_registerSnapshotURL_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_registerDashboardURL(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_registerDashboardURL(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().RegisterDashboardURL(rctx, fc.Args["validator"].(types.ValAddress), fc.Args["url"].(*url.URL), fc.Args["points"].(uint64))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			if ec.directives.Auth == nil {
+				return nil, errors.New("directive auth is not implemented")
+			}
+			return ec.directives.Auth(ctx, nil, directive0)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*string); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *string`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOVoid2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_registerDashboardURL(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Void does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_registerDashboardURL_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return
 	}
@@ -4059,6 +4354,10 @@ func (ec *executionContext) fieldContext_Query_validator(ctx context.Context, fi
 				return ec.fieldContext_Validator_country(ctx, field)
 			case "rpcEndpoint":
 				return ec.fieldContext_Validator_rpcEndpoint(ctx, field)
+			case "snapshot":
+				return ec.fieldContext_Validator_snapshot(ctx, field)
+			case "dashboard":
+				return ec.fieldContext_Validator_dashboard(ctx, field)
 			case "status":
 				return ec.fieldContext_Validator_status(ctx, field)
 			case "points":
@@ -5444,6 +5743,88 @@ func (ec *executionContext) fieldContext_Validator_rpcEndpoint(ctx context.Conte
 	return fc, nil
 }
 
+func (ec *executionContext) _Validator_snapshot(ctx context.Context, field graphql.CollectedField, obj *nemeton.Validator) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Validator_snapshot(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Snapshot, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*url.URL)
+	fc.Result = res
+	return ec.marshalOURI2ᚖnetᚋurlᚐURL(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Validator_snapshot(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Validator",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type URI does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Validator_dashboard(ctx context.Context, field graphql.CollectedField, obj *nemeton.Validator) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Validator_dashboard(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Dashboard, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*url.URL)
+	fc.Result = res
+	return ec.marshalOURI2ᚖnetᚋurlᚐURL(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Validator_dashboard(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Validator",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type URI does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Validator_status(ctx context.Context, field graphql.CollectedField, obj *nemeton.Validator) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Validator_status(ctx, field)
 	if err != nil {
@@ -5745,6 +6126,10 @@ func (ec *executionContext) fieldContext_ValidatorEdge_node(ctx context.Context,
 				return ec.fieldContext_Validator_country(ctx, field)
 			case "rpcEndpoint":
 				return ec.fieldContext_Validator_rpcEndpoint(ctx, field)
+			case "snapshot":
+				return ec.fieldContext_Validator_snapshot(ctx, field)
+			case "dashboard":
+				return ec.fieldContext_Validator_dashboard(ctx, field)
 			case "status":
 				return ec.fieldContext_Validator_status(ctx, field)
 			case "points":
@@ -7734,6 +8119,18 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 				return ec._Mutation_registerRPCEndpoint(ctx, field)
 			})
 
+		case "registerSnapshotURL":
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_registerSnapshotURL(ctx, field)
+			})
+
+		case "registerDashboardURL":
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_registerDashboardURL(ctx, field)
+			})
+
 		case "completeTask":
 
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
@@ -8479,6 +8876,14 @@ func (ec *executionContext) _Validator(ctx context.Context, sel ast.SelectionSet
 		case "rpcEndpoint":
 
 			out.Values[i] = ec._Validator_rpcEndpoint(ctx, field, obj)
+
+		case "snapshot":
+
+			out.Values[i] = ec._Validator_snapshot(ctx, field, obj)
+
+		case "dashboard":
+
+			out.Values[i] = ec._Validator_dashboard(ctx, field, obj)
 
 		case "status":
 			field := field
