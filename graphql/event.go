@@ -104,7 +104,7 @@ type RegisterURLEvent struct {
 	Type      string           `json:"type"`
 	Validator types.ValAddress `json:"validator"`
 	URL       *url.URL         `json:"url"`
-	Rewards   *uint64          `json:"rewards"`
+	Points    *uint64          `json:"rewards,omitempty"`
 }
 
 func (e *RegisterURLEvent) Marshal() (map[string]interface{}, error) {

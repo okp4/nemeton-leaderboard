@@ -8,6 +8,7 @@ import (
 	"context"
 	"fmt"
 	"net/url"
+
 	"okp4/nemeton-leaderboard/app/event"
 	"okp4/nemeton-leaderboard/app/message"
 	"okp4/nemeton-leaderboard/app/nemeton"
@@ -137,7 +138,7 @@ func (r *mutationResolver) RegisterRPCEndpoint(ctx context.Context, validator ty
 		Type:      nemeton.TaskTypeRPC,
 		Validator: validator,
 		URL:       url,
-		Rewards:   nil,
+		Points:    nil,
 	}
 	rawEvt, err := evt.Marshal()
 	if err != nil {
@@ -162,7 +163,7 @@ func (r *mutationResolver) RegisterSnapshotURL(ctx context.Context, validator ty
 		Type:      nemeton.TaskTypeSnapshots,
 		Validator: validator,
 		URL:       url,
-		Rewards:   nil,
+		Points:    nil,
 	}
 	rawEvt, err := evt.Marshal()
 	if err != nil {
@@ -196,7 +197,7 @@ func (r *mutationResolver) RegisterDashboardURL(ctx context.Context, validator t
 		Type:      nemeton.TaskTypeDashboard,
 		Validator: validator,
 		URL:       url,
-		Rewards:   &points,
+		Points:    &points,
 	}
 	rawEvt, err := evt.Marshal()
 	if err != nil {
@@ -452,10 +453,12 @@ func (r *Resolver) Tasks() generated.TasksResolver { return &tasksResolver{r} }
 // Validator returns generated.ValidatorResolver implementation.
 func (r *Resolver) Validator() generated.ValidatorResolver { return &validatorResolver{r} }
 
-type identityResolver struct{ *Resolver }
-type mutationResolver struct{ *Resolver }
-type phaseResolver struct{ *Resolver }
-type phasesResolver struct{ *Resolver }
-type queryResolver struct{ *Resolver }
-type tasksResolver struct{ *Resolver }
-type validatorResolver struct{ *Resolver }
+type (
+	identityResolver  struct{ *Resolver }
+	mutationResolver  struct{ *Resolver }
+	phaseResolver     struct{ *Resolver }
+	phasesResolver    struct{ *Resolver }
+	queryResolver     struct{ *Resolver }
+	tasksResolver     struct{ *Resolver }
+	validatorResolver struct{ *Resolver }
+)

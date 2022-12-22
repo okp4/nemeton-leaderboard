@@ -268,7 +268,7 @@ func (a *Actor) handleRegisterURLEvent(when time.Time, data map[string]interface
 		return
 	}
 
-	if err := a.store.RegisterValidatorURL(a.ctx, when, e.Type, e.Validator, e.URL, e.Rewards); err != nil {
+	if err := a.store.RegisterValidatorURL(a.ctx, when, e.Type, e.Validator, e.URL, e.Points); err != nil {
 		log.Err(err).Interface("data", data).Msg("🤕 Couldn't register/update validator url")
 	}
 }
