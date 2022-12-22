@@ -180,7 +180,16 @@ func (r *mutationResolver) RegisterSnapshotURL(ctx context.Context, validator ty
 }
 
 // RegisterDashboardURL is the resolver for the registerDashboardURL field.
-func (r *mutationResolver) RegisterDashboardURL(ctx context.Context, validator types.ValAddress, url *url.URL) (*string, error) {
+func (r *mutationResolver) RegisterDashboardURL(ctx context.Context, validator types.ValAddress, url *url.URL, rewards uint64) (*string, error) {
+	phase := r.store.GetCurrentPhase()
+	for _, task := range phase.Tasks {
+		if task.Type == nemeton.TaskTypeDashboard {
+			if maxPoints := task.GetParamMaxPoints(); maxPoints != nil && rewards > *maxPoints {
+				return nil, fmt.Errorf("the maximum number of points allowed for this task is %d, you give %d points", *maxPoints, rewards)
+			}
+		}
+	}
+
 	evt := RegisterURLEvent{
 		Type:      nemeton.TaskTypeDashboard,
 		Validator: validator,

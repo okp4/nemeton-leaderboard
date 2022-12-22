@@ -256,6 +256,11 @@ type Mutation {
         The dashboard url of validator.
         """
         url: URI!
+
+        """
+        Number of point to give to the validator. Up to 2000.
+        """
+        rewards: UInt64!
     ): Void @auth
 
     """

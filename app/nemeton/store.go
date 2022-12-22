@@ -563,7 +563,7 @@ func (s *Store) CompleteValidatorsUptimeForPhase(ctx context.Context, phase *Pha
 		return fmt.Errorf("could not retrieve uptime task for phase %d", phase.Number)
 	}
 
-	reward := task.GetUptimeMaxPoints()
+	reward := task.GetParamMaxPoints()
 	if reward == nil {
 		return fmt.Errorf("could not retrieve the maximum number of point for task %s", task.ID)
 	}
