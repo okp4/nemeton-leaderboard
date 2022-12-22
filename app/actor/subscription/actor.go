@@ -283,6 +283,6 @@ func (a *Actor) handleTaskCompletedEvent(when time.Time, data map[string]interfa
 	}
 
 	if err := a.store.ManualCompleteTask(a.ctx, e.Validator, when, e.Phase, e.Task, e.Points); err != nil {
-		log.Err(err).Interface("data", data).Msg("🤕 Couldn't register/update validator rpc endpoint")
+		log.Err(err).Interface("data", data).Msg("🤕 Couldn't manually complete task")
 	}
 }
