@@ -543,6 +543,16 @@ type Validator {
     rpcEndpoint: URI
 
     """
+    The validator snapshots url.
+    """
+    snapshot: URI
+
+    """
+    The validator dashboard url.
+    """
+    dashboard: URI
+
+    """
     The validator current status.
     """
     status: ValidatorStatus!

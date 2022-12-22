@@ -23,6 +23,8 @@ type Validator struct {
 	Discord     string                       `bson:"discord"`
 	Country     string                       `bson:"country"`
 	RPCEndpoint *url.URL                     `bson:"rpcEndpoint,omitempty"`
+	Snapshot    *url.URL                     `bson:"snapshot,omitempty"`
+	Dashboard   *url.URL                     `bson:"dashboard,omitempty"`
 	Status      string                       `bson:"status"`
 	Points      uint64                       `bson:"points"`
 	Tasks       map[int]map[string]TaskState `bson:"tasks"`

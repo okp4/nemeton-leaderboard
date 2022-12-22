@@ -155,6 +155,7 @@ type ComplexityRoot struct {
 
 	Validator struct {
 		Country      func(childComplexity int) int
+		Dashboard    func(childComplexity int) int
 		Delegator    func(childComplexity int) int
 		Details      func(childComplexity int) int
 		Discord      func(childComplexity int) int
@@ -164,6 +165,7 @@ type ComplexityRoot struct {
 		Points       func(childComplexity int) int
 		RPCEndpoint  func(childComplexity int) int
 		Rank         func(childComplexity int) int
+		Snapshot     func(childComplexity int) int
 		Status       func(childComplexity int) int
 		Tasks        func(childComplexity int) int
 		Twitter      func(childComplexity int) int
@@ -709,6 +711,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Validator.Country(childComplexity), true
 
+	case "Validator.dashboard":
+		if e.complexity.Validator.Dashboard == nil {
+			break
+		}
+
+		return e.complexity.Validator.Dashboard(childComplexity), true
+
 	case "Validator.delegator":
 		if e.complexity.Validator.Delegator == nil {
 			break
@@ -771,6 +780,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Validator.Rank(childComplexity), true
+
+	case "Validator.snapshot":
+		if e.complexity.Validator.Snapshot == nil {
+			break
+		}
+
+		return e.complexity.Validator.Snapshot(childComplexity), true
 
 	case "Validator.status":
 		if e.complexity.Validator.Status == nil {
@@ -1431,6 +1447,16 @@ type Validator {
     The validator rpc node endpoint.
     """
     rpcEndpoint: URI
+
+    """
+    The validator snapshots url.
+    """
+    snapshot: URI
+
+    """
+    The validator dashboard url.
+    """
+    dashboard: URI
 
     """
     The validator current status.
@@ -4314,6 +4340,10 @@ func (ec *executionContext) fieldContext_Query_validator(ctx context.Context, fi
 				return ec.fieldContext_Validator_country(ctx, field)
 			case "rpcEndpoint":
 				return ec.fieldContext_Validator_rpcEndpoint(ctx, field)
+			case "snapshot":
+				return ec.fieldContext_Validator_snapshot(ctx, field)
+			case "dashboard":
+				return ec.fieldContext_Validator_dashboard(ctx, field)
 			case "status":
 				return ec.fieldContext_Validator_status(ctx, field)
 			case "points":
@@ -5699,6 +5729,88 @@ func (ec *executionContext) fieldContext_Validator_rpcEndpoint(ctx context.Conte
 	return fc, nil
 }
 
+func (ec *executionContext) _Validator_snapshot(ctx context.Context, field graphql.CollectedField, obj *nemeton.Validator) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Validator_snapshot(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Snapshot, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*url.URL)
+	fc.Result = res
+	return ec.marshalOURI2ᚖnetᚋurlᚐURL(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Validator_snapshot(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Validator",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type URI does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Validator_dashboard(ctx context.Context, field graphql.CollectedField, obj *nemeton.Validator) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Validator_dashboard(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Dashboard, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*url.URL)
+	fc.Result = res
+	return ec.marshalOURI2ᚖnetᚋurlᚐURL(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Validator_dashboard(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Validator",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type URI does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Validator_status(ctx context.Context, field graphql.CollectedField, obj *nemeton.Validator) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Validator_status(ctx, field)
 	if err != nil {
@@ -6000,6 +6112,10 @@ func (ec *executionContext) fieldContext_ValidatorEdge_node(ctx context.Context,
 				return ec.fieldContext_Validator_country(ctx, field)
 			case "rpcEndpoint":
 				return ec.fieldContext_Validator_rpcEndpoint(ctx, field)
+			case "snapshot":
+				return ec.fieldContext_Validator_snapshot(ctx, field)
+			case "dashboard":
+				return ec.fieldContext_Validator_dashboard(ctx, field)
 			case "status":
 				return ec.fieldContext_Validator_status(ctx, field)
 			case "points":
@@ -8746,6 +8862,14 @@ func (ec *executionContext) _Validator(ctx context.Context, sel ast.SelectionSet
 		case "rpcEndpoint":
 
 			out.Values[i] = ec._Validator_rpcEndpoint(ctx, field, obj)
+
+		case "snapshot":
+
+			out.Values[i] = ec._Validator_snapshot(ctx, field, obj)
+
+		case "dashboard":
+
+			out.Values[i] = ec._Validator_dashboard(ctx, field, obj)
 
 		case "status":
 			field := field
