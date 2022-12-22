@@ -89,6 +89,8 @@ func (a *Actor) receiveNewEvent(e event.Event) {
 		a.handleGenTXSubmittedEvent(e.Date, e.Data)
 	case graphql.ValidatorRegisteredEventType:
 		a.handleValidatorRegisteredEvent(e.Data)
+	case graphql.ValidatorUpdatedEventType:
+		a.handleValidatorUpdatedEvent(e.Data)
 	case tweet.NewTweetEventType:
 		a.handleNewTweetEvent(e.Date, e.Data)
 	case graphql.RegisterRPCEndpointEventType:
@@ -188,6 +190,29 @@ func (a *Actor) handleValidatorRegisteredEvent(data map[string]interface{}) {
 		e.Twitter,
 	); err != nil {
 		log.Err(err).Interface("data", data).Msg("🤕 Couldn't register validator")
+	}
+}
+
+func (a *Actor) handleValidatorUpdatedEvent(data map[string]interface{}) {
+	log.Info().Interface("event", data).Msg("Handle ValidatorUpdated event")
+
+	e := &graphql.ValidatorUpdatedEvent{}
+	if err := e.Unmarshal(data); err != nil {
+		log.Panic().Err(err).Msg("❌ Failed unmarshal event to ValidatorUpdated")
+		return
+	}
+
+	if err := a.store.UpdateValidator(
+		context.Background(),
+		e.Delegator,
+		e.Valoper,
+		e.Valcons,
+		e.Description,
+		e.Discord,
+		e.Country,
+		e.Twitter,
+	); err != nil {
+		log.Err(err).Interface("data", data).Msg("🤕 Couldn't update validator")
 	}
 }
 

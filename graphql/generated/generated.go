@@ -79,6 +79,7 @@ type ComplexityRoot struct {
 		RegisterRPCEndpoint  func(childComplexity int, validator types.ValAddress, url *url.URL) int
 		RegisterValidator    func(childComplexity int, twitter *string, discord string, country string, delegator types.AccAddress, validator types.ValAddress) int
 		SubmitValidatorGenTx func(childComplexity int, twitter *string, discord string, country string, gentx map[string]interface{}) int
+		UpdateValidator      func(childComplexity int, delegator types.AccAddress, twitter *string, discord string, country string, valoper types.ValAddress) int
 	}
 
 	PageInfo struct {
@@ -179,6 +180,7 @@ type IdentityResolver interface {
 type MutationResolver interface {
 	SubmitValidatorGenTx(ctx context.Context, twitter *string, discord string, country string, gentx map[string]interface{}) (*string, error)
 	RegisterValidator(ctx context.Context, twitter *string, discord string, country string, delegator types.AccAddress, validator types.ValAddress) (*string, error)
+	UpdateValidator(ctx context.Context, delegator types.AccAddress, twitter *string, discord string, country string, valoper types.ValAddress) (*string, error)
 	RegisterRPCEndpoint(ctx context.Context, validator types.ValAddress, url *url.URL) (*string, error)
 }
 type PhaseResolver interface {
@@ -317,6 +319,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.SubmitValidatorGenTx(childComplexity, args["twitter"].(*string), args["discord"].(string), args["country"].(string), args["gentx"].(map[string]interface{})), true
+
+	case "Mutation.updateValidator":
+		if e.complexity.Mutation.UpdateValidator == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_updateValidator_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.UpdateValidator(childComplexity, args["delegator"].(types.AccAddress), args["twitter"].(*string), args["discord"].(string), args["country"].(string), args["valoper"].(types.ValAddress)), true
 
 	case "PageInfo.count":
 		if e.complexity.PageInfo.Count == nil {
@@ -1008,6 +1022,38 @@ type Mutation {
     ): Void @auth
 
     """
+    Emit a ` + "`" + `ValidatorUpdatedEvent` + "`" + ` in the system carrying information related to the update of a validator.
+
+    All the validator properties are updated. Regarding task completion, this is not retroactive (e.g. uptime tracking after consensus keys updated).
+    """
+    updateValidator(
+        """
+        The delegator owning the validator to update.
+        """
+        delegator: AccAddress!
+
+        """
+        The validator twitter account.
+        """
+        twitter: String
+
+        """
+        The validator discord account.
+        """
+        discord: String!
+
+        """
+        The validator country.
+        """
+        country: String!
+
+        """
+        The validator address, used to retrieve its information on chain.
+        """
+        valoper: ValoperAddress!
+    ): Void @auth
+
+    """
     Emit a ` + "`" + `RegisterRPCEndpointEvent` + "`" + ` in the system to register RPC node url for the given druid validator.
 
     Through the event handling logic, the validator will be fulfilled with his RPC endpoint url and task completed with points
@@ -1546,6 +1592,57 @@ func (ec *executionContext) field_Mutation_submitValidatorGenTX_args(ctx context
 		}
 	}
 	args["gentx"] = arg3
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_updateValidator_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 types.AccAddress
+	if tmp, ok := rawArgs["delegator"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("delegator"))
+		arg0, err = ec.unmarshalNAccAddress2githubᚗcomᚋcosmosᚋcosmosᚑsdkᚋtypesᚐAccAddress(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["delegator"] = arg0
+	var arg1 *string
+	if tmp, ok := rawArgs["twitter"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("twitter"))
+		arg1, err = ec.unmarshalOString2ᚖstring(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["twitter"] = arg1
+	var arg2 string
+	if tmp, ok := rawArgs["discord"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("discord"))
+		arg2, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["discord"] = arg2
+	var arg3 string
+	if tmp, ok := rawArgs["country"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("country"))
+		arg3, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["country"] = arg3
+	var arg4 types.ValAddress
+	if tmp, ok := rawArgs["valoper"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("valoper"))
+		arg4, err = ec.unmarshalNValoperAddress2githubᚗcomᚋcosmosᚋcosmosᚑsdkᚋtypesᚐValAddress(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["valoper"] = arg4
 	return args, nil
 }
 
@@ -2232,6 +2329,78 @@ func (ec *executionContext) fieldContext_Mutation_registerValidator(ctx context.
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_registerValidator_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_updateValidator(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_updateValidator(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().UpdateValidator(rctx, fc.Args["delegator"].(types.AccAddress), fc.Args["twitter"].(*string), fc.Args["discord"].(string), fc.Args["country"].(string), fc.Args["valoper"].(types.ValAddress))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			if ec.directives.Auth == nil {
+				return nil, errors.New("directive auth is not implemented")
+			}
+			return ec.directives.Auth(ctx, nil, directive0)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*string); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *string`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOVoid2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_updateValidator(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Void does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_updateValidator_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return
 	}
@@ -7394,6 +7563,12 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_registerValidator(ctx, field)
+			})
+
+		case "updateValidator":
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_updateValidator(ctx, field)
 			})
 
 		case "registerRPCEndpoint":
