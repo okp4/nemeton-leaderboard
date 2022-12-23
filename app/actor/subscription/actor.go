@@ -2,6 +2,7 @@ package subscription
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"okp4/nemeton-leaderboard/app/util"
@@ -28,6 +29,7 @@ type Actor struct {
 	ctx         context.Context
 	eventPID    *actor.PID
 	offsetStore *offset.Store
+	lastHeight  *int64
 }
 
 func NewSubscriber(mongoURI, dbName string, eventPID *actor.PID) (*Actor, error) {
@@ -117,6 +119,8 @@ func (a *Actor) handleNewBlockEvent(data map[string]interface{}) {
 
 	logger := log.With().Time("blockTime", e.Time).Int64("height", e.Height).Logger()
 	logger.Info().Msg("Handle NewBlock event")
+	a.lastHeight = &e.Height
+
 	consensusAddr := make([]types.ConsAddress, len(e.Signatures))
 	for i, signature := range e.Signatures {
 		consensusAddr[i] = signature.GetValidatorAddress()
@@ -184,6 +188,12 @@ func (a *Actor) handleValidatorRegisteredEvent(data map[string]interface{}) {
 		return
 	}
 
+	if a.lastHeight == nil {
+		log.Err(fmt.Errorf("doesn't have a last height")).
+			Interface("data", data).
+			Msg("🤕 Couldn't register validator")
+	}
+
 	if err := a.store.RegisterValidator(
 		context.Background(),
 		e.Valoper,
@@ -193,6 +203,7 @@ func (a *Actor) handleValidatorRegisteredEvent(data map[string]interface{}) {
 		e.Discord,
 		e.Country,
 		e.Twitter,
+		*a.lastHeight,
 	); err != nil {
 		log.Err(err).Interface("data", data).Msg("🤕 Couldn't register validator")
 	}

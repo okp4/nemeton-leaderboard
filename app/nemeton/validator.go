@@ -26,8 +26,8 @@ type Validator struct {
 	Snapshot    *url.URL                     `bson:"snapshot,omitempty"`
 	Dashboard   *url.URL                     `bson:"dashboard,omitempty"`
 	Status      string                       `bson:"status"`
-	Points      uint64                       `bson:"points"`
-	Tasks       map[int]map[string]TaskState `bson:"tasks"`
+	Points      *uint64                      `bson:"points,omitempty"`
+	Tasks       map[int]map[string]TaskState `bson:"tasks,omitempty"`
 }
 
 func MakeValidatorFromMsg(createMsg *stakingtypes.MsgCreateValidator, discord, country string, twitter *string) (*Validator, error) {
@@ -87,13 +87,16 @@ func NewValidator(
 		Discord:   discord,
 		Country:   country,
 		Status:    "inactive",
-		Tasks:     map[int]map[string]TaskState{},
 	}, nil
 }
 
 func (v *Validator) Cursor() *Cursor {
+	pts := uint64(0)
+	if v.Points != nil {
+		pts = *v.Points
+	}
 	return &Cursor{
-		points:   v.Points,
+		points:   pts,
 		objectID: v.ID,
 	}
 }
