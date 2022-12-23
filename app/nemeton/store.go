@@ -306,7 +306,7 @@ func (s *Store) CreateGentxValidator(
 		}
 	}
 
-	validator.Points = points
+	validator.Points = &points
 	validator.Tasks = tasks
 
 	_, err = s.db.Collection(validatorsCollectionName).InsertOne(ctx, validator)
