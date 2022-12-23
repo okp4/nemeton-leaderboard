@@ -1,5 +1,12 @@
 # ØKP4 🧙 Nemeton Leaderboard 🏆
 
+## [2.1.1](https://github.com/okp4/nemeton-leaderboard/compare/v2.1.0...v2.1.1) (2022-12-23)
+
+
+### Bug Fixes
+
+* **graphql:** repair points marshalling ([dcf3a10](https://github.com/okp4/nemeton-leaderboard/commit/dcf3a108c3fa27a3e2d588b0c44574a3a02e7101))
+
 ## [2.1.0](https://github.com/okp4/nemeton-leaderboard/compare/v2.0.0...v2.1.0) (2022-12-23)
 
 
