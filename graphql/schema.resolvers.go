@@ -132,6 +132,11 @@ func (r *mutationResolver) UpdateValidator(ctx context.Context, delegator types.
 	return nil, nil
 }
 
+// RemoveValidator is the resolver for the removeValidator field.
+func (r *mutationResolver) RemoveValidator(ctx context.Context, validator types.ValAddress) (*string, error) {
+	panic(fmt.Errorf("not implemented: RemoveValidator - removeValidator"))
+}
+
 // RegisterRPCEndpoint is the resolver for the registerRPCEndpoint field.
 func (r *mutationResolver) RegisterRPCEndpoint(ctx context.Context, validator types.ValAddress, url *url.URL) (*string, error) {
 	evt := RegisterURLEvent{

@@ -206,6 +206,18 @@ type Mutation {
     ): Void @auth
 
     """
+    Emit a `ValidatorRemovedEvent` in the system carrying information related to remove a validator.
+
+    The concerned validator will be completely removed from the system..
+    """
+    removeValidator(
+        """
+        The validator valoper address that need to be removed.
+        """
+        validator: ValoperAddress!
+    ): Void @auth
+
+    """
     Emit a `RegisterRPCEndpointEvent` in the system to register RPC node url for the given druid validator.
 
     Through the event handling logic, the validator will be fulfilled with his RPC endpoint url and task completed with points
