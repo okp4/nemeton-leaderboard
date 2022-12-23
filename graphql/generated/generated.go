@@ -8,13 +8,14 @@ import (
 	"errors"
 	"fmt"
 	"net/url"
-	"okp4/nemeton-leaderboard/app/nemeton"
-	"okp4/nemeton-leaderboard/graphql/model"
-	"okp4/nemeton-leaderboard/graphql/scalar"
 	"strconv"
 	"sync"
 	"sync/atomic"
 	"time"
+
+	"okp4/nemeton-leaderboard/app/nemeton"
+	"okp4/nemeton-leaderboard/graphql/model"
+	"okp4/nemeton-leaderboard/graphql/scalar"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/99designs/gqlgen/graphql/introspection"
@@ -5895,9 +5896,9 @@ func (ec *executionContext) _Validator_points(ctx context.Context, field graphql
 		}
 		return graphql.Null
 	}
-	res := resTmp.(uint64)
+	res := resTmp.(*uint64)
 	fc.Result = res
-	return ec.marshalNUInt642uint64(ctx, field.Selections, res)
+	return ec.marshalNUInt642ᚖuint64(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Validator_points(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -8035,7 +8036,6 @@ func (ec *executionContext) _Identity(ctx context.Context, sel ast.SelectionSet,
 
 			out.Concurrently(i, func() graphql.Marshaler {
 				return innerFunc(ctx)
-
 			})
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
@@ -8335,7 +8335,6 @@ func (ec *executionContext) _Phase(ctx context.Context, sel ast.SelectionSet, ob
 
 			out.Concurrently(i, func() graphql.Marshaler {
 				return innerFunc(ctx)
-
 			})
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
@@ -8376,7 +8375,6 @@ func (ec *executionContext) _Phases(ctx context.Context, sel ast.SelectionSet, o
 
 			out.Concurrently(i, func() graphql.Marshaler {
 				return innerFunc(ctx)
-
 			})
 		case "ongoing":
 			field := field
@@ -8396,7 +8394,6 @@ func (ec *executionContext) _Phases(ctx context.Context, sel ast.SelectionSet, o
 
 			out.Concurrently(i, func() graphql.Marshaler {
 				return innerFunc(ctx)
-
 			})
 		case "finished":
 			field := field
@@ -8416,7 +8413,6 @@ func (ec *executionContext) _Phases(ctx context.Context, sel ast.SelectionSet, o
 
 			out.Concurrently(i, func() graphql.Marshaler {
 				return innerFunc(ctx)
-
 			})
 		case "current":
 			field := field
@@ -8433,7 +8429,6 @@ func (ec *executionContext) _Phases(ctx context.Context, sel ast.SelectionSet, o
 
 			out.Concurrently(i, func() graphql.Marshaler {
 				return innerFunc(ctx)
-
 			})
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
@@ -8766,7 +8761,6 @@ func (ec *executionContext) _Tasks(ctx context.Context, sel ast.SelectionSet, ob
 
 			out.Concurrently(i, func() graphql.Marshaler {
 				return innerFunc(ctx)
-
 			})
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
@@ -8807,7 +8801,6 @@ func (ec *executionContext) _Validator(ctx context.Context, sel ast.SelectionSet
 
 			out.Concurrently(i, func() graphql.Marshaler {
 				return innerFunc(ctx)
-
 			})
 		case "moniker":
 
@@ -8831,7 +8824,6 @@ func (ec *executionContext) _Validator(ctx context.Context, sel ast.SelectionSet
 
 			out.Concurrently(i, func() graphql.Marshaler {
 				return innerFunc(ctx)
-
 			})
 		case "details":
 
@@ -8903,7 +8895,6 @@ func (ec *executionContext) _Validator(ctx context.Context, sel ast.SelectionSet
 
 			out.Concurrently(i, func() graphql.Marshaler {
 				return innerFunc(ctx)
-
 			})
 		case "points":
 
@@ -8930,7 +8921,6 @@ func (ec *executionContext) _Validator(ctx context.Context, sel ast.SelectionSet
 
 			out.Concurrently(i, func() graphql.Marshaler {
 				return innerFunc(ctx)
-
 			})
 		case "missedBlocks":
 			field := field
@@ -8950,7 +8940,6 @@ func (ec *executionContext) _Validator(ctx context.Context, sel ast.SelectionSet
 
 			out.Concurrently(i, func() graphql.Marshaler {
 				return innerFunc(ctx)
-
 			})
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
@@ -9802,6 +9791,27 @@ func (ec *executionContext) unmarshalNUInt642uint64(ctx context.Context, v inter
 
 func (ec *executionContext) marshalNUInt642uint64(ctx context.Context, sel ast.SelectionSet, v uint64) graphql.Marshaler {
 	res := graphql.MarshalUint64(v)
+	if res == graphql.Null {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+	}
+	return res
+}
+
+func (ec *executionContext) unmarshalNUInt642ᚖuint64(ctx context.Context, v interface{}) (*uint64, error) {
+	res, err := graphql.UnmarshalUint64(v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNUInt642ᚖuint64(ctx context.Context, sel ast.SelectionSet, v *uint64) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	res := graphql.MarshalUint64(*v)
 	if res == graphql.Null {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
