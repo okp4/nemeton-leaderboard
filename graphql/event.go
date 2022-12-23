@@ -12,6 +12,7 @@ const (
 	GenTXSubmittedEventType      = "gentx-submitted"
 	ValidatorRegisteredEventType = "validator-registered"
 	ValidatorUpdatedEventType    = "validator-updated"
+	ValidatorRemovedEventType    = "validator-removed"
 	TaskCompletedEventType       = "task-completed"
 	RegisterURLEventType         = "register-url-endpoint"
 )
@@ -92,6 +93,29 @@ func (e *ValidatorUpdatedEvent) Marshal() (map[string]interface{}, error) {
 }
 
 func (e *ValidatorUpdatedEvent) Unmarshal(data map[string]interface{}) error {
+	d, err := json.Marshal(data)
+	if err != nil {
+		return err
+	}
+
+	return json.Unmarshal(d, e)
+}
+
+type ValidatorRemovedEvent struct {
+	Validator types.ValAddress `json:"validator"`
+}
+
+func (e *ValidatorRemovedEvent) Marshal() (map[string]interface{}, error) {
+	var event map[string]interface{}
+	data, err := json.Marshal(&e)
+	if err != nil {
+		return nil, err
+	}
+	err = json.Unmarshal(data, &event)
+	return event, err
+}
+
+func (e *ValidatorRemovedEvent) Unmarshal(data map[string]interface{}) error {
 	d, err := json.Marshal(data)
 	if err != nil {
 		return err

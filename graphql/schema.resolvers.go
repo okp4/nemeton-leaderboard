@@ -63,10 +63,14 @@ func (r *mutationResolver) SubmitValidatorGenTx(ctx context.Context, twitter *st
 // RegisterValidator is the resolver for the registerValidator field.
 func (r *mutationResolver) RegisterValidator(ctx context.Context, twitter *string, discord string, country string, delegator types.AccAddress, validator types.ValAddress) (*string, error) {
 	val, err := r.FetchValidator(validator)
+	if err != nil {
+		log.Err(err).Str("valoper", validator.String()).Msg("🤕 Couldn't fetch validator")
+		return nil, err
+	}
 
 	var pubkey cryptotypes.PubKey
 	if err := simapp.MakeTestEncodingConfig().InterfaceRegistry.UnpackAny(val.ConsensusPubkey, &pubkey); err != nil {
-		log.Err(err).Str("valoper", validator.String()).Msg("🤕 Couldn't fetch validator")
+		log.Err(err).Str("valoper", validator.String()).Msg("🤕 Couldn't get pubkey of validator")
 		return nil, err
 	}
 
@@ -99,10 +103,14 @@ func (r *mutationResolver) RegisterValidator(ctx context.Context, twitter *strin
 // UpdateValidator is the resolver for the updateValidator field.
 func (r *mutationResolver) UpdateValidator(ctx context.Context, delegator types.AccAddress, twitter *string, discord string, country string, valoper types.ValAddress) (*string, error) {
 	val, err := r.FetchValidator(valoper)
+	if err != nil {
+		log.Err(err).Str("valoper", valoper.String()).Msg("🤕 Couldn't fetch validator")
+		return nil, err
+	}
 
 	var pubkey cryptotypes.PubKey
 	if err := simapp.MakeTestEncodingConfig().InterfaceRegistry.UnpackAny(val.ConsensusPubkey, &pubkey); err != nil {
-		log.Err(err).Str("valoper", valoper.String()).Msg("🤕 Couldn't fetch validator")
+		log.Err(err).Str("valoper", valoper.String()).Msg("🤕 Couldn't get pubkey of validator")
 		return nil, err
 	}
 
@@ -133,8 +141,32 @@ func (r *mutationResolver) UpdateValidator(ctx context.Context, delegator types.
 }
 
 // RemoveValidator is the resolver for the removeValidator field.
+// Before send Event, a fetch is done to ensure the valoper address is good.
 func (r *mutationResolver) RemoveValidator(ctx context.Context, validator types.ValAddress) (*string, error) {
-	panic(fmt.Errorf("not implemented: RemoveValidator - removeValidator"))
+	_, err := r.FetchValidator(validator)
+	if err != nil {
+		log.Err(err).Str("valoper", validator.String()).Msg("🤕 Couldn't fetch validator")
+		return nil, err
+	}
+
+	evt := ValidatorRemovedEvent{
+		Validator: validator,
+	}
+	rawEvt, err := evt.Marshal()
+	if err != nil {
+		return nil, err
+	}
+
+	r.actorCTX.Send(
+		r.eventStore,
+		&message.PublishEventMessage{
+			Event: event.NewEvent(
+				ValidatorRemovedEventType,
+				rawEvt,
+			),
+		},
+	)
+	return nil, nil
 }
 
 // RegisterRPCEndpoint is the resolver for the registerRPCEndpoint field.
