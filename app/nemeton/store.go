@@ -375,6 +375,16 @@ func (s *Store) UpdateValidator(
 	return err
 }
 
+func (s *Store) RemoveValidator(ctx context.Context, valoper types.ValAddress) error {
+	_, err := s.db.Collection(validatorsCollectionName).
+		DeleteOne(
+			ctx,
+			bson.M{
+				"valoper": valoper,
+			})
+	return err
+}
+
 func (s *Store) RegisterValidatorURL(ctx context.Context,
 	when time.Time,
 	urlType string,

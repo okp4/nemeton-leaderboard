@@ -96,6 +96,8 @@ func (a *Actor) receiveNewEvent(e event.Event) {
 		a.handleValidatorRegisteredEvent(e.Data)
 	case graphql.ValidatorUpdatedEventType:
 		a.handleValidatorUpdatedEvent(e.Data)
+	case graphql.ValidatorRemovedEventType:
+		a.handleValidatorRemovedEvent(e.Data)
 	case tweet.NewTweetEventType:
 		a.handleNewTweetEvent(e.Date, e.Data)
 	case graphql.TaskCompletedEventType:
@@ -229,6 +231,20 @@ func (a *Actor) handleValidatorUpdatedEvent(data map[string]interface{}) {
 		e.Twitter,
 	); err != nil {
 		log.Err(err).Interface("data", data).Msg("🤕 Couldn't update validator")
+	}
+}
+
+func (a *Actor) handleValidatorRemovedEvent(data map[string]interface{}) {
+	log.Info().Interface("event", data).Msg("Handle ValidatorRemoved event")
+
+	e := &graphql.ValidatorRemovedEvent{}
+	if err := e.Unmarshal(data); err != nil {
+		log.Panic().Err(err).Msg("❌ Failed unmarshal event to ValidatorRemoved")
+		return
+	}
+
+	if err := a.store.RemoveValidator(a.ctx, e.Validator); err != nil {
+		log.Err(err).Interface("data", data).Msg("🤕 Couldn't remove validator")
 	}
 }
 
