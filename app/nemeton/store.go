@@ -321,13 +321,30 @@ func (s *Store) RegisterValidator(
 	description stakingtypes.Description,
 	discord, country string,
 	twitter *string,
+	lastHeight int64,
 ) error {
 	validator, err := NewValidator(valoper, delegator, valcons, description, discord, country, twitter)
 	if err != nil {
 		return err
 	}
 
-	_, err = s.db.Collection(validatorsCollectionName).InsertOne(ctx, validator)
+	res, err := s.db.Collection(validatorsCollectionName).InsertOne(ctx, validator)
+	if err != nil {
+		return err
+	}
+
+	_, err = s.db.Collection(validatorsCollectionName).UpdateOne(
+		ctx,
+		bson.M{"_id": res.InsertedID},
+		bson.M{
+			"missedBlocks": bson.A{
+				bson.M{
+					"from": 1,
+					"to":   lastHeight + 1,
+				},
+			},
+		},
+	)
 	return err
 }
 
