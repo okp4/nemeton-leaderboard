@@ -81,5 +81,6 @@ func (a *StoreActor) handleSubscribeEvent(ctx actor.Context, msg *message.Subscr
 func (a *StoreActor) handleUnsubscribeEvent(ctx actor.Context, msg *message.UnsubscribeEventMessage) {
 	streamPID := a.streams[msg.PID.Address]
 	ctx.Stop(streamPID)
+	delete(a.streams, msg.PID.Address)
 	log.Info().Str("to", msg.PID.Address).Msg("®️ Event subscriber unsubscribed")
 }
