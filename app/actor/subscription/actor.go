@@ -71,6 +71,9 @@ func (a *Actor) Receive(ctx actor.Context) {
 		a.receiveNewEvent(e.Event)
 	case *actor.Restarting, *actor.Stopping:
 		log.Info().Msg("✋ Stop looking new event")
+		ctx.Send(a.eventPID, &message.UnsubscribeEventMessage{
+			PID: ctx.Self(),
+		})
 		if err := a.offsetStore.Close(context.Background()); err != nil {
 			log.Err(err).Msg("❌ Couldn't properly close offset store")
 		}
