@@ -19,6 +19,10 @@ type SubscribeEventMessage struct {
 	From *primitive.ObjectID
 }
 
+type UnsubscribeEventMessage struct {
+	PID *actor.PID
+}
+
 type NewEventMessage struct {
 	Event event.Event
 }

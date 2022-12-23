@@ -15,12 +15,14 @@ type StoreActor struct {
 	mongoURI string
 	dbName   string
 	store    *event.Store
+	streams  map[string]*actor.PID
 }
 
 func NewEventStoreActor(mongoURI, dbName string) *StoreActor {
 	return &StoreActor{
 		mongoURI: mongoURI,
 		dbName:   dbName,
+		streams:  make(map[string]*actor.PID),
 	}
 }
 
@@ -34,6 +36,8 @@ func (a *StoreActor) Receive(ctx actor.Context) {
 		a.handlePublishEvent(msg)
 	case *message.SubscribeEventMessage:
 		a.handleSubscribeEvent(ctx, msg)
+	case *message.UnsubscribeEventMessage:
+		a.handleUnsubscribeEvent(ctx, msg)
 	}
 }
 
@@ -70,6 +74,12 @@ func (a *StoreActor) handleSubscribeEvent(ctx actor.Context, msg *message.Subscr
 		return NewStreamHandlerActor(stream, msg.PID)
 	})
 
-	ctx.Spawn(streamProps)
+	a.streams[msg.PID.Address] = ctx.Spawn(streamProps)
 	log.Info().Str("to", msg.PID.Address).Msg("®️ Event subscriber registered")
+}
+
+func (a *StoreActor) handleUnsubscribeEvent(ctx actor.Context, msg *message.UnsubscribeEventMessage) {
+	streamPID := a.streams[msg.PID.Address]
+	ctx.Stop(streamPID)
+	log.Info().Str("to", msg.PID.Address).Msg("®️ Event subscriber unsubscribed")
 }
