@@ -1,5 +1,24 @@
 # ØKP4 🧙 Nemeton Leaderboard 🏆
 
+## [2.1.0](https://github.com/okp4/nemeton-leaderboard/compare/v2.0.0...v2.1.0) (2022-12-23)
+
+
+### Features
+
+* **phase2:** add dashboard and snapshot field on validator ([ee8cffc](https://github.com/okp4/nemeton-leaderboard/commit/ee8cffcf6a49903f2ddd8435f83db5bb65582600))
+* **phase2:** add maxpoints on dashboard task ([f68baa9](https://github.com/okp4/nemeton-leaderboard/commit/f68baa9e9adfae2842fda854ee627edf7c6f400d))
+* **phase2:** allow add rewards on dashboard mutation ([b4a9072](https://github.com/okp4/nemeton-leaderboard/commit/b4a9072fb1609eab01793c2eb13c7ec7683b268c))
+* **phase2:** register dashboard rewards onmongo ([d45b1df](https://github.com/okp4/nemeton-leaderboard/commit/d45b1df3001d81b104fbb76f24969cc1cbf225f2))
+
+
+### Bug Fixes
+
+* **event:** add unsubscribe event to stop mongo stream on crash ([daf5fa1](https://github.com/okp4/nemeton-leaderboard/commit/daf5fa1ae7f35c3c2030b5d8c2e2991878547159))
+* **event:** remove actor pid stream on stop ([bd2942b](https://github.com/okp4/nemeton-leaderboard/commit/bd2942b5bbea9ad861da0d71ac463e171e1ceb84))
+* **lint:** fix linter and naming ([54905aa](https://github.com/okp4/nemeton-leaderboard/commit/54905aa1bc4ce1a5a16427c60d6ef53a65e01cc9))
+* **register:** ensure missedblocks propulated ([2e3dc96](https://github.com/okp4/nemeton-leaderboard/commit/2e3dc96133f15e80cdac6c9e6cbc7c863c3c5f14))
+* **update:** prevent erasing tasks & points on update ([148554c](https://github.com/okp4/nemeton-leaderboard/commit/148554c5a514fdce46e5bbb02f59038c03ec7f11))
+
 ## [2.0.0](https://github.com/okp4/nemeton-leaderboard/compare/v1.3.0...v2.0.0) (2022-12-22)
 
 
