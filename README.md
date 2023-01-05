@@ -3,9 +3,9 @@
 [![nemeton github bannner](./etc/nemeton-banner.jpg)](Nemeton)
 
 [![version](https://img.shields.io/github/v/release/okp4/nemeton-leaderboard?style=for-the-badge&logo=github)](https://github.com/okp4/nemeton-leaderboard/releases)
-[![lint](https://img.shields.io/github/workflow/status/okp4/nemeton-leaderboard/Lint?label=lint&style=for-the-badge&logo=github)](https://github.com/okp4/nemeton-leaderboard/actions/workflows/lint.yml)
-[![build](https://img.shields.io/github/workflow/status/okp4/nemeton-leaderboard/Build?label=build&style=for-the-badge&logo=github)](https://github.com/okp4/nemeton-leaderboard/actions/workflows/build.yml)
-[![test](https://img.shields.io/github/workflow/status/okp4/nemeton-leaderboard/Test?label=test&style=for-the-badge&logo=github)](https://github.com/okp4/nemeton-leaderboard/actions/workflows/test.yml)
+[![lint](https://img.shields.io/github/actions/workflow/status/okp4/nemeton-leaderboard/lint.yml?branch=main&label=lint&style=for-the-badge&logo=github)](https://github.com/okp4/nemeton-leaderboard/actions/workflows/lint.yml)
+[![build](https://img.shields.io/github/actions/workflow/status/okp4/nemeton-leaderboard/build.yml?branch=main&label=build&style=for-the-badge&logo=github)](https://github.com/okp4/nemeton-leaderboard/actions/workflows/build.yml)
+[![test](https://img.shields.io/github/actions/workflow/status/okp4/nemeton-leaderboard/test.yml?branch=main&label=test&style=for-the-badge&logo=github)](https://github.com/okp4/nemeton-leaderboard/actions/workflows/test.yml)
 [![codecov](https://img.shields.io/codecov/c/github/okp4/nemeton-leaderboard?style=for-the-badge&token=6NL9ICGZQS&logo=codecov)](https://codecov.io/gh/okp4/nemeton-leaderboard)
 [![conventional commits](https://img.shields.io/badge/Conventional%20Commits-1.0.0-yellow.svg?style=for-the-badge&logo=conventionalcommits)](https://conventionalcommits.org)
 [![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-2.1-4baaaa.svg?style=for-the-badge)](https://github.com/okp4/.github/blob/main/CODE_OF_CONDUCT.md)
