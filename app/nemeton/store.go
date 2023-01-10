@@ -482,7 +482,6 @@ func (s *Store) CompleteNodeSetupTask(ctx context.Context, when time.Time, vals 
 func (s *Store) ManualCompleteTask(
 	ctx context.Context,
 	valoper types.ValAddress,
-	when time.Time,
 	phaseNB int,
 	taskID string,
 	rewards *uint64,
@@ -501,7 +500,7 @@ func (s *Store) ManualCompleteTask(
 	points := uint64(0)
 	if rewards != nil {
 		points = *rewards
-	} else if task.InProgressAt(when) {
+	} else {
 		if task.Rewards == nil {
 			return fmt.Errorf("no rewards found for task '%s' in phase '%d'", taskID, phaseNB)
 		}
