@@ -141,7 +141,6 @@ func (r *mutationResolver) UpdateValidator(ctx context.Context, delegator types.
 }
 
 // RemoveValidator is the resolver for the removeValidator field.
-// Before send Event, a fetch is done to ensure the valoper address is good.
 func (r *mutationResolver) RemoveValidator(ctx context.Context, validator types.ValAddress) (*string, error) {
 	_, err := r.FetchValidator(validator)
 	if err != nil {
@@ -434,15 +433,32 @@ func (r *validatorResolver) Tasks(ctx context.Context, obj *nemeton.Validator) (
 			Phase:          phase,
 		}
 		for i, task := range phase.Tasks {
-			mappedState := &model.TaskState{
-				Task: &phase.Tasks[i],
-			}
+			completed := false
+			earnedPoints := uint64(0)
+			submitted := false
 			if state := obj.Task(phase.Number, task.ID); state != nil {
-				mappedState.Completed = state.Completed
-				mappedState.EarnedPoints = state.EarnedPoints
+				completed = state.Completed
+				earnedPoints = state.EarnedPoints
+				submitted = state.Submitted
 			}
 
-			if mappedState.Completed {
+			var mappedState model.TaskState
+			if task.WithSubmission() {
+				mappedState = model.SubmissionTaskState{
+					Task:         &phase.Tasks[i],
+					Completed:    completed,
+					EarnedPoints: earnedPoints,
+					Submitted:    submitted,
+				}
+			} else {
+				mappedState = model.BasicTaskState{
+					Task:         &phase.Tasks[i],
+					Completed:    completed,
+					EarnedPoints: earnedPoints,
+				}
+			}
+
+			if mappedState.GetCompleted() {
 				perPhase.CompletedCount++
 			}
 			if task.Started() {
@@ -452,7 +468,7 @@ func (r *validatorResolver) Tasks(ctx context.Context, obj *nemeton.Validator) (
 				perPhase.FinishedCount++
 			}
 			perPhase.Tasks = append(perPhase.Tasks, mappedState)
-			perPhase.Points += mappedState.EarnedPoints
+			perPhase.Points += mappedState.GetEarnedPoints()
 		}
 
 		result.CompletedCount += perPhase.CompletedCount
