@@ -479,10 +479,42 @@ func (s *Store) CompleteNodeSetupTask(ctx context.Context, when time.Time, vals 
 	return nil
 }
 
+func (s *Store) ManualSubmitTask(
+	ctx context.Context,
+	valoper types.ValAddress,
+	phaseNB int,
+	taskID string,
+) error {
+	phase := s.GetPhase(phaseNB)
+	var task *Task
+	for i, it := range phase.Tasks {
+		if it.ID == taskID {
+			task = &phase.Tasks[i]
+		}
+	}
+	if task == nil {
+		return fmt.Errorf("task '%s' not found in phase '%d'", taskID, phaseNB)
+	}
+
+	if !task.WithSubmission() {
+		return fmt.Errorf("task '%s' in phase '%d' has no submission", taskID, phaseNB)
+	}
+
+	_, err := s.db.Collection(validatorsCollectionName).UpdateOne(ctx,
+		bson.M{
+			"valoper": valoper,
+		},
+		bson.M{
+			"$set": bson.M{
+				fmt.Sprintf("tasks.%d.%s.submitted", phaseNB, taskID): true,
+			},
+		})
+	return err
+}
+
 func (s *Store) ManualCompleteTask(
 	ctx context.Context,
 	valoper types.ValAddress,
-	when time.Time,
 	phaseNB int,
 	taskID string,
 	rewards *uint64,
@@ -501,7 +533,7 @@ func (s *Store) ManualCompleteTask(
 	points := uint64(0)
 	if rewards != nil {
 		points = *rewards
-	} else if task.InProgressAt(when) {
+	} else {
 		if task.Rewards == nil {
 			return fmt.Errorf("no rewards found for task '%s' in phase '%d'", taskID, phaseNB)
 		}

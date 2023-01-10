@@ -217,6 +217,23 @@ type Mutation {
         validator: ValoperAddress!
     ): Void @auth
 
+    submitTask(
+        """
+        The validator valoper address concerned by the submission.
+        """
+        validator: ValoperAddress!
+
+        """
+        The phase holding task to be submitted.
+        """
+        phase: Int!
+
+        """
+        The task to submit.
+        """
+        task: ID!
+    ): Void @auth
+
     """
     Emit a `RegisterRPCEndpointEvent` in the system to register RPC node url for the given druid validator.
 
@@ -697,14 +714,14 @@ type PerPhaseTasks {
 """
 Represents the progress/result of a task assigned to a validator.
 """
-type TaskState {
+interface TaskState {
     """
     The task we're talking about.
     """
     task: Task!
 
     """
-    `true` if the validator  completed this task.
+    `true` if the validator completed this task.
     """
     completed: Boolean!
 
@@ -712,4 +729,49 @@ type TaskState {
     The number of points earned by the validator on this task.
     """
     earnedPoints: UInt64!
+}
+
+"""
+Represents the progress/result of a basic task assigned to a validator.
+"""
+type BasicTaskState implements TaskState {
+    """
+    The task we're talking about.
+    """
+    task: Task!
+
+    """
+    `true` if the validator completed this task.
+    """
+    completed: Boolean!
+
+    """
+    The number of points earned by the validator on this task.
+    """
+    earnedPoints: UInt64!
+}
+
+"""
+Represents the progress/result of a task assigned to a validator expecting a submission from him.
+"""
+type SubmissionTaskState implements TaskState {
+    """
+    The task we're talking about.
+    """
+    task: Task!
+
+    """
+    `true` if the validator completed this task.
+    """
+    completed: Boolean!
+
+    """
+    The number of points earned by the validator on this task.
+    """
+    earnedPoints: UInt64!
+
+    """
+    `true` if the validator submitted the expected content.
+    """
+    submitted: Boolean!
 }

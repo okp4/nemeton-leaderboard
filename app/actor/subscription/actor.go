@@ -100,8 +100,10 @@ func (a *Actor) receiveNewEvent(e event.Event) {
 		a.handleValidatorRemovedEvent(e.Data)
 	case tweet.NewTweetEventType:
 		a.handleNewTweetEvent(e.Date, e.Data)
+	case graphql.TaskSubmittedEventType:
+		a.handleTaskSubmittedEvent(e.Data)
 	case graphql.TaskCompletedEventType:
-		a.handleTaskCompletedEvent(e.Date, e.Data)
+		a.handleTaskCompletedEvent(e.Data)
 	case graphql.RegisterURLEventType:
 		a.handleRegisterURLEvent(e.Date, e.Data)
 	default:
@@ -303,7 +305,21 @@ func (a *Actor) handleRegisterURLEvent(when time.Time, data map[string]interface
 	}
 }
 
-func (a *Actor) handleTaskCompletedEvent(when time.Time, data map[string]interface{}) {
+func (a *Actor) handleTaskSubmittedEvent(data map[string]interface{}) {
+	log.Info().Interface("event", data).Msg("Handle TaskSubmitted event")
+
+	e := &graphql.TaskSubmittedEvent{}
+	if err := e.Unmarshal(data); err != nil {
+		log.Panic().Err(err).Msg("❌ Failed unmarshal event to TaskSubmittedEvent")
+		return
+	}
+
+	if err := a.store.ManualSubmitTask(a.ctx, e.Validator, e.Phase, e.Task); err != nil {
+		log.Err(err).Interface("data", data).Msg("🤕 Couldn't manually submit task")
+	}
+}
+
+func (a *Actor) handleTaskCompletedEvent(data map[string]interface{}) {
 	log.Info().Interface("event", data).Msg("Handle TaskCompleted event")
 
 	e := &graphql.TaskCompletedEvent{}
@@ -312,7 +328,7 @@ func (a *Actor) handleTaskCompletedEvent(when time.Time, data map[string]interfa
 		return
 	}
 
-	if err := a.store.ManualCompleteTask(a.ctx, e.Validator, when, e.Phase, e.Task, e.Points); err != nil {
+	if err := a.store.ManualCompleteTask(a.ctx, e.Validator, e.Phase, e.Task, e.Points); err != nil {
 		log.Err(err).Interface("data", data).Msg("🤕 Couldn't manually complete task")
 	}
 }

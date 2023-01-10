@@ -18,6 +18,7 @@ const (
 type TaskState struct {
 	Completed    bool   `bson:"completed"`
 	EarnedPoints uint64 `bson:"points"`
+	Submitted    bool   `bson:"submitted"`
 }
 
 type Task struct {
@@ -53,6 +54,13 @@ func (t Task) FinishedAt(at time.Time) bool {
 
 func (t Task) InProgressAt(at time.Time) bool {
 	return t.StartedAt(at) && !t.FinishedAt(at)
+}
+
+func (t Task) WithSubmission() bool {
+	return t.Type == taskTypeSubmission ||
+		t.Type == TaskTypeRPC ||
+		t.Type == TaskTypeSnapshots ||
+		t.Type == TaskTypeDashboard
 }
 
 func (t Task) GetParamMaxPoints() *uint64 {

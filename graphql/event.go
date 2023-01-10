@@ -14,6 +14,7 @@ const (
 	ValidatorUpdatedEventType    = "validator-updated"
 	ValidatorRemovedEventType    = "validator-removed"
 	TaskCompletedEventType       = "task-completed"
+	TaskSubmittedEventType       = "task-submitted"
 	RegisterURLEventType         = "register-url-endpoint"
 )
 
@@ -142,6 +143,31 @@ func (e *RegisterURLEvent) Marshal() (map[string]interface{}, error) {
 }
 
 func (e *RegisterURLEvent) Unmarshal(data map[string]interface{}) error {
+	d, err := json.Marshal(data)
+	if err != nil {
+		return err
+	}
+
+	return json.Unmarshal(d, e)
+}
+
+type TaskSubmittedEvent struct {
+	Validator types.ValAddress `json:"validator"`
+	Phase     int              `json:"phase"`
+	Task      string           `json:"task"`
+}
+
+func (e *TaskSubmittedEvent) Marshal() (map[string]interface{}, error) {
+	var event map[string]interface{}
+	data, err := json.Marshal(&e)
+	if err != nil {
+		return nil, err
+	}
+	err = json.Unmarshal(data, &event)
+	return event, err
+}
+
+func (e *TaskSubmittedEvent) Unmarshal(data map[string]interface{}) error {
 	d, err := json.Marshal(data)
 	if err != nil {
 		return err
