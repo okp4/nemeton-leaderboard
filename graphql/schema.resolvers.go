@@ -168,6 +168,30 @@ func (r *mutationResolver) RemoveValidator(ctx context.Context, validator types.
 	return nil, nil
 }
 
+// SubmitTask is the resolver for the submitTask field.
+func (r *mutationResolver) SubmitTask(ctx context.Context, validator types.ValAddress, phase int, task string) (*string, error) {
+	evt := TaskSubmittedEvent{
+		Validator: validator,
+		Phase:     phase,
+		Task:      task,
+	}
+	rawEvt, err := evt.Marshal()
+	if err != nil {
+		return nil, err
+	}
+
+	r.actorCTX.Send(
+		r.eventStore,
+		&message.PublishEventMessage{
+			Event: event.NewEvent(
+				TaskSubmittedEventType,
+				rawEvt,
+			),
+		},
+	)
+	return nil, nil
+}
+
 // RegisterRPCEndpoint is the resolver for the registerRPCEndpoint field.
 func (r *mutationResolver) RegisterRPCEndpoint(ctx context.Context, validator types.ValAddress, url *url.URL) (*string, error) {
 	evt := RegisterURLEvent{

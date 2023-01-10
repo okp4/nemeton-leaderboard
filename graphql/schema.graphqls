@@ -217,6 +217,23 @@ type Mutation {
         validator: ValoperAddress!
     ): Void @auth
 
+    submitTask(
+        """
+        The validator valoper address concerned by the submission.
+        """
+        validator: ValoperAddress!
+
+        """
+        The phase holding task to be submitted.
+        """
+        phase: Int!
+
+        """
+        The task to submit.
+        """
+        task: ID!
+    ): Void @auth
+
     """
     Emit a `RegisterRPCEndpointEvent` in the system to register RPC node url for the given druid validator.
 

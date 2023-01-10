@@ -100,6 +100,8 @@ func (a *Actor) receiveNewEvent(e event.Event) {
 		a.handleValidatorRemovedEvent(e.Data)
 	case tweet.NewTweetEventType:
 		a.handleNewTweetEvent(e.Date, e.Data)
+	case graphql.TaskSubmittedEventType:
+		a.handleTaskSubmittedEvent(e.Data)
 	case graphql.TaskCompletedEventType:
 		a.handleTaskCompletedEvent(e.Data)
 	case graphql.RegisterURLEventType:
@@ -300,6 +302,20 @@ func (a *Actor) handleRegisterURLEvent(when time.Time, data map[string]interface
 
 	if err := a.store.RegisterValidatorURL(a.ctx, when, e.Type, e.Validator, e.URL, e.Points); err != nil {
 		log.Err(err).Interface("data", data).Msg("🤕 Couldn't register/update validator url")
+	}
+}
+
+func (a *Actor) handleTaskSubmittedEvent(data map[string]interface{}) {
+	log.Info().Interface("event", data).Msg("Handle TaskSubmitted event")
+
+	e := &graphql.TaskSubmittedEvent{}
+	if err := e.Unmarshal(data); err != nil {
+		log.Panic().Err(err).Msg("❌ Failed unmarshal event to TaskSubmittedEvent")
+		return
+	}
+
+	if err := a.store.ManualSubmitTask(a.ctx, e.Validator, e.Phase, e.Task); err != nil {
+		log.Err(err).Interface("data", data).Msg("🤕 Couldn't manually submit task")
 	}
 }
 

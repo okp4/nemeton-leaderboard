@@ -89,6 +89,7 @@ type ComplexityRoot struct {
 		RegisterSnapshotURL  func(childComplexity int, validator types.ValAddress, url *url.URL) int
 		RegisterValidator    func(childComplexity int, twitter *string, discord string, country string, delegator types.AccAddress, validator types.ValAddress) int
 		RemoveValidator      func(childComplexity int, validator types.ValAddress) int
+		SubmitTask           func(childComplexity int, validator types.ValAddress, phase int, task string) int
 		SubmitValidatorGenTx func(childComplexity int, twitter *string, discord string, country string, gentx map[string]interface{}) int
 		UpdateValidator      func(childComplexity int, delegator types.AccAddress, twitter *string, discord string, country string, valoper types.ValAddress) int
 	}
@@ -196,6 +197,7 @@ type MutationResolver interface {
 	RegisterValidator(ctx context.Context, twitter *string, discord string, country string, delegator types.AccAddress, validator types.ValAddress) (*string, error)
 	UpdateValidator(ctx context.Context, delegator types.AccAddress, twitter *string, discord string, country string, valoper types.ValAddress) (*string, error)
 	RemoveValidator(ctx context.Context, validator types.ValAddress) (*string, error)
+	SubmitTask(ctx context.Context, validator types.ValAddress, phase int, task string) (*string, error)
 	RegisterRPCEndpoint(ctx context.Context, validator types.ValAddress, url *url.URL) (*string, error)
 	RegisterSnapshotURL(ctx context.Context, validator types.ValAddress, url *url.URL) (*string, error)
 	RegisterDashboardURL(ctx context.Context, validator types.ValAddress, url *url.URL, points uint64) (*string, error)
@@ -394,6 +396,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.RemoveValidator(childComplexity, args["validator"].(types.ValAddress)), true
+
+	case "Mutation.submitTask":
+		if e.complexity.Mutation.SubmitTask == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_submitTask_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.SubmitTask(childComplexity, args["validator"].(types.ValAddress), args["phase"].(int), args["task"].(string)), true
 
 	case "Mutation.submitValidatorGenTX":
 		if e.complexity.Mutation.SubmitValidatorGenTx == nil {
@@ -1173,6 +1187,23 @@ type Mutation {
         validator: ValoperAddress!
     ): Void @auth
 
+    submitTask(
+        """
+        The validator valoper address concerned by the submission.
+        """
+        validator: ValoperAddress!
+
+        """
+        The phase holding task to be submitted.
+        """
+        phase: Int!
+
+        """
+        The task to submit.
+        """
+        task: ID!
+    ): Void @auth
+
     """
     Emit a ` + "`" + `RegisterRPCEndpointEvent` + "`" + ` in the system to register RPC node url for the given druid validator.
 
@@ -1908,6 +1939,39 @@ func (ec *executionContext) field_Mutation_removeValidator_args(ctx context.Cont
 		}
 	}
 	args["validator"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_submitTask_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 types.ValAddress
+	if tmp, ok := rawArgs["validator"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("validator"))
+		arg0, err = ec.unmarshalNValoperAddress2githubᚗcomᚋcosmosᚋcosmosᚑsdkᚋtypesᚐValAddress(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["validator"] = arg0
+	var arg1 int
+	if tmp, ok := rawArgs["phase"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("phase"))
+		arg1, err = ec.unmarshalNInt2int(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["phase"] = arg1
+	var arg2 string
+	if tmp, ok := rawArgs["task"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("task"))
+		arg2, err = ec.unmarshalNID2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["task"] = arg2
 	return args, nil
 }
 
@@ -2981,6 +3045,78 @@ func (ec *executionContext) fieldContext_Mutation_removeValidator(ctx context.Co
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_removeValidator_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_submitTask(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_submitTask(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().SubmitTask(rctx, fc.Args["validator"].(types.ValAddress), fc.Args["phase"].(int), fc.Args["task"].(string))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			if ec.directives.Auth == nil {
+				return nil, errors.New("directive auth is not implemented")
+			}
+			return ec.directives.Auth(ctx, nil, directive0)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*string); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *string`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOVoid2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_submitTask(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Void does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_submitTask_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return
 	}
@@ -8561,6 +8697,12 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_removeValidator(ctx, field)
+			})
+
+		case "submitTask":
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_submitTask(ctx, field)
 			})
 
 		case "registerRPCEndpoint":
