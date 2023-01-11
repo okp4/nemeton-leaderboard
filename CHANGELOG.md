@@ -1,5 +1,21 @@
 # ØKP4 🧙 Nemeton Leaderboard 🏆
 
+## [2.2.0](https://github.com/okp4/nemeton-leaderboard/compare/v2.1.1...v2.2.0) (2023-01-11)
+
+
+### Features
+
+* **task:** add submitted status to tasks with submission ([edd0e2b](https://github.com/okp4/nemeton-leaderboard/commit/edd0e2be582375ba911a1b2ccada2bae424e9135))
+* **task:** allow submitting a task through mutation ([4afe843](https://github.com/okp4/nemeton-leaderboard/commit/4afe8436140b427d23490ebaebc1d441b76a2251))
+* **validator:** add mutation to remove validator ([1e92a2e](https://github.com/okp4/nemeton-leaderboard/commit/1e92a2e821148caffd5ee0710a17911102411a6a))
+* **validator:** handle remove validator event ([237740b](https://github.com/okp4/nemeton-leaderboard/commit/237740b84d98bbffe7c862f6b487d317f620d06d))
+* **validator:** trigger ValidatorRemovedEvent ([fbfb01a](https://github.com/okp4/nemeton-leaderboard/commit/fbfb01ad90a46415c79c7065a06e74f1c547cc84))
+
+
+### Bug Fixes
+
+* **task:** make manual task completion intemporal ([f60bc68](https://github.com/okp4/nemeton-leaderboard/commit/f60bc6884fa2631b6f4bc0d318b90464f89748c4))
+
 ## [2.1.1](https://github.com/okp4/nemeton-leaderboard/compare/v2.1.0...v2.1.1) (2022-12-23)
 
 
