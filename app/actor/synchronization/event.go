@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"time"
 
+	types2 "github.com/cosmos/cosmos-sdk/types"
 	"github.com/tendermint/tendermint/proto/tendermint/types"
 )
 
@@ -13,6 +14,7 @@ type NewBlockEvent struct {
 	Height     int64             `json:"height"`
 	Time       time.Time         `json:"time"`
 	Signatures []types.CommitSig `json:"signatures"`
+	Msgs       []types2.Msg      `json:"msgs"`
 }
 
 func (e *NewBlockEvent) Marshal() (map[string]interface{}, error) {
