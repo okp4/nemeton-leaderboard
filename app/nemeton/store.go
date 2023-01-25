@@ -10,6 +10,7 @@ import (
 	"okp4/nemeton-leaderboard/app/util"
 
 	"github.com/cosmos/cosmos-sdk/types"
+	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -733,4 +734,32 @@ func (s *Store) CompleteValidatorsUptimeForPhase(ctx context.Context, phase *Pha
 	}
 
 	return nil
+}
+
+func (s *Store) CompleteVoteProposalTask(ctx context.Context, when time.Time, msgVotes []v1.MsgVote) error {
+	if len(msgVotes) == 0 {
+		return nil
+	}
+
+	phase, task := s.getTaskPhaseByType(TaskTypeVoteProposal, when)
+	if phase == nil || task == nil {
+		return nil
+	}
+
+	proposalID := task.GetParamProposalID()
+	if proposalID == nil {
+		return fmt.Errorf("could not retrieve linked proposal ID for task %s", task.ID)
+	}
+
+	addrs := make([]types.AccAddress, len(msgVotes))
+	for _, vote := range msgVotes {
+		if vote.ProposalId == *proposalID {
+			addr, err := types.AccAddressFromBech32(vote.Voter)
+			if err != nil {
+				return err
+			}
+			addrs = append(addrs, addr)
+		}
+	}
+	return s.ensureTaskCompleted(ctx, bson.M{"delegator": bson.M{"$in": addrs}}, phase.Number, task.ID, *task.Rewards)
 }

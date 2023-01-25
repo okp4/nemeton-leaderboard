@@ -138,6 +138,10 @@ func (a *Actor) handleNewBlockEvent(data map[string]interface{}) {
 		logger.Panic().Err(err).Msg("🤕 Failed update validator node setup task.")
 	}
 
+	if err := a.store.CompleteVoteProposalTask(a.ctx, e.Time, e.MsgVotes); err != nil {
+		logger.Panic().Err(err).Msg("🤕 Failed complete vote proposal task.")
+	}
+
 	if err := a.store.UpdatePhaseBlocks(a.ctx, e.Time, e.Height); err != nil {
 		logger.Panic().Err(err).Msg("🤕 Failed update phase block range.")
 	}

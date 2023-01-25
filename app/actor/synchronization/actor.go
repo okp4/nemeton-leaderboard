@@ -159,8 +159,8 @@ func (a *Actor) publishEvent(ctx actor.Context, block *tmservice.Block) error {
 		Height:     block.Header.Height,
 		Time:       block.Header.Time,
 		Signatures: block.LastCommit.Signatures,
-		Msgs:       filterMsgs(a.txDecoder, block.Data.Txs),
 	}
+	filteredMsgs(&blockEvent, a.txDecoder, block.Data.Txs)
 
 	blockData, err := blockEvent.Marshal()
 	if err != nil {
@@ -176,8 +176,8 @@ func (a *Actor) publishEvent(ctx actor.Context, block *tmservice.Block) error {
 	return nil
 }
 
-func filterMsgs(decoder types.TxDecoder, txs [][]byte) []types.Msg {
-	msgs := make([]types.Msg, 0)
+func filteredMsgs(block *NewBlockEvent, decoder types.TxDecoder, txs [][]byte) {
+	msgVotes := make([]v1.MsgVote, 0)
 	for _, tx := range txs {
 		txDecoded, err := decoder(tx)
 		if err != nil {
@@ -186,12 +186,13 @@ func filterMsgs(decoder types.TxDecoder, txs [][]byte) []types.Msg {
 		}
 
 		for _, msg := range txDecoded.GetMsgs() {
-			if voteMsg, ok := msg.(*v1.MsgVote); ok {
-				msgs = append(msgs, voteMsg)
-				continue
+			switch voteMsg := msg.(type) {
+			case *v1.MsgVote:
+				msgVotes = append(msgVotes, *voteMsg)
+			default:
+				log.Info().Interface("msg", msg).Msg("Skip message from transaction")
 			}
-			log.Info().Interface("msg", msg).Msg("Skip message from transaction")
 		}
 	}
-	return msgs
+	block.MsgVotes = msgVotes
 }
