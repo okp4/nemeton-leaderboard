@@ -751,7 +751,7 @@ func (s *Store) CompleteVoteProposalTask(ctx context.Context, when time.Time, ms
 		return fmt.Errorf("could not retrieve linked proposal ID for task %s", task.ID)
 	}
 
-	addrs := make([]types.AccAddress, len(msgVotes))
+	addrs := make([]types.AccAddress, 0, len(msgVotes))
 	for _, vote := range msgVotes {
 		if vote.ProposalId == *proposalID {
 			addr, err := types.AccAddressFromBech32(vote.Voter)

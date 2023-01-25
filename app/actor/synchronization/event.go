@@ -14,7 +14,7 @@ type NewBlockEvent struct {
 	Height     int64             `json:"height"`
 	Time       time.Time         `json:"time"`
 	Signatures []types.CommitSig `json:"signatures"`
-	MsgVotes   []v1.MsgVote      `json:"omitempty,msgVotes"`
+	MsgVotes   []v1.MsgVote      `json:"msgVotes,omitempty"`
 }
 
 func (e *NewBlockEvent) Marshal() (map[string]interface{}, error) {

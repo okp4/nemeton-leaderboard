@@ -14,7 +14,7 @@ const (
 	TaskTypeVoteProposal = "vote-proposal"
 
 	taskParamMaxPoints  = "max-points"
-	taskParamProposalId = "proposal-id"
+	taskParamProposalID = "proposal-id"
 )
 
 type TaskState struct {
@@ -76,7 +76,7 @@ func (t Task) GetParamMaxPoints() *uint64 {
 }
 
 func (t Task) GetParamProposalID() *uint64 {
-	if v, ok := t.Params[taskParamProposalId]; ok {
+	if v, ok := t.Params[taskParamProposalID]; ok {
 		if proposalID, ok := v.(int64); ok {
 			p := uint64(proposalID)
 			return &p
@@ -141,6 +141,6 @@ func makeDashboardTask(id, name, description string, start, end time.Time, maxPo
 
 func makeVoteProposalTask(id, name, description string, start, end time.Time, rewards uint64, proposalID uint64) Task {
 	return makeTask(TaskTypeVoteProposal, id, name, description, start, end, &rewards, map[string]interface{}{
-		taskParamProposalId: proposalID,
+		taskParamProposalID: proposalID,
 	})
 }
