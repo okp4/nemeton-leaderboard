@@ -75,6 +75,16 @@ func (t Task) GetParamMaxPoints() *uint64 {
 	return nil
 }
 
+func (t Task) GetParamProposalID() *uint64 {
+	if v, ok := t.Params[taskParamProposalId]; ok {
+		if proposalID, ok := v.(int64); ok {
+			p := uint64(proposalID)
+			return &p
+		}
+	}
+	return nil
+}
+
 func makeTask(
 	ttype, id, name, description string,
 	start, end time.Time,
@@ -129,7 +139,7 @@ func makeDashboardTask(id, name, description string, start, end time.Time, maxPo
 	})
 }
 
-func makeVoteProposalTask(id, name, description string, start, end time.Time, rewards uint64, proposalID uint) Task {
+func makeVoteProposalTask(id, name, description string, start, end time.Time, rewards uint64, proposalID uint64) Task {
 	return makeTask(TaskTypeVoteProposal, id, name, description, start, end, &rewards, map[string]interface{}{
 		taskParamProposalId: proposalID,
 	})
