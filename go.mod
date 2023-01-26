@@ -17,7 +17,7 @@ require (
 	github.com/vektah/gqlparser/v2 v2.5.1
 	go.mongodb.org/mongo-driver v1.11.1
 	golang.org/x/net v0.5.0
-	google.golang.org/grpc v1.52.1
+	google.golang.org/grpc v1.52.3
 	gopkg.in/yaml.v2 v2.4.0
 )
 
