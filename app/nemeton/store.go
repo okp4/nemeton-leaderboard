@@ -564,16 +564,27 @@ func (s *Store) ensureTaskCompleted(ctx context.Context, filter bson.M, phase in
 	return err
 }
 
+// getTaskPhaseByType return the current phase at the given time and the current **first** task for the given task type.
 func (s *Store) getTaskPhaseByType(id string, at time.Time) (*Phase, *Task) {
-	phase := s.GetCurrentPhaseAt(at)
+	if phase, tasks := s.getTasksPhaseByType(id, at); len(tasks) > 0 {
+		return phase, tasks[0]
+	} else {
+		return phase, nil
+	}
+}
+
+// getTasksPhaseByType return the current phase at the given time and all tasks for the given task type.
+func (s *Store) getTasksPhaseByType(id string, at time.Time) (phase *Phase, tasks []*Task) {
+	phase = s.GetCurrentPhaseAt(at)
+	tasks = make([]*Task, 0)
 	if phase != nil {
 		for _, task := range phase.Tasks {
 			if task.Type == id && task.InProgressAt(at) {
-				return phase, &task
+				tasks = append(tasks, &task)
 			}
 		}
 	}
-	return phase, nil
+	return phase, tasks
 }
 
 func (s *Store) UpdatePhaseBlocks(ctx context.Context, blockTime time.Time, height int64) error {
