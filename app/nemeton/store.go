@@ -566,21 +566,20 @@ func (s *Store) ensureTaskCompleted(ctx context.Context, filter bson.M, phase in
 
 // getTaskPhaseByType return the current phase at the given time and the current **first** task for the given task type.
 func (s *Store) getTaskPhaseByType(id string, at time.Time) (*Phase, *Task) {
-	if phase, tasks := s.getTasksPhaseByType(id, at); len(tasks) > 0 {
-		return phase, tasks[0]
-	} else {
-		return phase, nil
+	phase, tasks := s.getTasksPhaseByType(id, at)
+	if len(tasks) > 0 {
+		return phase, &tasks[0]
 	}
+	return phase, nil
 }
 
 // getTasksPhaseByType return the current phase at the given time and all tasks for the given task type.
-func (s *Store) getTasksPhaseByType(id string, at time.Time) (phase *Phase, tasks []*Task) {
-	phase = s.GetCurrentPhaseAt(at)
-	tasks = make([]*Task, 0)
+func (s *Store) getTasksPhaseByType(id string, at time.Time) (*Phase, []Task) {
+	phase, tasks := s.GetCurrentPhaseAt(at), make([]Task, 0)
 	if phase != nil {
 		for _, task := range phase.Tasks {
 			if task.Type == id && task.InProgressAt(at) {
-				tasks = append(tasks, &task)
+				tasks = append(tasks, task)
 			}
 		}
 	}
@@ -773,7 +772,11 @@ func (s *Store) CompleteVoteProposalTask(ctx context.Context, when time.Time, ms
 				addrs = append(addrs, addr)
 			}
 		}
-		return s.ensureTaskCompleted(ctx, bson.M{"delegator": bson.M{"$in": addrs}}, phase.Number, task.ID, *task.Rewards)
+
+		err := s.ensureTaskCompleted(ctx, bson.M{"delegator": bson.M{"$in": addrs}}, phase.Number, task.ID, *task.Rewards)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
