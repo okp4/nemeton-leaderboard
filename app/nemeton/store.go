@@ -752,25 +752,29 @@ func (s *Store) CompleteVoteProposalTask(ctx context.Context, when time.Time, ms
 		return nil
 	}
 
-	phase, task := s.getTaskPhaseByType(TaskTypeVoteProposal, when)
-	if phase == nil || task == nil {
+	phase, tasks := s.getTasksPhaseByType(TaskTypeVoteProposal, when)
+	if phase == nil || tasks == nil || len(tasks) == 0 {
 		return nil
 	}
 
-	proposalID := task.GetParamProposalID()
-	if proposalID == nil {
-		return fmt.Errorf("could not retrieve linked proposal ID for task %s", task.ID)
+	for _, task := range tasks {
+		proposalID := task.GetParamProposalID()
+		if proposalID == nil {
+			return fmt.Errorf("could not retrieve linked proposal ID for task %s", task.ID)
+		}
+
+		addrs := make([]types.AccAddress, 0, len(msgVotes))
+		for _, vote := range msgVotes {
+			if vote.ProposalId == *proposalID {
+				addr, err := types.AccAddressFromBech32(vote.Voter)
+				if err != nil {
+					return err
+				}
+				addrs = append(addrs, addr)
+			}
+		}
+		return s.ensureTaskCompleted(ctx, bson.M{"delegator": bson.M{"$in": addrs}}, phase.Number, task.ID, *task.Rewards)
 	}
 
-	addrs := make([]types.AccAddress, 0, len(msgVotes))
-	for _, vote := range msgVotes {
-		if vote.ProposalId == *proposalID {
-			addr, err := types.AccAddressFromBech32(vote.Voter)
-			if err != nil {
-				return err
-			}
-			addrs = append(addrs, addr)
-		}
-	}
-	return s.ensureTaskCompleted(ctx, bson.M{"delegator": bson.M{"$in": addrs}}, phase.Number, task.ID, *task.Rewards)
+	return nil
 }
