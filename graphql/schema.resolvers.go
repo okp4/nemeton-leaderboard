@@ -303,7 +303,26 @@ func (r *mutationResolver) CompleteTask(ctx context.Context, validator types.Val
 
 // SubmitBonusPoints is the resolver for the submitBonusPoints field.
 func (r *mutationResolver) SubmitBonusPoints(ctx context.Context, validator types.ValAddress, points uint64, reason string) (*string, error) {
-	panic(fmt.Errorf("not implemented: SubmitBonusPoints - submitBonusPoints"))
+	evt := &BonusPointsSubmittedEvent{
+		Validator: validator,
+		Points:    points,
+		Reason:    reason,
+	}
+	rawEvt, err := evt.Marshal()
+	if err != nil {
+		return nil, err
+	}
+
+	r.actorCTX.Send(
+		r.eventStore,
+		&message.PublishEventMessage{
+			Event: event.NewEvent(
+				BonusPointsSubmittedEventType,
+				rawEvt,
+			),
+		},
+	)
+	return nil, nil
 }
 
 // Blocks is the resolver for the blocks field.

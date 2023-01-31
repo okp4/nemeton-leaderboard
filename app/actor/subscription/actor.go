@@ -106,6 +106,8 @@ func (a *Actor) receiveNewEvent(e event.Event) {
 		a.handleTaskCompletedEvent(e.Data)
 	case graphql.RegisterURLEventType:
 		a.handleRegisterURLEvent(e.Date, e.Data)
+	case graphql.BonusPointsSubmittedEventType:
+		a.handleBonusPointsSubmittedEvent(e.Data)
 	default:
 		log.Warn().Msg("⚠️ No event handler for this event.")
 	}
@@ -342,5 +344,19 @@ func (a *Actor) handleTaskCompletedEvent(data map[string]interface{}) {
 
 	if err := a.store.ManualCompleteTask(a.ctx, e.Validator, e.Phase, e.Task, e.Points); err != nil {
 		log.Err(err).Interface("data", data).Msg("🤕 Couldn't manually complete task")
+	}
+}
+
+func (a *Actor) handleBonusPointsSubmittedEvent(data map[string]interface{}) {
+	log.Info().Interface("event", data).Msg("Handle BonusPointsSubmittedEvent event")
+
+	e := &graphql.BonusPointsSubmittedEvent{}
+	if err := e.Unmarshal(data); err != nil {
+		log.Panic().Err(err).Msg("❌ Failed unmarshal event to BonusPointsSubmittedEvent")
+		return
+	}
+
+	if err := a.store.SubmitBonusPoints(a.ctx, e.Validator, e.Points, e.Reason); err != nil {
+		log.Err(err).Interface("data", data).Msg("🤕 Couldn't submit bonus points")
 	}
 }
