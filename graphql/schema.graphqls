@@ -320,6 +320,26 @@ type Mutation {
         """
         points: UInt64
     ): Void @auth
+
+    """
+    Emit a `BonusPointsSubmittedEvent` in the system carrying information related to number of bonus points that need to be given to a validator.
+    """
+    submitBonusPoints(
+        """
+        The validator who will receive bonus points.
+        """
+        validator: ValoperAddress!
+
+        """
+        The total number of bonus points that will be given to the validator.
+        """
+        points: UInt64!
+
+        """
+        The reason why this validator receive those bonus points.
+        """
+        reason: String!
+    ): Void @auth
 }
 
 """
