@@ -483,6 +483,21 @@ type BlockRange {
 }
 
 """
+Represents the bonus points attribution.
+"""
+type BonusPoints {
+    """
+    The total number of bonus points attributed.
+    """
+    points: UInt64!
+
+    """
+    The reason why this bonus point has been attributed.
+    """
+    reason: String!
+}
+
+"""
 Represents a page of the Leaderboard.
 """
 type BoardConnection {
@@ -625,6 +640,11 @@ type Validator {
     The blocks the validator has not signed.
     """
     missedBlocks: [BlockRange!]! @goField(forceResolver: true)
+
+    """
+    Additionally bonus points affected to the validator with the corresponding reason.
+    """
+    bonusPoints: [BonusPoints!]
 }
 
 """

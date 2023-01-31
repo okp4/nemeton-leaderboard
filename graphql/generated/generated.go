@@ -72,6 +72,11 @@ type ComplexityRoot struct {
 		PageInfo func(childComplexity int) int
 	}
 
+	BonusPoints struct {
+		Points func(childComplexity int) int
+		Reason func(childComplexity int) int
+	}
+
 	Identity struct {
 		Kid     func(childComplexity int) int
 		Picture func(childComplexity int) int
@@ -164,6 +169,7 @@ type ComplexityRoot struct {
 	}
 
 	Validator struct {
+		BonusPoints  func(childComplexity int) int
 		Country      func(childComplexity int) int
 		Dashboard    func(childComplexity int) int
 		Delegator    func(childComplexity int) int
@@ -304,6 +310,20 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.BoardConnection.PageInfo(childComplexity), true
+
+	case "BonusPoints.points":
+		if e.complexity.BonusPoints.Points == nil {
+			break
+		}
+
+		return e.complexity.BonusPoints.Points(childComplexity), true
+
+	case "BonusPoints.reason":
+		if e.complexity.BonusPoints.Reason == nil {
+			break
+		}
+
+		return e.complexity.BonusPoints.Reason(childComplexity), true
 
 	case "Identity.kid":
 		if e.complexity.Identity.Kid == nil {
@@ -780,6 +800,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Tasks.StartedCount(childComplexity), true
+
+	case "Validator.bonusPoints":
+		if e.complexity.Validator.BonusPoints == nil {
+			break
+		}
+
+		return e.complexity.Validator.BonusPoints(childComplexity), true
 
 	case "Validator.country":
 		if e.complexity.Validator.Country == nil {
@@ -1466,6 +1493,21 @@ type BlockRange {
 }
 
 """
+Represents the bonus points attribution.
+"""
+type BonusPoints {
+    """
+    The total number of bonus points attributed.
+    """
+    points: UInt64!
+
+    """
+    The reason why this bonus point has been attributed.
+    """
+    reason: String!
+}
+
+"""
 Represents a page of the Leaderboard.
 """
 type BoardConnection {
@@ -1608,6 +1650,11 @@ type Validator {
     The blocks the validator has not signed.
     """
     missedBlocks: [BlockRange!]! @goField(forceResolver: true)
+
+    """
+    Additionally bonus points affected to the validator with the corresponding reason.
+    """
+    bonusPoints: [BonusPoints!]
 }
 
 """
@@ -2691,6 +2738,94 @@ func (ec *executionContext) fieldContext_BoardConnection_pageInfo(ctx context.Co
 				return ec.fieldContext_PageInfo_count(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type PageInfo", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _BonusPoints_points(ctx context.Context, field graphql.CollectedField, obj *nemeton.BonusPoints) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_BonusPoints_points(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Points, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(uint64)
+	fc.Result = res
+	return ec.marshalNUInt642uint64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_BonusPoints_points(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BonusPoints",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type UInt64 does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _BonusPoints_reason(ctx context.Context, field graphql.CollectedField, obj *nemeton.BonusPoints) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_BonusPoints_reason(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Reason, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_BonusPoints_reason(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BonusPoints",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
 		},
 	}
 	return fc, nil
@@ -4961,6 +5096,8 @@ func (ec *executionContext) fieldContext_Query_validator(ctx context.Context, fi
 				return ec.fieldContext_Validator_tasks(ctx, field)
 			case "missedBlocks":
 				return ec.fieldContext_Validator_missedBlocks(ctx, field)
+			case "bonusPoints":
+				return ec.fieldContext_Validator_bonusPoints(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Validator", field.Name)
 		},
@@ -6658,6 +6795,53 @@ func (ec *executionContext) fieldContext_Validator_missedBlocks(ctx context.Cont
 	return fc, nil
 }
 
+func (ec *executionContext) _Validator_bonusPoints(ctx context.Context, field graphql.CollectedField, obj *nemeton.Validator) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Validator_bonusPoints(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.BonusPoints, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*[]*nemeton.BonusPoints)
+	fc.Result = res
+	return ec.marshalOBonusPoints2ᚖᚕᚖokp4ᚋnemetonᚑleaderboardᚋappᚋnemetonᚐBonusPointsᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Validator_bonusPoints(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Validator",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "points":
+				return ec.fieldContext_BonusPoints_points(ctx, field)
+			case "reason":
+				return ec.fieldContext_BonusPoints_reason(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type BonusPoints", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _ValidatorEdge_cursor(ctx context.Context, field graphql.CollectedField, obj *model.ValidatorEdge) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_ValidatorEdge_cursor(ctx, field)
 	if err != nil {
@@ -6775,6 +6959,8 @@ func (ec *executionContext) fieldContext_ValidatorEdge_node(ctx context.Context,
 				return ec.fieldContext_Validator_tasks(ctx, field)
 			case "missedBlocks":
 				return ec.fieldContext_Validator_missedBlocks(ctx, field)
+			case "bonusPoints":
+				return ec.fieldContext_Validator_bonusPoints(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Validator", field.Name)
 		},
@@ -8705,6 +8891,41 @@ func (ec *executionContext) _BoardConnection(ctx context.Context, sel ast.Select
 	return out
 }
 
+var bonusPointsImplementors = []string{"BonusPoints"}
+
+func (ec *executionContext) _BonusPoints(ctx context.Context, sel ast.SelectionSet, obj *nemeton.BonusPoints) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, bonusPointsImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("BonusPoints")
+		case "points":
+
+			out.Values[i] = ec._BonusPoints_points(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "reason":
+
+			out.Values[i] = ec._BonusPoints_reason(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
 var identityImplementors = []string{"Identity"}
 
 func (ec *executionContext) _Identity(ctx context.Context, sel ast.SelectionSet, obj *model.Identity) graphql.Marshaler {
@@ -9662,6 +9883,10 @@ func (ec *executionContext) _Validator(ctx context.Context, sel ast.SelectionSet
 				return innerFunc(ctx)
 
 			})
+		case "bonusPoints":
+
+			out.Values[i] = ec._Validator_bonusPoints(ctx, field, obj)
+
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -10113,6 +10338,16 @@ func (ec *executionContext) marshalNBoardConnection2ᚖokp4ᚋnemetonᚑleaderbo
 		return graphql.Null
 	}
 	return ec._BoardConnection(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNBonusPoints2ᚖokp4ᚋnemetonᚑleaderboardᚋappᚋnemetonᚐBonusPoints(ctx context.Context, sel ast.SelectionSet, v *nemeton.BonusPoints) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._BonusPoints(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalNBoolean2bool(ctx context.Context, v interface{}) (bool, error) {
@@ -10931,6 +11166,57 @@ func (ec *executionContext) marshalOBlockRange2ᚖokp4ᚋnemetonᚑleaderboard�
 		return graphql.Null
 	}
 	return ec._BlockRange(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalOBonusPoints2ᚕᚖokp4ᚋnemetonᚑleaderboardᚋappᚋnemetonᚐBonusPointsᚄ(ctx context.Context, sel ast.SelectionSet, v []*nemeton.BonusPoints) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNBonusPoints2ᚖokp4ᚋnemetonᚑleaderboardᚋappᚋnemetonᚐBonusPoints(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalOBonusPoints2ᚖᚕᚖokp4ᚋnemetonᚑleaderboardᚋappᚋnemetonᚐBonusPointsᚄ(ctx context.Context, sel ast.SelectionSet, v *[]*nemeton.BonusPoints) graphql.Marshaler {
+	return ec.marshalOBonusPoints2ᚕᚖokp4ᚋnemetonᚑleaderboardᚋappᚋnemetonᚐBonusPointsᚄ(ctx, sel, *v)
 }
 
 func (ec *executionContext) unmarshalOBoolean2bool(ctx context.Context, v interface{}) (bool, error) {
