@@ -11,8 +11,10 @@ const (
 	TaskTypeRPC          = "rpc"
 	TaskTypeSnapshots    = "snapshots"
 	TaskTypeDashboard    = "dashboard"
+	TaskTypeVoteProposal = "vote-proposal"
 
-	taskParamMaxPoints = "max-points"
+	taskParamMaxPoints  = "max-points"
+	taskParamProposalID = "proposal-id"
 )
 
 type TaskState struct {
@@ -73,6 +75,16 @@ func (t Task) GetParamMaxPoints() *uint64 {
 	return nil
 }
 
+func (t Task) GetParamProposalID() *uint64 {
+	if v, ok := t.Params[taskParamProposalID]; ok {
+		if proposalID, ok := v.(int64); ok {
+			p := uint64(proposalID)
+			return &p
+		}
+	}
+	return nil
+}
+
 func makeTask(
 	ttype, id, name, description string,
 	start, end time.Time,
@@ -124,5 +136,11 @@ func makeSnapshotsTask(id, name, description string, start, end time.Time, rewar
 func makeDashboardTask(id, name, description string, start, end time.Time, maxPoints uint64) Task {
 	return makeTask(TaskTypeDashboard, id, name, description, start, end, nil, map[string]interface{}{
 		taskParamMaxPoints: maxPoints,
+	})
+}
+
+func makeVoteProposalTask(id, name, description string, start, end time.Time, rewards uint64, proposalID uint64) Task {
+	return makeTask(TaskTypeVoteProposal, id, name, description, start, end, &rewards, map[string]interface{}{
+		taskParamProposalID: proposalID,
 	})
 }

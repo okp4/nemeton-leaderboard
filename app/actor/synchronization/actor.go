@@ -12,6 +12,9 @@ import (
 	"github.com/asynkron/protoactor-go/actor"
 	"github.com/asynkron/protoactor-go/scheduler"
 	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
+	"github.com/cosmos/cosmos-sdk/simapp"
+	"github.com/cosmos/cosmos-sdk/types"
+	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	"github.com/rs/zerolog/log"
 )
 
@@ -23,6 +26,7 @@ type Actor struct {
 	eventStore   *actor.PID
 	offsetStore  *offset.Store
 	currentBlock int64
+	txDecoder    types.TxDecoder
 }
 
 func NewActor(eventStore, grpcClient *actor.PID, mongoURI, dbName string) (*Actor, error) {
@@ -41,12 +45,15 @@ func NewActor(eventStore, grpcClient *actor.PID, mongoURI, dbName string) (*Acto
 		currentBlock = 1
 	}
 
+	txDecoder := simapp.MakeTestEncodingConfig().TxConfig.TxDecoder()
+
 	return &Actor{
 		context:      ctx,
 		grpcClient:   grpcClient,
 		eventStore:   eventStore,
 		offsetStore:  store,
 		currentBlock: currentBlock,
+		txDecoder:    txDecoder,
 	}, nil
 }
 
@@ -153,6 +160,7 @@ func (a *Actor) publishEvent(ctx actor.Context, block *tmservice.Block) error {
 		Time:       block.Header.Time,
 		Signatures: block.LastCommit.Signatures,
 	}
+	filteredMsgs(&blockEvent, a.txDecoder, block.Data.Txs)
 
 	blockData, err := blockEvent.Marshal()
 	if err != nil {
@@ -166,4 +174,25 @@ func (a *Actor) publishEvent(ctx actor.Context, block *tmservice.Block) error {
 	}
 
 	return nil
+}
+
+func filteredMsgs(block *NewBlockEvent, decoder types.TxDecoder, txs [][]byte) {
+	msgVotes := make([]v1.MsgVote, 0)
+	for _, tx := range txs {
+		txDecoded, err := decoder(tx)
+		if err != nil {
+			log.Err(err).Msg("💱 Failed decode transaction")
+			continue
+		}
+
+		for _, msg := range txDecoded.GetMsgs() {
+			switch voteMsg := msg.(type) {
+			case *v1.MsgVote:
+				msgVotes = append(msgVotes, *voteMsg)
+			default:
+				log.Info().Interface("msg", msg).Msg("Skip message from transaction")
+			}
+		}
+	}
+	block.MsgVotes = msgVotes
 }

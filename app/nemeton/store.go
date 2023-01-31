@@ -10,6 +10,7 @@ import (
 	"okp4/nemeton-leaderboard/app/util"
 
 	"github.com/cosmos/cosmos-sdk/types"
+	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -563,16 +564,26 @@ func (s *Store) ensureTaskCompleted(ctx context.Context, filter bson.M, phase in
 	return err
 }
 
+// getTaskPhaseByType return the current phase at the given time and the current **first** task for the given task type.
 func (s *Store) getTaskPhaseByType(id string, at time.Time) (*Phase, *Task) {
-	phase := s.GetCurrentPhaseAt(at)
+	phase, tasks := s.getTasksPhaseByType(id, at)
+	if len(tasks) > 0 {
+		return phase, &tasks[0]
+	}
+	return phase, nil
+}
+
+// getTasksPhaseByType return the current phase at the given time and all tasks for the given task type.
+func (s *Store) getTasksPhaseByType(id string, at time.Time) (*Phase, []Task) {
+	phase, tasks := s.GetCurrentPhaseAt(at), make([]Task, 0)
 	if phase != nil {
 		for _, task := range phase.Tasks {
 			if task.Type == id && task.InProgressAt(at) {
-				return phase, &task
+				tasks = append(tasks, task)
 			}
 		}
 	}
-	return phase, nil
+	return phase, tasks
 }
 
 func (s *Store) UpdatePhaseBlocks(ctx context.Context, blockTime time.Time, height int64) error {
@@ -730,6 +741,42 @@ func (s *Store) CompleteValidatorsUptimeForPhase(ctx context.Context, phase *Pha
 	})
 	if err != nil {
 		return err
+	}
+
+	return nil
+}
+
+func (s *Store) CompleteVoteProposalTask(ctx context.Context, when time.Time, msgVotes []v1.MsgVote) error {
+	if len(msgVotes) == 0 {
+		return nil
+	}
+
+	phase, tasks := s.getTasksPhaseByType(TaskTypeVoteProposal, when)
+	if phase == nil || tasks == nil || len(tasks) == 0 {
+		return nil
+	}
+
+	for _, task := range tasks {
+		proposalID := task.GetParamProposalID()
+		if proposalID == nil {
+			return fmt.Errorf("could not retrieve linked proposal ID for task %s", task.ID)
+		}
+
+		addrs := make([]types.AccAddress, 0, len(msgVotes))
+		for _, vote := range msgVotes {
+			if vote.ProposalId == *proposalID {
+				addr, err := types.AccAddressFromBech32(vote.Voter)
+				if err != nil {
+					return err
+				}
+				addrs = append(addrs, addr)
+			}
+		}
+
+		err := s.ensureTaskCompleted(ctx, bson.M{"delegator": bson.M{"$in": addrs}}, phase.Number, task.ID, *task.Rewards)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
