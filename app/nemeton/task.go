@@ -88,6 +88,26 @@ func (t Task) GetParamProposalID() *uint64 {
 	return nil
 }
 
+func (t Task) GetParamUpgradeStartBlock() *uint64 {
+	if v, ok := t.Params[taskParamUpgradeStartBlock]; ok {
+		if startBlock, ok := v.(int64); ok {
+			p := uint64(startBlock)
+			return &p
+		}
+	}
+	return nil
+}
+
+func (t Task) GetParamUpgradeEndBlock() *uint64 {
+	if v, ok := t.Params[taskParamUpgradeEndBlock]; ok {
+		if endBlock, ok := v.(int64); ok {
+			p := uint64(endBlock)
+			return &p
+		}
+	}
+	return nil
+}
+
 func makeTask(
 	ttype, id, name, description string,
 	start, end time.Time,

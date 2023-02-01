@@ -142,6 +142,10 @@ func (a *Actor) handleNewBlockEvent(data map[string]interface{}) {
 		logger.Panic().Err(err).Msg("🤕 Failed complete vote proposal task.")
 	}
 
+	if err := a.store.CompleteUpgradeTask(a.ctx, e.Time, consensusAddr, uint64(e.Height)); err != nil {
+		logger.Panic().Err(err).Msg("🤕 Failed complete upgrade task.")
+	}
+
 	if err := a.store.UpdatePhaseBlocks(a.ctx, e.Time, e.Height); err != nil {
 		logger.Panic().Err(err).Msg("🤕 Failed update phase block range.")
 	}
