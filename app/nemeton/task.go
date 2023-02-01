@@ -12,9 +12,12 @@ const (
 	TaskTypeSnapshots    = "snapshots"
 	TaskTypeDashboard    = "dashboard"
 	TaskTypeVoteProposal = "vote-proposal"
+	TaskTypeUpgrade      = "upgrade"
 
-	taskParamMaxPoints  = "max-points"
-	taskParamProposalID = "proposal-id"
+	taskParamMaxPoints         = "max-points"
+	taskParamProposalID        = "proposal-id"
+	taskParamUpgradeStartBlock = "start-block"
+	taskParamUpgradeEndBlock   = "end-block"
 )
 
 type TaskState struct {
@@ -85,6 +88,26 @@ func (t Task) GetParamProposalID() *uint64 {
 	return nil
 }
 
+func (t Task) GetParamUpgradeStartBlock() *uint64 {
+	if v, ok := t.Params[taskParamUpgradeStartBlock]; ok {
+		if startBlock, ok := v.(int64); ok {
+			p := uint64(startBlock)
+			return &p
+		}
+	}
+	return nil
+}
+
+func (t Task) GetParamUpgradeEndBlock() *uint64 {
+	if v, ok := t.Params[taskParamUpgradeEndBlock]; ok {
+		if endBlock, ok := v.(int64); ok {
+			p := uint64(endBlock)
+			return &p
+		}
+	}
+	return nil
+}
+
 func makeTask(
 	ttype, id, name, description string,
 	start, end time.Time,
@@ -142,5 +165,12 @@ func makeDashboardTask(id, name, description string, start, end time.Time, maxPo
 func makeVoteProposalTask(id, name, description string, start, end time.Time, rewards uint64, proposalID uint64) Task {
 	return makeTask(TaskTypeVoteProposal, id, name, description, start, end, &rewards, map[string]interface{}{
 		taskParamProposalID: proposalID,
+	})
+}
+
+func makeUpgradeTask(id, name, description string, start, end time.Time, rewards uint64, startBlock, endBlock uint64) Task {
+	return makeTask(TaskTypeUpgrade, id, name, description, start, end, &rewards, map[string]interface{}{
+		taskParamUpgradeStartBlock: startBlock,
+		taskParamUpgradeEndBlock:   endBlock,
 	})
 }

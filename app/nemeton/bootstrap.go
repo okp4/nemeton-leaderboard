@@ -196,10 +196,20 @@ Share the content links to botanik#4248 on Discord. Only one submission per drui
 					"0",
 					"Vote for governance proposal to whitelist address for smart contract deployment",
 					"",
-					time.Date(2023, time.January, 2, 0, 0, 0, 0, time.UTC),     // TODO:⚠️ CHANGE DATE
-					time.Date(2023, time.January, 31, 23, 59, 59, 0, time.UTC), // TODO:⚠️ CHANGE DATE
+					time.Date(2023, time.February, 1, 0, 0, 0, 0, time.UTC),     // TODO:⚠️ CHANGE DATE
+					time.Date(2023, time.February, 15, 23, 59, 59, 0, time.UTC), // TODO:⚠️ CHANGE DATE
 					1500,
 					1,
+				),
+				makeUpgradeTask(
+					"1",
+					"",
+					"",
+					time.Date(2023, time.February, 1, 0, 0, 0, 0, time.UTC),     // TODO:⚠️ CHANGE DATE
+					time.Date(2023, time.February, 31, 23, 59, 59, 0, time.UTC), // TODO:⚠️ CHANGE DATE
+					2500,
+					110000,
+					110300,
 				),
 			},
 		},

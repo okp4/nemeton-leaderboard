@@ -142,6 +142,10 @@ func (a *Actor) handleNewBlockEvent(data map[string]interface{}) {
 		logger.Panic().Err(err).Msg("🤕 Failed complete vote proposal task.")
 	}
 
+	if err := a.store.CompleteUpgradeTask(a.ctx, e.Time, consensusAddr, uint64(e.Height)); err != nil {
+		logger.Panic().Err(err).Msg("🤕 Failed complete upgrade task.")
+	}
+
 	if err := a.store.UpdatePhaseBlocks(a.ctx, e.Time, e.Height); err != nil {
 		logger.Panic().Err(err).Msg("🤕 Failed update phase block range.")
 	}
@@ -152,6 +156,10 @@ func (a *Actor) handleNewBlockEvent(data map[string]interface{}) {
 	}
 
 	phase := a.store.GetCurrentPhaseAt(e.Time)
+	if phase == nil {
+		log.Panic().Err(err).Msg(fmt.Sprintf("🤕 No phase found for block %d at %s", e.Height, e.Time))
+		return // obvious but make linter happy 🙃
+	}
 	blockRange, err := a.store.GetPhaseBlocks(a.ctx, phase.Number)
 	if err != nil {
 		log.Panic().Err(err).Msg("🤕 Could not request block range.")

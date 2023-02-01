@@ -781,3 +781,21 @@ func (s *Store) CompleteVoteProposalTask(ctx context.Context, when time.Time, ms
 
 	return nil
 }
+
+func (s *Store) CompleteUpgradeTask(ctx context.Context, when time.Time, consensusAddrs []types.ConsAddress, height uint64) error {
+	phase, task := s.getTaskPhaseByType(TaskTypeUpgrade, when)
+	if phase == nil || task == nil {
+		return nil
+	}
+
+	startBlock, endBlock := task.GetParamUpgradeStartBlock(), task.GetParamUpgradeEndBlock()
+	if startBlock == nil || endBlock == nil {
+		return fmt.Errorf("couldn't get upgrade task params (startBlock: %d) (endBlock: %d)", startBlock, endBlock)
+	}
+
+	if height >= *startBlock && height < *endBlock {
+		return s.ensureTaskCompleted(ctx, bson.M{"valcons": bson.M{"$in": consensusAddrs}}, phase.Number, task.ID, *task.Rewards)
+	}
+
+	return nil
+}
