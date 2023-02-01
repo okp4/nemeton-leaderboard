@@ -28,7 +28,7 @@ type Validator struct {
 	Status      string                       `bson:"status"`
 	Points      *uint64                      `bson:"points,omitempty"`
 	Tasks       map[int]map[string]TaskState `bson:"tasks,omitempty"`
-	BonusPoints *[]BonusPoints               `bson:"bonusPoints,omitempty"`
+	BonusPoints []BonusPoints                `bson:"bonusPoints,omitempty"`
 }
 
 type BonusPoints struct {

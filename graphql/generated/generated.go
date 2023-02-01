@@ -1654,7 +1654,7 @@ type Validator {
     """
     Additionally bonus points affected to the validator with the corresponding reason.
     """
-    bonusPoints: [BonusPoints!]
+    bonusPoints: [BonusPoints!]!
 }
 
 """
@@ -6816,11 +6816,14 @@ func (ec *executionContext) _Validator_bonusPoints(ctx context.Context, field gr
 		return graphql.Null
 	}
 	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
 		return graphql.Null
 	}
-	res := resTmp.(*[]*nemeton.BonusPoints)
+	res := resTmp.([]nemeton.BonusPoints)
 	fc.Result = res
-	return ec.marshalOBonusPoints2ᚖᚕᚖokp4ᚋnemetonᚑleaderboardᚋappᚋnemetonᚐBonusPointsᚄ(ctx, field.Selections, res)
+	return ec.marshalNBonusPoints2ᚕokp4ᚋnemetonᚑleaderboardᚋappᚋnemetonᚐBonusPointsᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Validator_bonusPoints(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -9887,6 +9890,9 @@ func (ec *executionContext) _Validator(ctx context.Context, sel ast.SelectionSet
 
 			out.Values[i] = ec._Validator_bonusPoints(ctx, field, obj)
 
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -10340,14 +10346,52 @@ func (ec *executionContext) marshalNBoardConnection2ᚖokp4ᚋnemetonᚑleaderbo
 	return ec._BoardConnection(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNBonusPoints2ᚖokp4ᚋnemetonᚑleaderboardᚋappᚋnemetonᚐBonusPoints(ctx context.Context, sel ast.SelectionSet, v *nemeton.BonusPoints) graphql.Marshaler {
-	if v == nil {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
-		}
-		return graphql.Null
+func (ec *executionContext) marshalNBonusPoints2okp4ᚋnemetonᚑleaderboardᚋappᚋnemetonᚐBonusPoints(ctx context.Context, sel ast.SelectionSet, v nemeton.BonusPoints) graphql.Marshaler {
+	return ec._BonusPoints(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNBonusPoints2ᚕokp4ᚋnemetonᚑleaderboardᚋappᚋnemetonᚐBonusPointsᚄ(ctx context.Context, sel ast.SelectionSet, v []nemeton.BonusPoints) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
 	}
-	return ec._BonusPoints(ctx, sel, v)
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNBonusPoints2okp4ᚋnemetonᚑleaderboardᚋappᚋnemetonᚐBonusPoints(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
 }
 
 func (ec *executionContext) unmarshalNBoolean2bool(ctx context.Context, v interface{}) (bool, error) {
@@ -11166,57 +11210,6 @@ func (ec *executionContext) marshalOBlockRange2ᚖokp4ᚋnemetonᚑleaderboard�
 		return graphql.Null
 	}
 	return ec._BlockRange(ctx, sel, v)
-}
-
-func (ec *executionContext) marshalOBonusPoints2ᚕᚖokp4ᚋnemetonᚑleaderboardᚋappᚋnemetonᚐBonusPointsᚄ(ctx context.Context, sel ast.SelectionSet, v []*nemeton.BonusPoints) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalNBonusPoints2ᚖokp4ᚋnemetonᚑleaderboardᚋappᚋnemetonᚐBonusPoints(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
-
-	for _, e := range ret {
-		if e == graphql.Null {
-			return graphql.Null
-		}
-	}
-
-	return ret
-}
-
-func (ec *executionContext) marshalOBonusPoints2ᚖᚕᚖokp4ᚋnemetonᚑleaderboardᚋappᚋnemetonᚐBonusPointsᚄ(ctx context.Context, sel ast.SelectionSet, v *[]*nemeton.BonusPoints) graphql.Marshaler {
-	return ec.marshalOBonusPoints2ᚕᚖokp4ᚋnemetonᚑleaderboardᚋappᚋnemetonᚐBonusPointsᚄ(ctx, sel, *v)
 }
 
 func (ec *executionContext) unmarshalOBoolean2bool(ctx context.Context, v interface{}) (bool, error) {

@@ -644,7 +644,7 @@ type Validator {
     """
     Additionally bonus points affected to the validator with the corresponding reason.
     """
-    bonusPoints: [BonusPoints!]
+    bonusPoints: [BonusPoints!]!
 }
 
 """
