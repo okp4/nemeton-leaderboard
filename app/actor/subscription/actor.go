@@ -152,6 +152,9 @@ func (a *Actor) handleNewBlockEvent(data map[string]interface{}) {
 	}
 
 	phase := a.store.GetCurrentPhaseAt(e.Time)
+	if phase == nil {
+		log.Panic().Err(err).Msg(fmt.Sprintf("🤕 No phase found for block %d at %s", e.Height, e.Time))
+	}
 	blockRange, err := a.store.GetPhaseBlocks(a.ctx, phase.Number)
 	if err != nil {
 		log.Panic().Err(err).Msg("🤕 Could not request block range.")
