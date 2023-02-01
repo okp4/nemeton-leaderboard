@@ -1,5 +1,19 @@
 # ØKP4 🧙 Nemeton Leaderboard 🏆
 
+## [2.3.0](https://github.com/okp4/nemeton-leaderboard/compare/v2.2.0...v2.3.0) (2023-02-01)
+
+
+### Features
+
+* **sync:** register MsgVote messages ([10660c9](https://github.com/okp4/nemeton-leaderboard/commit/10660c97ddae07e39d33a03d68fbec5cebacb930))
+* **vote:** create vote proposal task type ([6f26190](https://github.com/okp4/nemeton-leaderboard/commit/6f26190914639b82368b7457079496826cafb16d))
+* **vote:** get param proposal helper ([73a0524](https://github.com/okp4/nemeton-leaderboard/commit/73a0524cd259a80edb05c944dde1072a5c6531f7))
+
+
+### Bug Fixes
+
+* **lint:** fix lint issue ([e8a7d93](https://github.com/okp4/nemeton-leaderboard/commit/e8a7d938962f5dead5ca7cadb939e126c5d67d94))
+
 ## [2.2.0](https://github.com/okp4/nemeton-leaderboard/compare/v2.1.1...v2.2.0) (2023-01-11)
 
 
