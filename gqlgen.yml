@@ -59,6 +59,9 @@ models:
   Validator:
     model:
       - okp4/nemeton-leaderboard/app/nemeton.Validator
+  BonusPoints:
+    model:
+      - okp4/nemeton-leaderboard/app/nemeton.BonusPoints
   ID:
     model:
       - github.com/99designs/gqlgen/graphql.ID

@@ -28,6 +28,12 @@ type Validator struct {
 	Status      string                       `bson:"status"`
 	Points      *uint64                      `bson:"points,omitempty"`
 	Tasks       map[int]map[string]TaskState `bson:"tasks,omitempty"`
+	BonusPoints []BonusPoints                `bson:"bonusPoints,omitempty"`
+}
+
+type BonusPoints struct {
+	Points uint64 `bson:"points"`
+	Reason string `bson:"reason"`
 }
 
 func MakeValidatorFromMsg(createMsg *stakingtypes.MsgCreateValidator, discord, country string, twitter *string) (*Validator, error) {

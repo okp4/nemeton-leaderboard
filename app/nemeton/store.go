@@ -799,3 +799,22 @@ func (s *Store) CompleteUpgradeTask(ctx context.Context, when time.Time, consens
 
 	return nil
 }
+
+func (s *Store) SubmitBonusPoints(ctx context.Context, valoper types.ValAddress, rewards uint64, reason string) error {
+	_, err := s.db.Collection(validatorsCollectionName).UpdateOne(ctx,
+		bson.M{
+			"valoper": valoper,
+		},
+		bson.M{
+			"$push": bson.M{
+				"bonusPoints": bson.M{
+					"points": rewards,
+					"reason": reason,
+				},
+			},
+			"$inc": bson.M{
+				"points": rewards,
+			},
+		})
+	return err
+}
