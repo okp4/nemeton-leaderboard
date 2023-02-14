@@ -8,13 +8,14 @@ import (
 	"errors"
 	"fmt"
 	"net/url"
-	"okp4/nemeton-leaderboard/app/nemeton"
-	"okp4/nemeton-leaderboard/graphql/model"
-	"okp4/nemeton-leaderboard/graphql/scalar"
 	"strconv"
 	"sync"
 	"sync/atomic"
 	"time"
+
+	"okp4/nemeton-leaderboard/app/nemeton"
+	"okp4/nemeton-leaderboard/graphql/model"
+	"okp4/nemeton-leaderboard/graphql/scalar"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/99designs/gqlgen/graphql/introspection"
@@ -87,7 +88,7 @@ type ComplexityRoot struct {
 	}
 
 	Mutation struct {
-		CompleteTask         func(childComplexity int, validator types.ValAddress, phase int, task string, points *uint64) int
+		CompleteTask         func(childComplexity int, validator types.ValAddress, phase int, task string, points *uint64, override *bool) int
 		RegisterDashboardURL func(childComplexity int, validator types.ValAddress, url *url.URL, points uint64) int
 		RegisterRPCEndpoint  func(childComplexity int, validator types.ValAddress, url *url.URL) int
 		RegisterSnapshotURL  func(childComplexity int, validator types.ValAddress, url *url.URL) int
@@ -207,7 +208,7 @@ type MutationResolver interface {
 	RegisterRPCEndpoint(ctx context.Context, validator types.ValAddress, url *url.URL) (*string, error)
 	RegisterSnapshotURL(ctx context.Context, validator types.ValAddress, url *url.URL) (*string, error)
 	RegisterDashboardURL(ctx context.Context, validator types.ValAddress, url *url.URL, points uint64) (*string, error)
-	CompleteTask(ctx context.Context, validator types.ValAddress, phase int, task string, points *uint64) (*string, error)
+	CompleteTask(ctx context.Context, validator types.ValAddress, phase int, task string, points *uint64, override *bool) (*string, error)
 	SubmitBonusPoints(ctx context.Context, validator types.ValAddress, points uint64, reason string) (*string, error)
 }
 type PhaseResolver interface {
@@ -356,7 +357,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.CompleteTask(childComplexity, args["validator"].(types.ValAddress), args["phase"].(int), args["task"].(string), args["points"].(*uint64)), true
+		return e.complexity.Mutation.CompleteTask(childComplexity, args["validator"].(types.ValAddress), args["phase"].(int), args["task"].(string), args["points"].(*uint64), args["override"].(*bool)), true
 
 	case "Mutation.registerDashboardURL":
 		if e.complexity.Mutation.RegisterDashboardURL == nil {
@@ -1329,6 +1330,11 @@ type Mutation {
         The points to attribute, if applicable. The priority will be given to the static rewards amount specified in the task definition.
         """
         points: UInt64
+
+        """
+        Allow updating points even if the task was already completed.
+        """
+        override: Boolean = False
     ): Void @auth
 
     """
@@ -1872,6 +1878,15 @@ func (ec *executionContext) field_Mutation_completeTask_args(ctx context.Context
 		}
 	}
 	args["points"] = arg3
+	var arg4 *bool
+	if tmp, ok := rawArgs["override"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("override"))
+		arg4, err = ec.unmarshalOBoolean2ᚖbool(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["override"] = arg4
 	return args, nil
 }
 
@@ -3547,7 +3562,7 @@ func (ec *executionContext) _Mutation_completeTask(ctx context.Context, field gr
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		directive0 := func(rctx context.Context) (interface{}, error) {
 			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Mutation().CompleteTask(rctx, fc.Args["validator"].(types.ValAddress), fc.Args["phase"].(int), fc.Args["task"].(string), fc.Args["points"].(*uint64))
+			return ec.resolvers.Mutation().CompleteTask(rctx, fc.Args["validator"].(types.ValAddress), fc.Args["phase"].(int), fc.Args["task"].(string), fc.Args["points"].(*uint64), fc.Args["override"].(*bool))
 		}
 		directive1 := func(ctx context.Context) (interface{}, error) {
 			if ec.directives.Auth == nil {
@@ -8961,7 +8976,6 @@ func (ec *executionContext) _Identity(ctx context.Context, sel ast.SelectionSet,
 
 			out.Concurrently(i, func() graphql.Marshaler {
 				return innerFunc(ctx)
-
 			})
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
@@ -9275,7 +9289,6 @@ func (ec *executionContext) _Phase(ctx context.Context, sel ast.SelectionSet, ob
 
 			out.Concurrently(i, func() graphql.Marshaler {
 				return innerFunc(ctx)
-
 			})
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
@@ -9316,7 +9329,6 @@ func (ec *executionContext) _Phases(ctx context.Context, sel ast.SelectionSet, o
 
 			out.Concurrently(i, func() graphql.Marshaler {
 				return innerFunc(ctx)
-
 			})
 		case "ongoing":
 			field := field
@@ -9336,7 +9348,6 @@ func (ec *executionContext) _Phases(ctx context.Context, sel ast.SelectionSet, o
 
 			out.Concurrently(i, func() graphql.Marshaler {
 				return innerFunc(ctx)
-
 			})
 		case "finished":
 			field := field
@@ -9356,7 +9367,6 @@ func (ec *executionContext) _Phases(ctx context.Context, sel ast.SelectionSet, o
 
 			out.Concurrently(i, func() graphql.Marshaler {
 				return innerFunc(ctx)
-
 			})
 		case "current":
 			field := field
@@ -9373,7 +9383,6 @@ func (ec *executionContext) _Phases(ctx context.Context, sel ast.SelectionSet, o
 
 			out.Concurrently(i, func() graphql.Marshaler {
 				return innerFunc(ctx)
-
 			})
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
@@ -9700,7 +9709,6 @@ func (ec *executionContext) _Tasks(ctx context.Context, sel ast.SelectionSet, ob
 
 			out.Concurrently(i, func() graphql.Marshaler {
 				return innerFunc(ctx)
-
 			})
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
@@ -9741,7 +9749,6 @@ func (ec *executionContext) _Validator(ctx context.Context, sel ast.SelectionSet
 
 			out.Concurrently(i, func() graphql.Marshaler {
 				return innerFunc(ctx)
-
 			})
 		case "moniker":
 
@@ -9765,7 +9772,6 @@ func (ec *executionContext) _Validator(ctx context.Context, sel ast.SelectionSet
 
 			out.Concurrently(i, func() graphql.Marshaler {
 				return innerFunc(ctx)
-
 			})
 		case "details":
 
@@ -9837,7 +9843,6 @@ func (ec *executionContext) _Validator(ctx context.Context, sel ast.SelectionSet
 
 			out.Concurrently(i, func() graphql.Marshaler {
 				return innerFunc(ctx)
-
 			})
 		case "points":
 
@@ -9864,7 +9869,6 @@ func (ec *executionContext) _Validator(ctx context.Context, sel ast.SelectionSet
 
 			out.Concurrently(i, func() graphql.Marshaler {
 				return innerFunc(ctx)
-
 			})
 		case "missedBlocks":
 			field := field
@@ -9884,7 +9888,6 @@ func (ec *executionContext) _Validator(ctx context.Context, sel ast.SelectionSet
 
 			out.Concurrently(i, func() graphql.Marshaler {
 				return innerFunc(ctx)
-
 			})
 		case "bonusPoints":
 

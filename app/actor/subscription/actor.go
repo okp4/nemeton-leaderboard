@@ -342,7 +342,7 @@ func (a *Actor) handleTaskCompletedEvent(data map[string]interface{}) {
 		return
 	}
 
-	if err := a.store.ManualCompleteTask(a.ctx, e.Validator, e.Phase, e.Task, e.Points); err != nil {
+	if err := a.store.ManualCompleteTask(a.ctx, e.Validator, e.Phase, e.Task, e.Points, e.Override); err != nil {
 		log.Err(err).Interface("data", data).Msg("🤕 Couldn't manually complete task")
 	}
 }

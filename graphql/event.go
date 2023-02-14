@@ -182,6 +182,7 @@ type TaskCompletedEvent struct {
 	Phase     int              `json:"phase"`
 	Task      string           `json:"task"`
 	Points    *uint64          `json:"points,omitempty"`
+	Override  bool             `json:"override"`
 }
 
 func (e *TaskCompletedEvent) Marshal() (map[string]interface{}, error) {
