@@ -190,26 +190,51 @@ Share the content links to botanik#4248 on Discord. Only one submission per drui
 			Name:        "Beltaine",
 			Description: "The third phase is all about token dynamics! Druids will engage in various node and community tasks with their precious tokens. Challenges will include some IBC-related tasks to open Nemeton to the interchain world...ime. Maintenance tasks and upgrades will be performed to test different kinds of state migrations.",
 			StartDate:   time.Date(2023, time.February, 1, 0, 0, 0, 0, time.UTC),
-			EndDate:     time.Date(2023, time.February, 19, 23, 59, 59, 0, time.UTC),
+			EndDate:     time.Date(2023, time.February, 28, 23, 59, 59, 0, time.UTC),
 			Tasks: []Task{
 				makeVoteProposalTask(
 					"0",
-					"Vote for governance proposal to whitelist address for smart contract deployment",
+					"Vote for the governance proposal to whitelist addresses for smart contract deployment",
 					"",
-					time.Date(2023, time.February, 1, 0, 0, 0, 0, time.UTC),     // TODO:⚠️ CHANGE DATE
-					time.Date(2023, time.February, 15, 23, 59, 59, 0, time.UTC), // TODO:⚠️ CHANGE DATE
+					time.Date(2023, time.February, 1, 12, 0, 0, 0, time.UTC),
+					time.Date(2023, time.February, 15, 12, 0, 0, 0, time.UTC),
 					1500,
 					1,
 				),
-				makeUpgradeTask(
+				makeVoteProposalTask(
 					"1",
+					"Vote for the governance proposal to implement the logic module to the Nemeton testnet",
 					"",
+					time.Date(2023, time.February, 6, 12, 0, 0, 0, time.UTC),
+					time.Date(2023, time.February, 20, 12, 0, 0, 0, time.UTC),
+					1500,
+					2,
+				),
+				makeUpgradeTask(
+					"2",
+					"Upgrade your node on time",
 					"",
-					time.Date(2023, time.February, 1, 0, 0, 0, 0, time.UTC),     // TODO:⚠️ CHANGE DATE
-					time.Date(2023, time.February, 31, 23, 59, 59, 0, time.UTC), // TODO:⚠️ CHANGE DATE
+					time.Date(2023, time.February, 20, 12, 0, 0, 0, time.UTC),
+					time.Date(2023, time.February, 28, 23, 59, 59, 0, time.UTC),
 					2500,
-					110000,
-					110300,
+					1033598,
+					1034218,
+				),
+				makeTweetNemetonTask(
+					"3",
+					"Tweet about OKP4",
+					"",
+					time.Date(2023, time.February, 1, 0, 0, 0, 0, time.UTC),
+					time.Date(2023, time.February, 28, 23, 59, 59, 0, time.UTC),
+					500,
+				),
+				makeUptimeTask(
+					"4",
+					"Uptime",
+					"",
+					time.Date(2023, time.February, 1, 0, 0, 0, 0, time.UTC),
+					time.Date(2023, time.February, 28, 23, 59, 59, 0, time.UTC),
+					2500,
 				),
 			},
 		},
