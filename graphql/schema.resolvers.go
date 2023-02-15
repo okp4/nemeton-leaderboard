@@ -8,6 +8,7 @@ import (
 	"context"
 	"fmt"
 	"net/url"
+
 	"okp4/nemeton-leaderboard/app/event"
 	"okp4/nemeton-leaderboard/app/message"
 	"okp4/nemeton-leaderboard/app/nemeton"
@@ -276,12 +277,13 @@ func (r *mutationResolver) RegisterDashboardURL(ctx context.Context, validator t
 }
 
 // CompleteTask is the resolver for the completeTask field.
-func (r *mutationResolver) CompleteTask(ctx context.Context, validator types.ValAddress, phase int, task string, points *uint64) (*string, error) {
+func (r *mutationResolver) CompleteTask(ctx context.Context, validator types.ValAddress, phase int, task string, points *uint64, override *bool) (*string, error) {
 	evt := &TaskCompletedEvent{
 		Validator: validator,
 		Phase:     phase,
 		Task:      task,
 		Points:    points,
+		Override:  override != nil && *override,
 	}
 	rawEvt, err := evt.Marshal()
 	if err != nil {
@@ -553,10 +555,12 @@ func (r *Resolver) Tasks() generated.TasksResolver { return &tasksResolver{r} }
 // Validator returns generated.ValidatorResolver implementation.
 func (r *Resolver) Validator() generated.ValidatorResolver { return &validatorResolver{r} }
 
-type identityResolver struct{ *Resolver }
-type mutationResolver struct{ *Resolver }
-type phaseResolver struct{ *Resolver }
-type phasesResolver struct{ *Resolver }
-type queryResolver struct{ *Resolver }
-type tasksResolver struct{ *Resolver }
-type validatorResolver struct{ *Resolver }
+type (
+	identityResolver  struct{ *Resolver }
+	mutationResolver  struct{ *Resolver }
+	phaseResolver     struct{ *Resolver }
+	phasesResolver    struct{ *Resolver }
+	queryResolver     struct{ *Resolver }
+	tasksResolver     struct{ *Resolver }
+	validatorResolver struct{ *Resolver }
+)

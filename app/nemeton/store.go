@@ -519,6 +519,7 @@ func (s *Store) ManualCompleteTask(
 	phaseNB int,
 	taskID string,
 	rewards *uint64,
+	override bool,
 ) error {
 	phase := s.GetPhase(phaseNB)
 	var task *Task
@@ -529,6 +530,12 @@ func (s *Store) ManualCompleteTask(
 	}
 	if task == nil {
 		return fmt.Errorf("task '%s' not found in phase '%d'", taskID, phaseNB)
+	}
+
+	if override {
+		if err := s.resetTaskPoints(ctx, valoper, phaseNB, taskID); err != nil {
+			return err
+		}
 	}
 
 	points := uint64(0)
@@ -562,6 +569,33 @@ func (s *Store) ensureTaskCompleted(ctx context.Context, filter bson.M, phase in
 			},
 		})
 	return err
+}
+
+func (s *Store) resetTaskPoints(ctx context.Context, valoper types.ValAddress, phase int, task string) error {
+	val, err := s.GetValidatorByValoper(ctx, valoper)
+	if err != nil {
+		return err
+	}
+
+	taskState := val.Task(phase, task)
+	if taskState != nil && taskState.Completed {
+		_, err := s.db.Collection(validatorsCollectionName).UpdateOne(
+			ctx,
+			bson.M{
+				"valoper": valoper,
+			},
+			bson.M{
+				"$unset": bson.M{
+					fmt.Sprintf("tasks.%d.%s", phase, task): 1,
+				},
+				"$inc": bson.M{
+					"points": int64(taskState.EarnedPoints) * -1,
+				},
+			},
+		)
+		return err
+	}
+	return nil
 }
 
 // getTaskPhaseByType return the current phase at the given time and the current **first** task for the given task type.

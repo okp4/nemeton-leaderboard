@@ -319,6 +319,11 @@ type Mutation {
         The points to attribute, if applicable. The priority will be given to the static rewards amount specified in the task definition.
         """
         points: UInt64
+
+        """
+        Allow updating points even if the task was already completed.
+        """
+        override: Boolean = False
     ): Void @auth
 
     """
