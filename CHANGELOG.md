@@ -1,5 +1,25 @@
 # ØKP4 🧙 Nemeton Leaderboard 🏆
 
+## [2.4.0](https://github.com/okp4/nemeton-leaderboard/compare/v2.3.0...v2.4.0) (2023-02-20)
+
+
+### Features
+
+* allow override completed task ([75ac78c](https://github.com/okp4/nemeton-leaderboard/commit/75ac78cda52be16d9b2a6e777488c5bd9478554a))
+* **bonus:** add event for bonus points submitted ([7600b32](https://github.com/okp4/nemeton-leaderboard/commit/7600b321872b521d2217fc30b144d9213bd85873))
+* **bonus:** add graphql mutation for submit bonus points ([248cfd1](https://github.com/okp4/nemeton-leaderboard/commit/248cfd18334f6e2dd6f3461f196abe829fc68112))
+* **bonus:** include bonus point into validator graphql api ([a17e44a](https://github.com/okp4/nemeton-leaderboard/commit/a17e44adf5f6062068c8690357885b1373e0001c))
+* **phase3:** details the tasks ([ffb6274](https://github.com/okp4/nemeton-leaderboard/commit/ffb6274520b7978bd079a8ed522431ce2f1a5bb4))
+* **upgrade:** add a new upgrade task check ([d0607a9](https://github.com/okp4/nemeton-leaderboard/commit/d0607a97700d210a4405f7e84e329f8f3dab1f80))
+* **upgrade:** complete upgrade task if validator sign after height given ([faf5cb0](https://github.com/okp4/nemeton-leaderboard/commit/faf5cb0bda2c251409869c605b5d1ce8a38d8d8e))
+
+
+### Bug Fixes
+
+* **bonus:** make bonusPoints attributes mandatory on api schema ([77ae2bc](https://github.com/okp4/nemeton-leaderboard/commit/77ae2bcca795f5a8059953b4f2cf2c121a262774))
+* **subscription:** add return to make linter happy ([22e9fb3](https://github.com/okp4/nemeton-leaderboard/commit/22e9fb36ae6d10cd385600bb923c968e1dc2667b))
+* **subscription:** panic if no phase was found for actual block range ([5f38875](https://github.com/okp4/nemeton-leaderboard/commit/5f38875457bf405f0c56f392ec9438283617ade7))
+
 ## [2.3.0](https://github.com/okp4/nemeton-leaderboard/compare/v2.2.0...v2.3.0) (2023-02-01)
 
 
