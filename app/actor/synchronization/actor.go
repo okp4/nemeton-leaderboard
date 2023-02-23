@@ -15,6 +15,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/types"
 	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
+	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	"github.com/rs/zerolog/log"
 )
 
@@ -189,6 +190,13 @@ func filteredMsgs(block *NewBlockEvent, decoder types.TxDecoder, txs [][]byte) {
 			switch voteMsg := msg.(type) {
 			case *v1.MsgVote:
 				msgVotes = append(msgVotes, *voteMsg)
+			case *v1beta1.MsgVote:
+				msgVotes = append(msgVotes, v1.MsgVote{
+					ProposalId: voteMsg.ProposalId,
+					Voter:      voteMsg.Voter,
+					Option:     v1.VoteOption(voteMsg.Option),
+					Metadata:   "",
+				})
 			default:
 				log.Info().Interface("msg", msg).Msg("Skip message from transaction")
 			}
