@@ -217,7 +217,7 @@ Share the content links to botanik#4248 on Discord. Only one submission per drui
 					time.Date(2023, time.February, 20, 12, 0, 0, 0, time.UTC),
 					time.Date(2023, time.February, 28, 23, 59, 59, 0, time.UTC),
 					2500,
-					1033598,
+					1033600,
 					1034218,
 				),
 				makeTweetNemetonTask(
