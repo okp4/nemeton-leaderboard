@@ -1,5 +1,18 @@
 # ØKP4 🧙 Nemeton Leaderboard 🏆
 
+## [2.5.0](https://github.com/okp4/nemeton-leaderboard/compare/v2.4.0...v2.5.0) (2023-02-28)
+
+
+### Features
+
+* **nemeton:** add phase 4 bootstrap ([0f4161e](https://github.com/okp4/nemeton-leaderboard/commit/0f4161ecec8107865696c463d6bcd047c83bec04))
+
+
+### Bug Fixes
+
+* **governance:** check also if validator vote with old MsgVote proto ([863126d](https://github.com/okp4/nemeton-leaderboard/commit/863126d6702bb0d1333b6f489b55382ded7768e2))
+* **nemeton:** correct phase 3 bootstrap ([b5b7a59](https://github.com/okp4/nemeton-leaderboard/commit/b5b7a59bece3d58560537a458609b1d54f613773))
+
 ## [2.4.0](https://github.com/okp4/nemeton-leaderboard/compare/v2.3.0...v2.4.0) (2023-02-20)
 
 
