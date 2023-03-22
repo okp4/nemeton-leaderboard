@@ -3,7 +3,7 @@ module okp4/nemeton-leaderboard
 go 1.19
 
 require (
-	github.com/99designs/gqlgen v0.17.26
+	github.com/99designs/gqlgen v0.17.27
 	github.com/asynkron/protoactor-go v0.0.0-20221002142108-880b460fcd1f
 	github.com/cosmos/btcutil v1.0.5
 	github.com/cosmos/cosmos-sdk v0.46.8
