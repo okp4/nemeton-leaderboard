@@ -157,24 +157,9 @@ func (a *Actor) handleNewBlockEvent(data map[string]interface{}) {
 		log.Panic().Err(err).Msg("🤕 Failed get previous phase.")
 	}
 
-	phase := a.store.GetCurrentPhaseAt(e.Time)
-	if phase == nil {
-		log.Panic().Err(err).Msg(fmt.Sprintf("🤕 No phase found for block %d at %s", e.Height, e.Time))
-		return // obvious but make linter happy 🙃
-	}
-	blockRange, err := a.store.GetPhaseBlocks(a.ctx, phase.Number)
-	if err != nil {
-		log.Panic().Err(err).Msg("🤕 Could not request block range.")
-	}
-
-	if previousPhase != nil && previousPhase.Number < phase.Number {
+	if previousPhase != nil {
 		log.Info().Int("oldPhase", previousPhase.Number).Msg("⏱️ It's the previous phase ended")
 		a.handlePhaseEnded(previousPhase)
-	}
-
-	if blockRange != nil && blockRange.To-blockRange.From == 1 {
-		log.Info().Int("newPhase", phase.Number).Msg("⏱️ It's a new phase started! ")
-		a.handlePhaseStarted(phase)
 	}
 }
 
@@ -299,10 +284,6 @@ func (a *Actor) handlePhaseEnded(phase *nemeton.Phase) {
 		return
 	}
 	log.Info().Int("phaseNumber", phase.Number).Msg("✅ Uptime points for phase has been set.")
-}
-
-func (a *Actor) handlePhaseStarted(phase *nemeton.Phase) {
-	// TODO: handle phase started
 }
 
 func (a *Actor) handleRegisterURLEvent(when time.Time, data map[string]interface{}) {
