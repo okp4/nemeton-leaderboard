@@ -258,6 +258,10 @@ func (a *Actor) handleNewTweetEvent(when time.Time, data map[string]interface{})
 		return
 	}
 	phase := a.store.GetCurrentPhaseAt(when)
+	if phase == nil {
+		log.Info().Msg("There is no phase in progress at the moment.")
+		return
+	}
 	for _, task := range phase.Tasks {
 		if task.Type == nemeton.TaskTypeTweetNemeton && task.InProgressAt(when) {
 			if !e.CreatedAt.After(task.StartDate) || !e.CreatedAt.Before(task.EndDate) {
