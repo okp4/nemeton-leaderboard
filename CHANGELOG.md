@@ -1,5 +1,13 @@
 # ØKP4 🧙 Nemeton Leaderboard 🏆
 
+## [2.5.1](https://github.com/okp4/nemeton-leaderboard/compare/v2.5.0...v2.5.1) (2023-04-24)
+
+
+### Bug Fixes
+
+* avoid crash when no phase in progress ([5619aa5](https://github.com/okp4/nemeton-leaderboard/commit/5619aa5392fb7cdfb391ee1d41245e2e7d686667))
+* **phase:** simplify end phase handling ([b0237bb](https://github.com/okp4/nemeton-leaderboard/commit/b0237bbe3f10a06f9d81ac3674a33dfacec7ac82))
+
 ## [2.5.0](https://github.com/okp4/nemeton-leaderboard/compare/v2.4.0...v2.5.0) (2023-02-28)
 
 
