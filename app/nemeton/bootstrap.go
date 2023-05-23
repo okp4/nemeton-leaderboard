@@ -305,5 +305,44 @@ Share the content links to botanik#4248 on Discord. Only one submission per drui
 				),
 			},
 		},
+		{
+			Number:      5,
+			Name:        "Samhain",
+			Description: "",
+			StartDate:   time.Date(2023, time.May, 24, 0, 0, 0, 0, time.UTC),
+			EndDate:     time.Date(2023, time.October, 31, 23, 59, 59, 0, time.UTC),
+			Tasks: []Task{
+				makeSubmissionTask(
+					"0",
+					"Vote for the governance proposals",
+					"",
+					time.Date(2023, time.May, 24, 12, 0, 0, 0, time.UTC),
+					time.Date(2023, time.October, 31, 23, 59, 59, 0, time.UTC),
+				),
+				makeSubmissionTask(
+					"1",
+					"Perform upgrades on time",
+					"",
+					time.Date(2023, time.May, 24, 12, 0, 0, 0, time.UTC),
+					time.Date(2023, time.October, 31, 23, 59, 59, 0, time.UTC),
+				),
+				makeTweetNemetonTask(
+					"2",
+					"Make an original/ creative tweet",
+					"",
+					time.Date(2023, time.May, 24, 12, 0, 0, 0, time.UTC),
+					time.Date(2023, time.October, 31, 23, 59, 59, 0, time.UTC),
+					3000,
+				),
+				makeUptimeTask(
+					"3",
+					"Uptime",
+					"",
+					time.Date(2023, time.May, 24, 12, 0, 0, 0, time.UTC),
+					time.Date(2023, time.October, 31, 23, 59, 59, 0, time.UTC),
+					8000,
+				),
+			},
+		},
 	}
 }
