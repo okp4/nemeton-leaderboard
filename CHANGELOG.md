@@ -1,5 +1,12 @@
 # ØKP4 🧙 Nemeton Leaderboard 🏆
 
+## [2.6.0](https://github.com/okp4/nemeton-leaderboard/compare/v2.5.1...v2.6.0) (2023-05-24)
+
+
+### Features
+
+* add phase 5 tasks ([35b0ed6](https://github.com/okp4/nemeton-leaderboard/commit/35b0ed6bc4b921da614fb2ee9f388d31f51c90cb))
+
 ## [2.5.1](https://github.com/okp4/nemeton-leaderboard/compare/v2.5.0...v2.5.1) (2023-04-24)
 
 
