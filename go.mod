@@ -14,7 +14,7 @@ require (
 	github.com/smartystreets/goconvey v1.8.0
 	github.com/spf13/cobra v1.7.0
 	github.com/tendermint/tendermint v0.34.24
-	github.com/vektah/gqlparser/v2 v2.5.1
+	github.com/vektah/gqlparser/v2 v2.5.3
 	go.mongodb.org/mongo-driver v1.11.7
 	golang.org/x/net v0.10.0
 	google.golang.org/grpc v1.55.0
