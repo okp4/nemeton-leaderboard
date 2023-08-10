@@ -34,8 +34,13 @@ jobs:
         with:
           go-version: "1.19"
 
+      - name: Setup node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 14
+
       - name: Release project
-        uses: cycjimmy/semantic-release-action@v3.4.1
+        uses: cycjimmy/semantic-release-action@v3
         with:
           semantic_version: 19.0.2
           branch: main
@@ -43,7 +48,7 @@ jobs:
             @semantic-release/changelog
             @semantic-release/exec
             @semantic-release/git
-            @google/semantic-release-replace-plugin
+            semantic-release-replace-plugin@v1.2.0
           extends: |
             conventional-changelog-conventionalcommits
         env:
