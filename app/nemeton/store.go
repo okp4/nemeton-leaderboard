@@ -535,7 +535,7 @@ func (s *Store) ManualCompleteTask(
 		}
 	}
 
-	points := uint64(0) //nolint:wastedassign
+	var points uint64
 	if rewards != nil {
 		points = *rewards
 	} else {
