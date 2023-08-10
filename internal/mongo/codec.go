@@ -23,7 +23,7 @@ func MakeRegistry() *bsoncodec.Registry {
 		Build()
 }
 
-func encodeAccAddress(ec bsoncodec.EncodeContext, vw bsonrw.ValueWriter, val reflect.Value) error {
+func encodeAccAddress(_ bsoncodec.EncodeContext, vw bsonrw.ValueWriter, val reflect.Value) error {
 	if !val.IsValid() || val.Type() != tAccAddress {
 		return bsoncodec.ValueEncoderError{Name: "ObjectIDEncodeValue", Types: []reflect.Type{tAccAddress}, Received: val}
 	}
@@ -31,7 +31,7 @@ func encodeAccAddress(ec bsoncodec.EncodeContext, vw bsonrw.ValueWriter, val ref
 	return vw.WriteString(val.Interface().(types.AccAddress).String())
 }
 
-func encodeValAddress(ec bsoncodec.EncodeContext, vw bsonrw.ValueWriter, val reflect.Value) error {
+func encodeValAddress(_ bsoncodec.EncodeContext, vw bsonrw.ValueWriter, val reflect.Value) error {
 	if !val.IsValid() || val.Type() != tValAddress {
 		return bsoncodec.ValueEncoderError{Name: "ObjectIDEncodeValue", Types: []reflect.Type{tValAddress}, Received: val}
 	}
@@ -39,7 +39,7 @@ func encodeValAddress(ec bsoncodec.EncodeContext, vw bsonrw.ValueWriter, val ref
 	return vw.WriteString(val.Interface().(types.ValAddress).String())
 }
 
-func encodeConsAddress(ec bsoncodec.EncodeContext, vw bsonrw.ValueWriter, val reflect.Value) error {
+func encodeConsAddress(_ bsoncodec.EncodeContext, vw bsonrw.ValueWriter, val reflect.Value) error {
 	if !val.IsValid() || val.Type() != tConsAddress {
 		return bsoncodec.ValueEncoderError{Name: "ObjectIDEncodeValue", Types: []reflect.Type{tConsAddress}, Received: val}
 	}

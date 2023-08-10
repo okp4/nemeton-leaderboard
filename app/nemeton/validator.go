@@ -93,7 +93,7 @@ func NewValidator(
 		Discord:   discord,
 		Country:   country,
 		Status:    "inactive",
-		Points:    new(uint64),
+		// Points:    new(uint64),
 	}, nil
 }
 
