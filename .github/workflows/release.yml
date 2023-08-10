@@ -29,6 +29,11 @@ jobs:
         with:
           token: ${{ secrets.OKP4_TOKEN }}
 
+      - name: Setup node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 14
+
       - name: Setup Go environment
         uses: actions/setup-go@v4.0.1
         with:
