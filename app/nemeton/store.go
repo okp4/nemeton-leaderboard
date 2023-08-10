@@ -79,10 +79,7 @@ func (s *Store) init(ctx context.Context) error {
 		s.phases = append(s.phases, &phase)
 	}
 
-	if err := s.ensureIndexes(ctx); err != nil {
-		return err
-	}
-	return nil
+	return s.ensureIndexes(ctx)
 }
 
 func (s *Store) ensureIndexes(ctx context.Context) error {
@@ -538,7 +535,7 @@ func (s *Store) ManualCompleteTask(
 		}
 	}
 
-	points := uint64(0)
+	points := uint64(0) //nolint:wastedassign
 	if rewards != nil {
 		points = *rewards
 	} else {
