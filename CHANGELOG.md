@@ -1,5 +1,20 @@
 # ØKP4 🧙 Nemeton Leaderboard 🏆
 
+## [2.7.0](https://github.com/okp4/nemeton-leaderboard/compare/v2.6.0...v2.7.0) (2023-08-11)
+
+
+### Features
+
+* **upgrade:** allow multiple upgrade task ([6a99ce7](https://github.com/okp4/nemeton-leaderboard/commit/6a99ce728bad5f7ef5016bd0979b561a4c78a639))
+
+
+### Bug Fixes
+
+* **lint:** bump golang lint to 1.53 ([74a2642](https://github.com/okp4/nemeton-leaderboard/commit/74a2642c47cf87821fd98c9d32982e2f224069dd))
+* **lint:** fix new linter issue ([030820f](https://github.com/okp4/nemeton-leaderboard/commit/030820f7cdad38b2153f444fc937c3bc5e52e05a))
+* **lint:** wastedassign linter issue ([9d8a223](https://github.com/okp4/nemeton-leaderboard/commit/9d8a223b460370de0caa65d6ecaacbc8ab2d7e90))
+* **validator:** allocate initial zero point on create new validator ([49a06dc](https://github.com/okp4/nemeton-leaderboard/commit/49a06dcc76c590e2f3a24c72cf50356d0881725b))
+
 ## [2.6.0](https://github.com/okp4/nemeton-leaderboard/compare/v2.5.1...v2.6.0) (2023-05-24)
 
 
