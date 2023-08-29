@@ -37,7 +37,7 @@ jobs:
       - name: Setup node
         uses: actions/setup-node@v3
         with:
-          node-version: 18
+          node-version: 14
 
       - name: Release project
         uses: cycjimmy/semantic-release-action@v3
@@ -48,7 +48,7 @@ jobs:
             @semantic-release/changelog
             @semantic-release/exec
             @semantic-release/git
-            semantic-release-replace-plugin@v1.2.7
+            semantic-release-replace-plugin@1.2.0
           extends: |
             conventional-changelog-conventionalcommits
         env:
