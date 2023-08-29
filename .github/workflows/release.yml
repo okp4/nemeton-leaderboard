@@ -48,7 +48,7 @@ jobs:
             @semantic-release/changelog
             @semantic-release/exec
             @semantic-release/git
-            semantic-release-replace-plugin@v1.2.0
+            semantic-release-replace-plugin@v1.2.7
           extends: |
             conventional-changelog-conventionalcommits
         env:
