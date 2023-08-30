@@ -1,5 +1,12 @@
 # ØKP4 🧙 Nemeton Leaderboard 🏆
 
+## [2.7.1](https://github.com/okp4/nemeton-leaderboard/compare/v2.7.0...v2.7.1) (2023-08-30)
+
+
+### Bug Fixes
+
+* **validator:** remove comment mistake ([f9f6fca](https://github.com/okp4/nemeton-leaderboard/commit/f9f6fca9d02fdb9eddd1d8e2b4ee8b68e12ce5e4))
+
 ## [2.7.0](https://github.com/okp4/nemeton-leaderboard/compare/v2.6.0...v2.7.0) (2023-08-11)
 
 
