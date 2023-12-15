@@ -23,6 +23,7 @@ const (
 	FlagTLSSkipVerify  = "tls-skip-verify"
 	FlagTwitterToken   = "twitter-token" // nolint:gosec
 	FlagTwitterAccount = "twitter-account"
+	FlagNoBlockSync    = "no-block-sync"
 )
 
 var (
@@ -35,6 +36,7 @@ var (
 	twitterToken   string
 	twitterAccount string
 	accessToken    string
+	noBlockSync    bool
 
 	startCmd = &cobra.Command{
 		Use:   "start",
@@ -54,6 +56,7 @@ var (
 				twitterAccount,
 				getTransportCredentials(),
 				accessTokenOpt,
+				noBlockSync,
 			)
 
 			kill := make(chan os.Signal, 1)
@@ -90,6 +93,7 @@ func init() {
 		"access-token",
 		"",
 		"The required access token for authenticated operations, an empty value = no auth")
+	startCmd.PersistentFlags().BoolVar(&noBlockSync, FlagNoBlockSync, false, "Disable block synchronization")
 }
 
 func getTransportCredentials() credentials.TransportCredentials {

@@ -21,11 +21,11 @@ type App struct {
 func Bootstrap(
 	listenAddr, mongoURI, dbName, grpcAddr, twitterToken, twitterAccount string,
 	tls credentials.TransportCredentials,
-	accessToken *string,
+	accessToken *string, noBlockSync bool,
 ) *App {
 	initProps := actor.PropsFromFunc(func(ctx actor.Context) {
 		if _, ok := ctx.Message().(*actor.Started); ok {
-			boot(ctx, listenAddr, mongoURI, dbName, grpcAddr, twitterToken, twitterAccount, tls, accessToken)
+			boot(ctx, listenAddr, mongoURI, dbName, grpcAddr, twitterToken, twitterAccount, tls, accessToken, noBlockSync)
 		}
 	})
 
@@ -47,7 +47,7 @@ func (app *App) Stop() error {
 
 func boot(ctx actor.Context, listenAddr, mongoURI, dbName, grpcAddr, twitterToken, twitterAccount string,
 	tls credentials.TransportCredentials,
-	accessToken *string,
+	accessToken *string, noBlockSync bool,
 ) {
 	grpcClientProps := actor.PropsFromProducer(func() actor.Actor {
 		grpcClient, err := cosmos.NewGrpcClient(grpcAddr, tls)
@@ -72,15 +72,17 @@ func boot(ctx actor.Context, listenAddr, mongoURI, dbName, grpcAddr, twitterToke
 
 	startSubscriber(ctx, eventStorePID, mongoURI, dbName)
 
-	blockSync := actor.PropsFromProducer(func() actor.Actor {
-		sync, err := synchronization.NewActor(eventStorePID, grpcClientPID, mongoURI, dbName)
-		if err != nil {
-			log.Panic().Err(err).Msg("❌ Could not start block synchronisation actor")
+	if !noBlockSync {
+		blockSync := actor.PropsFromProducer(func() actor.Actor {
+			sync, err := synchronization.NewActor(eventStorePID, grpcClientPID, mongoURI, dbName)
+			if err != nil {
+				log.Panic().Err(err).Msg("❌ Could not start block synchronisation actor")
+			}
+			return sync
+		})
+		if _, err := ctx.SpawnNamed(blockSync, "blockSync"); err != nil {
+			log.Panic().Err(err).Msg("❌ Could not create block sync actor")
 		}
-		return sync
-	})
-	if _, err := ctx.SpawnNamed(blockSync, "blockSync"); err != nil {
-		log.Panic().Err(err).Msg("❌ Could not create block sync actor")
 	}
 
 	tweetProps := actor.PropsFromProducer(func() actor.Actor {
