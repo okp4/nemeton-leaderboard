@@ -15,7 +15,7 @@ require (
 	github.com/spf13/cobra v1.8.0
 	github.com/tendermint/tendermint v0.34.24
 	github.com/vektah/gqlparser/v2 v2.5.10
-	go.mongodb.org/mongo-driver v1.11.7
+	go.mongodb.org/mongo-driver v1.13.1
 	golang.org/x/net v0.19.0
 	google.golang.org/grpc v1.60.1
 	gopkg.in/yaml.v2 v2.4.0
@@ -141,8 +141,8 @@ require (
 	github.com/tidwall/btree v1.5.0 // indirect
 	github.com/ulikunitz/xz v0.5.10 // indirect
 	github.com/xdg-go/pbkdf2 v1.0.0 // indirect
-	github.com/xdg-go/scram v1.1.1 // indirect
-	github.com/xdg-go/stringprep v1.0.3 // indirect
+	github.com/xdg-go/scram v1.1.2 // indirect
+	github.com/xdg-go/stringprep v1.0.4 // indirect
 	github.com/youmark/pkcs8 v0.0.0-20181117223130-1be2e3e5546d // indirect
 	github.com/zondax/hid v0.9.1 // indirect
 	github.com/zondax/ledger-go v0.14.1 // indirect
