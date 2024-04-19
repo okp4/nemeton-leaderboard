@@ -16,7 +16,7 @@ require (
 	github.com/tendermint/tendermint v0.34.24
 	github.com/vektah/gqlparser/v2 v2.5.11
 	go.mongodb.org/mongo-driver v1.11.7
-	golang.org/x/net v0.22.0
+	golang.org/x/net v0.23.0
 	google.golang.org/grpc v1.61.1
 	gopkg.in/yaml.v2 v2.4.0
 )
