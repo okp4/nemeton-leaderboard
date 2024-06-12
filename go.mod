@@ -14,7 +14,7 @@ require (
 	github.com/smartystreets/goconvey v1.8.1
 	github.com/spf13/cobra v1.8.0
 	github.com/tendermint/tendermint v0.34.24
-	github.com/vektah/gqlparser/v2 v2.5.11
+	github.com/vektah/gqlparser/v2 v2.5.14
 	go.mongodb.org/mongo-driver v1.11.7
 	golang.org/x/net v0.23.0
 	google.golang.org/grpc v1.61.1
@@ -133,7 +133,7 @@ require (
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/spf13/viper v1.13.0 // indirect
-	github.com/stretchr/testify v1.8.2 // indirect
+	github.com/stretchr/testify v1.9.0 // indirect
 	github.com/subosito/gotenv v1.4.1 // indirect
 	github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7 // indirect
 	github.com/tendermint/go-amino v0.16.0 // indirect
